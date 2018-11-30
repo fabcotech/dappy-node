@@ -1,0 +1,16 @@
+{
+  "name": "dappy-node",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4",
+    "grpc": "^1.17.0-pre1",
+    "rchain-api": "^0.7.1-beta.2"
+  }
+}
