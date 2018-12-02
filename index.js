@@ -71,8 +71,10 @@ app.post("/getValueAtPublicName", function(req, res) {
                 block.block.blockNumber
               }, ${new Date(parseInt(block.block.timestamp, 10)).toISOString()}`
             );
+            // Removing double-quotes at the end and the beginning of string
+            const dataWithoutQuotes = data.substring(1, data.length - 1);
             res.append("Content-Type", "text/plain; charset=UTF-8");
-            res.send(data);
+            res.send(dataWithoutQuotes);
             return;
           }
         }
