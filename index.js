@@ -6,23 +6,16 @@ const http = require("http");
 
 const app = express();
 const host = process.argv[5] ? process.argv[3] : "localhost";
-const port = process.argv[5] ? process.argv[5] : "40401";
-const expressport = process.argv[7] ? parseInt(process.argv[7], 10) : 3000;
+const httpport = process.argv[5] ? process.argv[5] : "40403";
+const grpcport = process.argv[7] ? process.argv[7] : "40401";
+const expressport = process.argv[9] ? parseInt(process.argv[9], 10) : 3000;
 
 const log = a => {
   console.log(new Date().toISOString(), a);
 };
-
-function bufAsHex(prop, val) {
-  if (prop === "data" && "type" in this && this.type === "Buffer") {
-    return Buffer.from(val).toString("hex");
-  }
-  return val;
-}
-
 const rchain = RNode(grpc, {
   host: host,
-  port: port
+  port: grpcport
 });
 
 app.use(function(req, res, next) {
@@ -36,7 +29,7 @@ app.use(function(req, res, next) {
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get(`/version`, function(req, res) {
-  http.get(`${host}:${port}/version`, resp => {
+  http.get(`http://${host}:${httpport}/version`, resp => {
     if (resp.statusCode !== 200) {
       res.status(400).json("Not found");
       return;
@@ -71,11 +64,7 @@ app.post("/getValueAtPublicName", function(req, res) {
       for (let i = 0; i < blockResults.length; i += 1) {
         const block = blockResults[i];
         for (let j = 0; j < block.postBlockData.length; j += 1) {
-          const data = JSON.stringify(
-            RHOCore.toRholang(block.postBlockData[j]),
-            bufAsHex,
-            2
-          );
+          const data = RHOCore.toRholang(block.postBlockData[j]);
           if (data) {
             log(
               `Received value from block n°${
@@ -101,5 +90,6 @@ app.post("/getValueAtPublicName", function(req, res) {
 app.listen(expressport, function() {
   log(`dappy-node listening on port ${expressport}!`);
   log(`RChain node host ${host}`);
-  log(`RChain node port ${port}`);
+  log(`RChain node GRPC port ${grpcport}`);
+  log(`RChain node HTTP port ${httpport}`);
 });

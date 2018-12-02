@@ -15,5 +15,5 @@ npm install
 node index
 
 // or with custom values
-node index --host localhost --port 40401 --express-port 4000
+node index --host localhost --httpport 40403 --grpcport 40401 --express-port 4000
 ```
