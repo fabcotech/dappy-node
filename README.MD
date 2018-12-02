@@ -11,9 +11,9 @@ git clone https://github.com/fabcotech/dappy-node.git
 cd dapppy-node
 npm install
 
+// With default values --host localhost --port 40401 --express-port 3000
 node index
 
-// or with custom arguments
-
-node index --host http://localhost --port 50000 --expressport 4000
+// or with custom values
+node index --host localhost --port 40401 --express-port 4000
 ```
