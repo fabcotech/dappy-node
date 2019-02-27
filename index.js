@@ -1,16 +1,33 @@
+require("dotenv").config();
 const express = require("express");
 const grpc = require("grpc");
-
 const http = require("http");
 const protoLoader = require("@grpc/proto-loader");
+const redis = require("redis");
+
+const listenForDataAtName = require("./rchain").listenForDataAtName;
+const getDappyNamesAndSaveToDb = require("./names").getDappyNamesAndSaveToDb;
+const log = require("./utils").log;
+const redisSmembers = require("./utils").redisSmembers;
+const redisHgetall = require("./utils").redisHgetall;
+const redisKeys = require("./utils").redisKeys;
 
 const app = express();
-const host = process.argv[5] ? process.argv[3] : "localhost";
-const httpport = process.argv[5] ? process.argv[5] : "40403";
-const grpcport = process.argv[7] ? process.argv[7] : "40401";
-const expressport = process.argv[9] ? parseInt(process.argv[9], 10) : 3000;
 
-let client = undefined;
+let protobufsLoaded = false;
+let appReady = false;
+let rnodeClient = undefined;
+const redisClient = redis.createClient();
+redisClient.on("error", err => {
+  log("error : redis error " + err);
+});
+
+const initJobs = () => {
+  getDappyNamesAndSaveToDb(rnodeClient, redisClient);
+  setInterval(() => {
+    getDappyNamesAndSaveToDb(rnodeClient, redisClient);
+  }, process.env.JOBS_INTERVAL);
+};
 
 protoLoader
   .load("./protobuf/CasperMessage.proto", {
@@ -22,27 +39,15 @@ protoLoader
   })
   .then(packageDefinition => {
     const packageObject = grpc.loadPackageDefinition(packageDefinition);
-    client = new packageObject.coop.rchain.casper.protocol.DeployService(
-      `${host}:${grpcport}`,
+    rnodeClient = new packageObject.coop.rchain.casper.protocol.DeployService(
+      `${process.env.RNODE_HOST}:${process.env.RNODE_GRPC_PORT}`,
       grpc.credentials.createInsecure()
     );
+    protobufsLoaded = true;
+    if (appReady) {
+      initJobs();
+    }
   });
-
-const listenForDataAtName = (options, client) => {
-  return new Promise((resolve, reject) => {
-    client.listenForDataAtName(options, function(err, blocks) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(blocks);
-      }
-    });
-  });
-};
-
-const log = a => {
-  console.log(new Date().toISOString(), a);
-};
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -55,7 +60,7 @@ app.use(function(req, res, next) {
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get(`/version`, function(req, res) {
-  http.get(`http://${host}:${httpport}/version`, resp => {
+  http.get(`http://${host}:${process.env.RNODE_HTTP_PORT}/version`, resp => {
     if (resp.statusCode !== 200) {
       res.status(400).json("Not found");
       return;
@@ -75,54 +80,71 @@ app.get(`/version`, function(req, res) {
   });
 });
 
-app.post("/getValueAtPublicName", function(req, res) {
+app.get("/get-records-for-publickey", async (req, res) => {
+  if (!req.query.publickey) {
+    res.status(400).send("Missing query attribute publickey");
+  }
+  const keys = await redisSmembers(
+    redisClient,
+    `publickey:${req.query.publickey}`
+  );
+  const records = await Promise.all(
+    keys.map(k => redisHgetall(redisClient, `name:${k}`))
+  );
+  res.send(records);
+});
+
+app.get("/get-all-records", async (req, res) => {
+  const keys = await redisKeys(redisClient, `name:*`);
+  const records = await Promise.all(
+    keys.map(k => redisHgetall(redisClient, k))
+  );
+  res.send(records);
+});
+
+app.get("/get-record", async (req, res) => {
+  if (!req.query.name) {
+    res.status(400).send("Missing query attribute name");
+  }
+  const record = await redisHgetall(redisClient, `name:${req.query.name}`);
+  res.send(record);
+});
+
+app.post("/listenForDataAtName", function(req, res) {
   listenForDataAtName(
     { depth: 1000, name: { exprs: [{ g_string: req.query.channel }] } },
-    client
+    rnodeClient
   )
     .then(blocks => {
-      for (let i = 0; i < blocks.blockResults.length; i += 1) {
-        const block = blocks.blockResults[i];
-        for (let j = 0; j < block.postBlockData.length; j += 1) {
-          const data = block.postBlockData[j].exprs[0];
-          if (data) {
-            log(
-              `Received value from block n°${
-                block.block.blockNumber
-              }, ${new Date(parseInt(block.block.timestamp, 10)).toISOString()}`
-            );
-            if (expressport === 4002) {
-              setTimeout(() => {
-                res.status(400).json("error");
-              }, 3000);
-              return;
-            } else if (expressport === 4001) {
-              setTimeout(() => {
-                res.append("Content-Type", "text/plain; charset=UTF-8");
-                res.send(data);
-              }, 3000);
-              return;
-            } else {
-              res.append("Content-Type", "text/plain; charset=UTF-8");
-              res.send(data);
-              return;
-            }
-          }
-        }
-      }
-
-      log(`Did not found any data for channel @"${req.query.channel}"`);
-      throw new Error("Not found");
+      getValueFromBlocks(blocks)
+        .then(data => {
+          res.append("Content-Type", "text/plain; charset=UTF-8");
+          res.send(data);
+        })
+        .catch(err => {
+          log(`did not found any data for "${req.query.channel}"`);
+          throw err;
+        });
     })
     .catch(err => {
-      console.error(err);
+      log("error : " + err);
       res.status(400).json(err.message);
     });
 });
 
-app.listen(expressport, function() {
-  log(`dappy-node listening on port ${expressport}!`);
-  log(`RChain node host ${host}`);
-  log(`RChain node GRPC port ${grpcport}`);
-  log(`RChain node HTTP port ${httpport}`);
+app.listen(process.env.NODEJS_PORT, function() {
+  log(`dappy-node listening on port ${process.env.NODEJS_PORT}!`);
+  log(`RChain node host ${process.env.RNODE_HOST}`);
+  log(`RChain node GRPC port ${process.env.RNODE_GRPC_PORT}`);
+  log(`RChain node HTTP port ${process.env.RNODE_HTTP_PORT}`);
+  http.get(
+    `http://${process.env.RNODE_HOST}:${process.env.RNODE_HTTP_PORT}/version`,
+    resp => {
+      log("RChain node responding\n");
+      appReady = true;
+      if (protobufsLoaded) {
+        initJobs();
+      }
+    }
+  );
 });
