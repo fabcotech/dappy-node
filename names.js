@@ -46,7 +46,7 @@ const storeNamesInRedis = async (redisClient, names) => {
   });
 };
 
-module.exports.getDappyNamesAndSaveToDb = (rchainClient, redisClient) => {
+module.exports.getDappyNamesAndSaveToDb = (rnodeClient, redisClient) => {
   log("names job initiated");
   log("== requesting the blockchain to get all names");
   const nameByteArray = new Buffer(
@@ -59,7 +59,7 @@ module.exports.getDappyNamesAndSaveToDb = (rchainClient, redisClient) => {
       depth: 20,
       name: channelRequest
     },
-    rchainClient
+    rnodeClient
   )
     .then(blocks => {
       getValueFromBlocks(blocks)

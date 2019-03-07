@@ -4,8 +4,12 @@ const grpc = require("grpc");
 const http = require("http");
 const protoLoader = require("@grpc/proto-loader");
 const redis = require("redis");
+const bodyParser = require("body-parser");
 
+const createBlock = require("./rchain").createBlock;
 const listenForDataAtName = require("./rchain").listenForDataAtName;
+const doDeploy = require("./rchain").doDeploy;
+const getValueFromBlocks = require("./rchain").getValueFromBlocks;
 const getDappyNamesAndSaveToDb = require("./names").getDappyNamesAndSaveToDb;
 const log = require("./utils").log;
 const redisSmembers = require("./utils").redisSmembers;
@@ -26,6 +30,13 @@ const initJobs = () => {
   getDappyNamesAndSaveToDb(rnodeClient, redisClient);
   setInterval(() => {
     getDappyNamesAndSaveToDb(rnodeClient, redisClient);
+  }, process.env.JOBS_INTERVAL);
+  setInterval(() => {
+    createBlock({}, rnodeClient)
+      .then(a => {
+        log("Successfully created a block");
+      })
+      .catch(err => {});
   }, process.env.JOBS_INTERVAL);
 };
 
@@ -49,6 +60,7 @@ protoLoader
     }
   });
 
+app.use(bodyParser.json());
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -60,24 +72,27 @@ app.use(function(req, res, next) {
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get(`/version`, function(req, res) {
-  http.get(`http://${host}:${process.env.RNODE_HTTP_PORT}/version`, resp => {
-    if (resp.statusCode !== 200) {
-      res.status(400).json("Not found");
-      return;
+  http.get(
+    `http://${process.env.RNODE_HOST}:${process.env.RNODE_HTTP_PORT}/version`,
+    resp => {
+      if (resp.statusCode !== 200) {
+        res.status(400).json("Not found");
+        return;
+      }
+
+      resp.setEncoding("utf8");
+      let rawData = "";
+      resp.on("data", chunk => {
+        rawData += chunk;
+      });
+
+      resp.on("end", () => {
+        res.append("Content-Type", "text/plain; charset=UTF-8");
+        res.send(rawData);
+        return;
+      });
     }
-
-    resp.setEncoding("utf8");
-    let rawData = "";
-    resp.on("data", chunk => {
-      rawData += chunk;
-    });
-
-    resp.on("end", () => {
-      res.append("Content-Type", "text/plain; charset=UTF-8");
-      res.send(rawData);
-      return;
-    });
-  });
+  );
 });
 
 app.get("/get-records-for-publickey", async (req, res) => {
@@ -111,8 +126,16 @@ app.get("/get-record", async (req, res) => {
 });
 
 app.post("/listenForDataAtName", function(req, res) {
+  if (!req.query.registryaddress) {
+    res.status(400).send("Missing query attribute registryaddress");
+  }
+  const nameByteArray = new Buffer(req.query.registryaddress, "hex");
+  const channelRequest = { ids: [{ id: Array.from(nameByteArray) }] };
   listenForDataAtName(
-    { depth: 1000, name: { exprs: [{ g_string: req.query.channel }] } },
+    {
+      depth: 20,
+      name: channelRequest
+    },
     rnodeClient
   )
     .then(blocks => {
@@ -122,13 +145,24 @@ app.post("/listenForDataAtName", function(req, res) {
           res.send(data);
         })
         .catch(err => {
-          log(`did not found any data for "${req.query.channel}"`);
-          throw err;
+          res.status(400).json(err.message);
         });
     })
     .catch(err => {
-      log("error : " + err);
+      log("error : communication error with the node (GRPC endpoint)");
+      log(err);
       res.status(400).json(err.message);
+    });
+});
+
+app.post("/deploy", function(req, res) {
+  doDeploy(req.body, rnodeClient)
+    .then(resp => {
+      res.json(resp);
+    })
+    .catch(err => {
+      log("error : communication error with the node (GRPC endpoint)");
+      res.status(400).json(err);
     });
 });
 

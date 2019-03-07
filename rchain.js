@@ -12,6 +12,30 @@ module.exports.listenForDataAtName = (options, client) => {
   });
 };
 
+module.exports.doDeploy = (options, client) => {
+  return new Promise((resolve, reject) => {
+    client.DoDeploy(options, function(err, resp) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(resp);
+      }
+    });
+  });
+};
+
+module.exports.createBlock = (options, client) => {
+  return new Promise((resolve, reject) => {
+    client.createBlock(options, function(err, resp) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(resp);
+      }
+    });
+  });
+};
+
 module.exports.toJSData = (par /*: IPar */) /*: Json */ => {
   function recur(p /*: IPar */) {
     if (p.exprs && p.exprs.length > 0) {
