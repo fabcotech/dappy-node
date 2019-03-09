@@ -158,7 +158,11 @@ app.post("/listenForDataAtName", function(req, res) {
 app.post("/deploy", function(req, res) {
   doDeploy(req.body, rnodeClient)
     .then(resp => {
-      res.json(resp);
+      if (resp.success) {
+        res.json(resp);
+      } else {
+        res.status(400).json(resp);
+      }
     })
     .catch(err => {
       log("error : communication error with the node (GRPC endpoint)");

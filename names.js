@@ -1,5 +1,3 @@
-const redis = require("redis");
-
 const log = require("./utils").log;
 const getValueFromBlocks = require("./rchain").getValueFromBlocks;
 const listenForDataAtName = require("./rchain").listenForDataAtName;
@@ -7,21 +5,36 @@ const rholangMapToJsObject = require("./rchain").rholangMapToJsObject;
 const redisKeys = require("./utils").redisKeys;
 
 const storeNamesInRedis = async (redisClient, names) => {
-  const command = redisClient.multi();
-
   const nameKeys = await redisKeys(redisClient, "name:*");
-  command.del(...nameKeys);
+  await new Promise((res, rej) => {
+    redisClient.del(...nameKeys, (err, resp) => {
+      if (err) {
+        return rej(err);
+      }
+      res(resp);
+    });
+  });
   const publickeyKeys = await redisKeys(redisClient, "publickey:*");
-  command.del(...publickeyKeys);
+  await new Promise((res, rej) => {
+    redisClient.del(...publickeyKeys, (err, resp) => {
+      if (err) {
+        return rej(err);
+      }
+      res(resp);
+    });
+  });
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     log("== " + names.length + " name(s) to store");
     let i = 0;
-    const storeName = () => {
+    const storeName = async () => {
       if (i % 20 === 0 || i === names.length - 1) {
         log("== processing name at index " + i);
       }
       const kv = names[i];
+      if (!kv) {
+        resolve();
+      }
       const name = kv.key.exprs[0].g_string;
       const record = rholangMapToJsObject(kv.value.exprs[0].e_map_body);
       const redisSetValues = [];
@@ -29,20 +42,33 @@ const storeNamesInRedis = async (redisClient, names) => {
         redisSetValues.push(key);
         redisSetValues.push(record[key]);
       }
-      command.hmset(`name:${name}`, ...redisSetValues);
-      command.sadd(`publickey:${record.publickey}`, name);
+
+      await new Promise((res, rej) => {
+        redisClient.hmset(`name:${name}`, ...redisSetValues, (err, resp) => {
+          if (err) {
+            return rej(err);
+          }
+          res(resp);
+        });
+      });
+      await new Promise((res, rej) => {
+        redisClient.sadd(`publickey:${record.publickey}`, name, (err, resp) => {
+          if (err) {
+            return rej(err);
+          }
+          res(resp);
+        });
+      });
 
       if (i === names.length - 1) {
-        log("== exetuing all commands in batch");
-        command.exec((err, replies) => {
-          resolve();
-        });
+        resolve();
       } else {
         i += 1;
-        storeName();
+        await storeName();
       }
     };
-    storeName();
+
+    await storeName();
   });
 };
 
