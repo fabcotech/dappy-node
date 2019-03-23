@@ -6,23 +6,27 @@ const redisKeys = require("./utils").redisKeys;
 
 const storeNamesInRedis = async (redisClient, names) => {
   const nameKeys = await redisKeys(redisClient, "name:*");
-  await new Promise((res, rej) => {
-    redisClient.del(...nameKeys, (err, resp) => {
-      if (err) {
-        return rej(err);
-      }
-      res(resp);
+  if (nameKeys.length) {
+    await new Promise((res, rej) => {
+      redisClient.del(...nameKeys, (err, resp) => {
+        if (err) {
+          return rej(err);
+        }
+        res(resp);
+      });
     });
-  });
+  }
   const publickeyKeys = await redisKeys(redisClient, "publickey:*");
-  await new Promise((res, rej) => {
-    redisClient.del(...publickeyKeys, (err, resp) => {
-      if (err) {
-        return rej(err);
-      }
-      res(resp);
+  if (publickeyKeys.length) {
+    await new Promise((res, rej) => {
+      redisClient.del(...publickeyKeys, (err, resp) => {
+        if (err) {
+          return rej(err);
+        }
+        res(resp);
+      });
     });
-  });
+  }
 
   return new Promise(async (resolve, reject) => {
     log("== " + names.length + " name(s) to store");
@@ -33,7 +37,7 @@ const storeNamesInRedis = async (redisClient, names) => {
       }
       const kv = names[i];
       if (!kv) {
-        resolve();
+        return resolve();
       }
       const name = kv.key.exprs[0].g_string;
       const record = rholangMapToJsObject(kv.value.exprs[0].e_map_body);
