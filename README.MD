@@ -2,39 +2,34 @@
 
 Simple node/express server to serve as a gateway between dappy and a RChain node.
 
-### run
+### run without docker (development)
 
-With a RChain node running locally or remotely with GRPC api:
+You have to have a RChain node running locally or remotely with GRPC api expôsed, and a redis server running also.
+
+You must copy the .env.example file and name it .env so environment variables will be read from it.
 
 ```
 git clone https://github.com/fabcotech/dappy-node.git
 cd dapppy-node
 npm install
 
-// With default values --host localhost --port 40401 --express-port 3000
 node index
-
-// or with custom values
-node index --host localhost --httpport 40403 --grpcport 40401 --express-port 4000
 ```
 
-With docker
+### run with docker (production)
+
+You must copy the .env.example file and name it .env so environment variables will be read from it.
+
+This docker-compose contains redis database and the node JS application
+
+RNode is not part of the docker-compose, it should be running on your host machine, with ports matching the one described in .env file.
 
 ```
 # Build the image
-docker build -t "dappy-node" .
+docker-compose build
 
-# Run the image
-docker run --network="host" -p RNODE_HTTP_PORT:40403 -p RNODE_GRPC_PORT:40401 -p HOST_DAPPY_NODE_PORT:3000 -d dappy-node
-
-# For a rnode default configuration
-
-# Run
-docker run --network="host" -p 40403:40403 -p 40401:40401 -p 3000:3000 dappy-node
-
-# Run in detach mode
-docker run --network="host" -p 40403:40403 -p 40401:40401 -p 3000:3000 -d dappy-node
-
+# Run the containers (redis and node JS script)
+docker-compose up --abort-on-container-exit
 ```
 
 dappy-node is plugged to the running rnode program !

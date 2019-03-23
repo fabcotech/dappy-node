@@ -1,4 +1,7 @@
-require("dotenv").config();
+if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
+  require("dotenv").config();
+}
+
 const express = require("express");
 const grpc = require("grpc");
 const http = require("http");
@@ -21,7 +24,12 @@ const app = express();
 let protobufsLoaded = false;
 let appReady = false;
 let rnodeClient = undefined;
-const redisClient = redis.createClient();
+
+const redisClient = redis.createClient({
+  db: 1,
+  host: process.env.REDIS_HOST
+});
+
 redisClient.on("error", err => {
   log("error : redis error " + err);
 });
@@ -70,7 +78,6 @@ app.use(function(req, res, next) {
   next();
 });
 
-// respond with "hello world" when a GET request is made to the homepage
 app.get(`/version`, function(req, res) {
   http.get(
     `http://${process.env.RNODE_HOST}:${process.env.RNODE_HTTP_PORT}/version`,

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index"
+    "start": "NODE_ENV=development node index"
   },
   "author": "",
   "license": "ISC",
