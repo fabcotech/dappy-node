@@ -14,6 +14,7 @@ const listenForDataAtName = require("./rchain").listenForDataAtName;
 const doDeploy = require("./rchain").doDeploy;
 const getValueFromBlocks = require("./rchain").getValueFromBlocks;
 const getDappyNamesAndSaveToDb = require("./names").getDappyNamesAndSaveToDb;
+const parseEither = require("./rchain").parseEither;
 const log = require("./utils").log;
 const redisSmembers = require("./utils").redisSmembers;
 const redisHgetall = require("./utils").redisHgetall;
@@ -145,7 +146,14 @@ app.post("/listenForDataAtName", function(req, res) {
     },
     rnodeClient
   )
-    .then(blocks => {
+    .then(either => {
+      let blocks;
+      try {
+        blocks = parseEither(either);
+      } catch (err) {
+        res.status(400).json(err.message);
+        return;
+      }
       getValueFromBlocks(blocks)
         .then(data => {
           res.append("Content-Type", "text/plain; charset=UTF-8");

@@ -2,6 +2,7 @@ const log = require("./utils").log;
 const getValueFromBlocks = require("./rchain").getValueFromBlocks;
 const listenForDataAtName = require("./rchain").listenForDataAtName;
 const rholangMapToJsObject = require("./rchain").rholangMapToJsObject;
+const parseEither = require("./rchain").parseEither;
 const redisKeys = require("./utils").redisKeys;
 
 const storeNamesInRedis = async (redisClient, names) => {
@@ -79,6 +80,7 @@ const storeNamesInRedis = async (redisClient, names) => {
 module.exports.getDappyNamesAndSaveToDb = (rnodeClient, redisClient) => {
   log("names job initiated");
   log("== requesting the blockchain to get all names");
+
   const nameByteArray = new Buffer(
     process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,
     "hex"
@@ -91,20 +93,40 @@ module.exports.getDappyNamesAndSaveToDb = (rnodeClient, redisClient) => {
     },
     rnodeClient
   )
-    .then(blocks => {
+    .then(either => {
+      let blocks;
+      try {
+        blocks = parseEither(either);
+      } catch (err) {
+        log("error : something went wrong when parsing the result from node");
+        log(err);
+      }
+
       getValueFromBlocks(blocks)
         .then(data => {
           log("== beginning storing of names in db");
           const a = new Date().getTime();
-          storeNamesInRedis(redisClient, data.e_map_body.kvs).then(() => {
-            const s =
-              Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
+          try {
+            storeNamesInRedis(redisClient, data.e_map_body.kvs)
+              .then(() => {
+                const s =
+                  Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
+                log(
+                  "== successfully re-stored all names from the blockchain, it took " +
+                    s +
+                    " seconds"
+                );
+              })
+              .catch(err => {
+                log("error: something went wrong when storing names");
+                log(err);
+              });
+          } catch (err) {
             log(
-              "== successfully re-stored all names from the blockchain, it took " +
-                s +
-                " seconds"
+              "error: something went wrong when initialized the storing of names"
             );
-          });
+            log(err);
+          }
         })
         .catch(err => {
           log("error : something went wrong when querying the node");

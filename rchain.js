@@ -1,4 +1,6 @@
-const log = require("./utils").log;
+const {
+  ListeningNameDataResponse
+} = require("./protobuf/CasperMessage").coop.rchain.casper.protocol;
 
 module.exports.listenForDataAtName = (options, client) => {
   return new Promise((resolve, reject) => {
@@ -109,4 +111,14 @@ module.exports.rholangMapToJsObject = map => {
   });
 
   return obj;
+};
+
+module.exports.parseEither = either => {
+  if (either && either.success && either.success.response) {
+    const json = JSON.stringify(either.success.response.value);
+    const d = ListeningNameDataResponse.decode(JSON.parse(json).data);
+    return d;
+  } else {
+    throw new Error("error: GRPC error");
+  }
 };
