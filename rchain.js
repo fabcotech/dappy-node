@@ -1,10 +1,23 @@
 const {
-  ListeningNameDataResponse
+  ListeningNameDataResponse,
+  PrivateNamePreviewResponse
 } = require("./protobuf/CasperMessage").coop.rchain.casper.protocol;
 
 module.exports.listenForDataAtName = (options, client) => {
   return new Promise((resolve, reject) => {
     client.listenForDataAtName(options, function(err, blocks) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(blocks);
+      }
+    });
+  });
+};
+
+module.exports.previewPrivateNames = (options, client) => {
+  return new Promise((resolve, reject) => {
+    client.previewPrivateNames(options, function(err, blocks) {
       if (err) {
         reject(err);
       } else {
@@ -113,10 +126,20 @@ module.exports.rholangMapToJsObject = map => {
   return obj;
 };
 
-module.exports.parseEither = either => {
+module.exports.parseEitherListeningNameData = either => {
   if (either && either.success && either.success.response) {
     const json = JSON.stringify(either.success.response.value);
     const d = ListeningNameDataResponse.decode(JSON.parse(json).data);
+    return d;
+  } else {
+    throw new Error("error: GRPC error");
+  }
+};
+
+module.exports.parseEitherPrivateNamePreview = either => {
+  if (either && either.success && either.success.response) {
+    const json = JSON.stringify(either.success.response.value);
+    const d = PrivateNamePreviewResponse.decode(JSON.parse(json).data);
     return d;
   } else {
     throw new Error("error: GRPC error");

@@ -9,12 +9,13 @@ const protoLoader = require("@grpc/proto-loader");
 const redis = require("redis");
 const bodyParser = require("body-parser");
 
+const previewPrivateNamesController = require("./src/preview-private-names");
+const listenForDataAtNameController = require("./src/listen-for-data-at-name");
+const deployController = require("./src/deploy");
+
 const createBlock = require("./rchain").createBlock;
-const listenForDataAtName = require("./rchain").listenForDataAtName;
-const doDeploy = require("./rchain").doDeploy;
-const getValueFromBlocks = require("./rchain").getValueFromBlocks;
 const getDappyNamesAndSaveToDb = require("./names").getDappyNamesAndSaveToDb;
-const parseEither = require("./rchain").parseEither;
+
 const log = require("./utils").log;
 const redisSmembers = require("./utils").redisSmembers;
 const redisHgetall = require("./utils").redisHgetall;
@@ -40,6 +41,7 @@ const initJobs = () => {
   setInterval(() => {
     getDappyNamesAndSaveToDb(rnodeClient, redisClient);
   }, process.env.JOBS_INTERVAL);
+
   setInterval(() => {
     createBlock({}, rnodeClient)
       .then(a => {
@@ -133,56 +135,14 @@ app.get("/get-record", async (req, res) => {
   res.send(record);
 });
 
-app.post("/listenForDataAtName", function(req, res) {
-  if (!req.query.registryaddress) {
-    res.status(400).send("Missing query attribute registryaddress");
-  }
-  const nameByteArray = new Buffer(req.query.registryaddress, "hex");
-  const channelRequest = { ids: [{ id: Array.from(nameByteArray) }] };
-  listenForDataAtName(
-    {
-      depth: 20,
-      name: channelRequest
-    },
-    rnodeClient
-  )
-    .then(either => {
-      let blocks;
-      try {
-        blocks = parseEither(either);
-      } catch (err) {
-        res.status(400).json(err.message);
-        return;
-      }
-      getValueFromBlocks(blocks)
-        .then(data => {
-          res.append("Content-Type", "text/plain; charset=UTF-8");
-          res.send(data);
-        })
-        .catch(err => {
-          res.status(400).json(err.message);
-        });
-    })
-    .catch(err => {
-      log("error : communication error with the node (GRPC endpoint)");
-      log(err);
-      res.status(400).json(err.message);
-    });
+app.post("/listen-for-data-at-name", (req, res) => {
+  listenForDataAtNameController(req, res, rnodeClient);
 });
-
-app.post("/deploy", function(req, res) {
-  doDeploy(req.body, rnodeClient)
-    .then(resp => {
-      if (resp.success) {
-        res.json(resp);
-      } else {
-        res.status(400).json(resp);
-      }
-    })
-    .catch(err => {
-      log("error : communication error with the node (GRPC endpoint)");
-      res.status(400).json(err);
-    });
+app.post("/preview-private-names", (req, res) => {
+  previewPrivateNamesController(req, res, rnodeClient);
+});
+app.post("/deploy", (req, res) => {
+  deployController(req, res, rnodeClient);
 });
 
 app.listen(process.env.NODEJS_PORT, function() {

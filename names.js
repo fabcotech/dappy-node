@@ -2,7 +2,8 @@ const log = require("./utils").log;
 const getValueFromBlocks = require("./rchain").getValueFromBlocks;
 const listenForDataAtName = require("./rchain").listenForDataAtName;
 const rholangMapToJsObject = require("./rchain").rholangMapToJsObject;
-const parseEither = require("./rchain").parseEither;
+const parseEitherListeningNameData = require("./rchain")
+  .parseEitherListeningNameData;
 const redisKeys = require("./utils").redisKeys;
 
 const storeNamesInRedis = async (redisClient, names) => {
@@ -85,18 +86,19 @@ module.exports.getDappyNamesAndSaveToDb = (rnodeClient, redisClient) => {
     process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,
     "hex"
   );
-  const channelRequest = { ids: [{ id: Array.from(nameByteArray) }] };
+  const nameRequest = { ids: [{ id: Array.from(nameByteArray) }] };
+
   listenForDataAtName(
     {
       depth: 20,
-      name: channelRequest
+      name: nameRequest
     },
     rnodeClient
   )
     .then(either => {
       let blocks;
       try {
-        blocks = parseEither(either);
+        blocks = parseEitherListeningNameData(either);
       } catch (err) {
         log("error : something went wrong when parsing the result from node");
         log(err);
