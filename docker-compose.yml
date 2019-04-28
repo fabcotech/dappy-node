@@ -2,20 +2,24 @@ version: "2"
 services:
   redis:
     image: redis
-    container_name: cache
+    container_name: redis
     expose:
       - 6379
   app:
+    container_name: app
     build: ./
     volumes:
       - ./:/var/www/app
     ports:
-      - 3000:3000
+      - "3000:3000"
     env_file:
       - .env
     environment:
       - NODE_ENV=production
       - REDIS_HOST=redis
+      - RNODE_HOST=172.17.0.1
     command: sh -c 'npm i && node index.js'
     expose:
-      - 3000
+      - "3000"
+    depends_on:
+      - redis

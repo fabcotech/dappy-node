@@ -15,14 +15,16 @@ module.exports = function(req, res, rnodeClient) {
         res.status(400).json(err.message);
         return;
       }
-      getValueFromBlocks(blocks)
-        .then(data => {
-          res.append("Content-Type", "text/plain; charset=UTF-8");
-          res.send(data);
-        })
-        .catch(err => {
-          res.status(404).json(err.message);
-        });
+
+      let data;
+      try {
+        data = getValueFromBlocks(blocks);
+        res.append("Content-Type", "text/plain; charset=UTF-8");
+        res.send(data);
+      } catch (e) {
+        log("error: " + err);
+        res.status(404).json(err.message);
+      }
     })
     .catch(err => {
       log("error : communication error with the node (GRPC endpoint)");

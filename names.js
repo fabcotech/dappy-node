@@ -90,7 +90,7 @@ module.exports.getDappyNamesAndSaveToDb = (rnodeClient, redisClient) => {
 
   listenForDataAtName(
     {
-      depth: 20,
+      depth: 1000,
       name: nameRequest
     },
     rnodeClient
@@ -102,38 +102,41 @@ module.exports.getDappyNamesAndSaveToDb = (rnodeClient, redisClient) => {
       } catch (err) {
         log("error : something went wrong when parsing the result from node");
         log(err);
+        return;
       }
 
-      getValueFromBlocks(blocks)
-        .then(data => {
-          log("== beginning storing of names in db");
-          const a = new Date().getTime();
-          try {
-            storeNamesInRedis(redisClient, data.e_map_body.kvs)
-              .then(() => {
-                const s =
-                  Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
-                log(
-                  "== successfully re-stored all names from the blockchain, it took " +
-                    s +
-                    " seconds"
-                );
-              })
-              .catch(err => {
-                log("error: something went wrong when storing names");
-                log(err);
-              });
-          } catch (err) {
+      let data;
+      try {
+        data = getValueFromBlocks(blocks);
+      } catch (e) {
+        log("error : something went wrong when querying the node");
+        log(err);
+        return;
+      }
+
+      log("== beginning storing of names in db");
+      const a = new Date().getTime();
+      try {
+        storeNamesInRedis(redisClient, data.exprs[0].e_map_body.kvs)
+          .then(() => {
+            const s =
+              Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
             log(
-              "error: something went wrong when initialized the storing of names"
+              "== successfully re-stored all names from the blockchain, it took " +
+                s +
+                " seconds"
             );
+          })
+          .catch(err => {
+            log("error: something went wrong when storing names");
             log(err);
-          }
-        })
-        .catch(err => {
-          log("error : something went wrong when querying the node");
-          log(err);
-        });
+          });
+      } catch (err) {
+        log(
+          "error: something went wrong when initialized the storing of names"
+        );
+        log(err);
+      }
     })
     .catch(err => {
       log("error : communication error with the node (GRPC endpoint)");

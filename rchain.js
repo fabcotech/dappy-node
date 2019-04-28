@@ -94,32 +94,35 @@ module.exports.toJSData = (par /*: IPar */) /*: Json */ => {
   return recur(par);
 };
 
-module.exports.getValueFromBlocks = blocks =>
-  new Promise((resolve, reject) => {
-    for (let i = 0; i < blocks.blockResults.length; i += 1) {
-      const block = blocks.blockResults[i];
-      for (let j = 0; j < block.postBlockData.length; j += 1) {
-        const data = block.postBlockData[j].exprs[0];
-        if (data) {
-          resolve(data);
-          return;
-        }
+module.exports.getValueFromBlocks = blocks => {
+  for (let i = 0; i < blocks.blockResults.length; i += 1) {
+    const block = blocks.blockResults[i];
+    for (let j = 0; j < block.postBlockData.length; j += 1) {
+      const data = block.postBlockData[j];
+      if (data) {
+        return data;
       }
     }
-    reject("Not data found in any block");
-  });
+  }
+  throw new Error("Not data found in any block");
+};
 
 module.exports.rholangMapToJsObject = map => {
   const obj = {};
   map.kvs.forEach(kv => {
     const k = kv.key.exprs[0].g_string;
-    const val = kv.value.exprs[0];
-    if (val.g_string) {
-      obj[k] = val.g_string;
-    } else if (val.hasOwnProperty("g_bool")) {
-      obj[k] = val.g_bool;
-    } else if (val.g_int) {
-      obj[k] = val.g_int;
+
+    const val = kv.value;
+    if (val.ids && val.ids[0]) {
+      obj[k] = val.ids[0].id;
+    } else if (val.exprs && val.exprs[0].g_string) {
+      obj[k] = val.exprs[0].g_string;
+    } else if (val.exprs && val.exprs[0].g_uri) {
+      obj[k] = val.exprs[0].g_uri;
+    } else if (val.exprs && val.exprs[0].hasOwnProperty("g_bool")) {
+      obj[k] = val.exprs[0].g_bool;
+    } else if (val.exprs && val.exprs[0].g_int) {
+      obj[k] = val.exprs[0].g_int;
     }
   });
 

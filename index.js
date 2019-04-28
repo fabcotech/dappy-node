@@ -12,6 +12,7 @@ const bodyParser = require("body-parser");
 const previewPrivateNamesController = require("./src/preview-private-names");
 const listenForDataAtNameController = require("./src/listen-for-data-at-name");
 const deployController = require("./src/deploy");
+const infoController = require("./src/info");
 
 const createBlock = require("./rchain").createBlock;
 const getDappyNamesAndSaveToDb = require("./names").getDappyNamesAndSaveToDb;
@@ -81,30 +82,6 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.get(`/version`, function(req, res) {
-  http.get(
-    `http://${process.env.RNODE_HOST}:${process.env.RNODE_HTTP_PORT}/version`,
-    resp => {
-      if (resp.statusCode !== 200) {
-        res.status(400).json("Not found");
-        return;
-      }
-
-      resp.setEncoding("utf8");
-      let rawData = "";
-      resp.on("data", chunk => {
-        rawData += chunk;
-      });
-
-      resp.on("end", () => {
-        res.append("Content-Type", "text/plain; charset=UTF-8");
-        res.send(rawData);
-        return;
-      });
-    }
-  );
-});
-
 app.get("/get-records-for-publickey", async (req, res) => {
   if (!req.query.publickey) {
     res.status(400).send("Missing query attribute publickey");
@@ -135,6 +112,9 @@ app.get("/get-record", async (req, res) => {
   res.send(record);
 });
 
+app.get("/info", (req, res) => {
+  infoController(req, res);
+});
 app.post("/listen-for-data-at-name", (req, res) => {
   listenForDataAtNameController(req, res, rnodeClient);
 });
