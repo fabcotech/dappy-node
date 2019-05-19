@@ -1,7 +1,3 @@
-if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
-  require("dotenv").config();
-}
-
 const express = require("express");
 const grpc = require("grpc");
 const http = require("http");
@@ -21,6 +17,10 @@ const log = require("./utils").log;
 const redisSmembers = require("./utils").redisSmembers;
 const redisHgetall = require("./utils").redisHgetall;
 const redisKeys = require("./utils").redisKeys;
+
+if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
+  require("dotenv").config();
+}
 
 const app = express();
 

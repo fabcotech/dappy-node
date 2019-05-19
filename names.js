@@ -108,7 +108,7 @@ module.exports.getDappyNamesAndSaveToDb = (rnodeClient, redisClient) => {
       let data;
       try {
         data = getValueFromBlocks(blocks);
-      } catch (e) {
+      } catch (err) {
         log("error : something went wrong when querying the node");
         log(err);
         return;

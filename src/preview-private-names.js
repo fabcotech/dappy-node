@@ -4,6 +4,9 @@ const parseEitherPrivateNamePreview = require("../rchain")
 const previewPrivateNames = require("../rchain").previewPrivateNames;
 
 module.exports = function(req, res, rnodeClient) {
+  if (req.body.user && req.body.user.data) {
+    req.body.user = Buffer.from(new Uint8Array(req.body.user.data));
+  }
   previewPrivateNames(req.body, rnodeClient)
     .then(either => {
       let privateNames;

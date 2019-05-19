@@ -1,7 +1,10 @@
 const {
   ListeningNameDataResponse,
-  PrivateNamePreviewResponse
+  PrivateNamePreviewResponse,
+  DeployData
 } = require("./protobuf/CasperMessage").coop.rchain.casper.protocol;
+
+const blake2 = require("blake2");
 
 module.exports.listenForDataAtName = (options, client) => {
   return new Promise((resolve, reject) => {
@@ -147,4 +150,25 @@ module.exports.parseEitherPrivateNamePreview = either => {
   } else {
     throw new Error("error: GRPC error");
   }
+};
+
+module.exports.deployDataToSign = a => {
+  const deployDataToSign = {
+    ...a,
+    deployer: null,
+    sig: null,
+    sigAlgorithm: null
+  };
+
+  return DeployData.encode(deployDataToSign).finish();
+};
+
+module.exports.getBlake2Hash = a => {
+  const blake2b256 = blake2.createHash("blake2b", { digestLength: 32 });
+  blake2b256.update(a);
+  return Uint8Array.from(blake2b256.digest());
+};
+
+module.exports.sign = (hash, privateKey) => {
+  return nacl.sign.detached(hash, Buffer.from(sk, "hex"));
 };

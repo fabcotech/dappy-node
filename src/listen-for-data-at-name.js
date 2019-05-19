@@ -21,7 +21,7 @@ module.exports = function(req, res, rnodeClient) {
         data = getValueFromBlocks(blocks);
         res.append("Content-Type", "text/plain; charset=UTF-8");
         res.send(data);
-      } catch (e) {
+      } catch (err) {
         log("error: " + err);
         res.status(404).json(err.message);
       }
