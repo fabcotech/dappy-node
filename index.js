@@ -1,16 +1,16 @@
 const express = require("express");
-const grpc = require("grpc");
-const http = require("http");
+const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
+const http = require("http");
 const redis = require("redis");
 const bodyParser = require("body-parser");
+const rchainToolkit = require("rchain-toolkit");
 
 const previewPrivateNamesController = require("./src/preview-private-names");
 const listenForDataAtNameController = require("./src/listen-for-data-at-name");
 const deployController = require("./src/deploy");
 const infoController = require("./src/info");
 
-const createBlock = require("./rchain").createBlock;
 const getDappyNamesAndSaveToDb = require("./names").getDappyNamesAndSaveToDb;
 
 const log = require("./utils").log;
@@ -26,7 +26,8 @@ const app = express();
 
 let protobufsLoaded = false;
 let appReady = false;
-let rnodeClient = undefined;
+let rnodeDeployClient = undefined;
+let rnodeProposeClient = undefined;
 
 const redisClient = redis.createClient({
   db: 1,
@@ -38,39 +39,20 @@ redisClient.on("error", err => {
 });
 
 const initJobs = () => {
-  getDappyNamesAndSaveToDb(rnodeClient, redisClient);
+  getDappyNamesAndSaveToDb(rnodeDeployClient, redisClient);
   setInterval(() => {
-    getDappyNamesAndSaveToDb(rnodeClient, redisClient);
+    getDappyNamesAndSaveToDb(rnodeDeployClient, redisClient);
   }, process.env.JOBS_INTERVAL);
 
-  setInterval(() => {
-    createBlock({}, rnodeClient)
-      .then(a => {
-        log("Successfully created a block");
-      })
-      .catch(err => {});
+  setInterval(async () => {
+    try {
+      await rchainToolkit.grpc.propose({}, rnodeProposeClient);
+      log("Successfully created a block");
+    } catch (err) {
+      log("error : Error when proposing : " + err);
+    }
   }, process.env.JOBS_INTERVAL);
 };
-
-protoLoader
-  .load("./protobuf/CasperMessage.proto", {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true
-  })
-  .then(packageDefinition => {
-    const packageObject = grpc.loadPackageDefinition(packageDefinition);
-    rnodeClient = new packageObject.coop.rchain.casper.protocol.DeployService(
-      `${process.env.RNODE_HOST}:${process.env.RNODE_GRPC_PORT}`,
-      grpc.credentials.createInsecure()
-    );
-    protobufsLoaded = true;
-    if (appReady) {
-      initJobs();
-    }
-  });
 
 app.use(bodyParser.json());
 app.use(function(req, res, next) {
@@ -116,14 +98,34 @@ app.get("/info", (req, res) => {
   infoController(req, res);
 });
 app.post("/listen-for-data-at-name", (req, res) => {
-  listenForDataAtNameController(req, res, rnodeClient);
+  listenForDataAtNameController(req, res, rnodeDeployClient);
 });
 app.post("/preview-private-names", (req, res) => {
-  previewPrivateNamesController(req, res, rnodeClient);
+  previewPrivateNamesController(req, res, rnodeDeployClient);
 });
 app.post("/deploy", (req, res) => {
-  deployController(req, res, rnodeClient);
+  deployController(req, res, rnodeDeployClient);
 });
+
+const loadClient = async () => {
+  rnodeDeployClient = await rchainToolkit.grpc.getGrpcDeployClient(
+    "localhost:40401",
+    grpc,
+    protoLoader
+  );
+
+  rnodeProposeClient = await rchainToolkit.grpc.getGrpcProposeClient(
+    "localhost:40401",
+    grpc,
+    protoLoader
+  );
+
+  protobufsLoaded = true;
+  if (appReady) {
+    initJobs();
+  }
+};
+loadClient();
 
 app.listen(process.env.NODEJS_PORT, function() {
   log(`dappy-node listening on port ${process.env.NODEJS_PORT}!`);

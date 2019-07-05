@@ -1,10 +1,7 @@
 const Ajv = require("ajv");
-const log = require("../utils").log;
+const rchainToolkit = require("rchain-toolkit");
 
-const parseEitherListeningNameData = require("../rchain")
-  .parseEitherListeningNameData;
-const listenForDataAtName = require("../rchain").listenForDataAtName;
-const getValueFromBlocks = require("../rchain").getValueFromBlocks;
+const log = require("../utils").log;
 
 const ajv = new Ajv();
 const schema = {
@@ -46,22 +43,14 @@ module.exports = function(req, res, rnodeClient) {
     return;
   }
 
-  listenForDataAtName(req.body, rnodeClient)
-    .then(either => {
-      let blocks;
-      try {
-        blocks = parseEitherListeningNameData(either);
-      } catch (err) {
-        res.status(200).json({
-          success: false,
-          error: { message: err.message }
-        });
-        return;
-      }
-
+  rchainToolkit.grpc
+    .listenForDataAtName(req.body, rnodeClient)
+    .then(listenForDataAtNameResponse => {
       let data;
       try {
-        data = getValueFromBlocks(blocks);
+        data = rchainToolkit.utils.getValueFromBlocks(
+          listenForDataAtNameResponse.blockResults
+        );
         res.append("Content-Type", "text/plain; charset=UTF-8");
         res.send({
           success: true,

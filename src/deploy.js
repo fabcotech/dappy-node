@@ -1,7 +1,6 @@
-const log = require("../utils").log;
-const doDeploy = require("../rchain").doDeploy;
+const rchainToolkit = require("rchain-toolkit");
 
-module.exports = function(req, res, rnodeClient) {
+module.exports = async function(req, res, rnodeClient) {
   if (req.body.sig && req.body.sig.data) {
     req.body.sig = new Uint8Array(req.body.sig.data);
   }
@@ -9,16 +8,14 @@ module.exports = function(req, res, rnodeClient) {
     req.body.deployer = Buffer.from(new Uint8Array(req.body.deployer.data));
   }
   console.log(req.body);
-  doDeploy(req.body, rnodeClient)
-    .then(resp => {
-      if (resp.success) {
-        res.json(resp);
-      } else {
-        res.status(400).json(resp);
-      }
-    })
-    .catch(err => {
-      log("error : communication error with the node (GRPC endpoint)");
-      res.status(400).json(err);
-    });
+  try {
+    const either = await rchainToolkit.grpc.doDeployRaw(req.body, rnodeClient);
+    if (either.success) {
+      res.json(either);
+    } else {
+      res.status(400).json(either);
+    }
+  } catch (err) {
+    res.status(400).json(err.message);
+  }
 };
