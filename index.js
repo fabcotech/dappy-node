@@ -6,6 +6,7 @@ const redis = require("redis");
 const bodyParser = require("body-parser");
 const rchainToolkit = require("rchain-toolkit");
 
+const getNodesController = require("./src/get-nodes");
 const previewPrivateNamesController = require("./src/preview-private-names");
 const listenForDataAtNameController = require("./src/listen-for-data-at-name");
 const deployController = require("./src/deploy");
@@ -96,6 +97,9 @@ app.get("/get-record", async (req, res) => {
 
 app.get("/info", (req, res) => {
   infoController(req, res);
+});
+app.post("/get-nodes", (req, res) => {
+  getNodesController(req, res, rnodeDeployClient);
 });
 app.post("/listen-for-data-at-name", (req, res) => {
   listenForDataAtNameController(req, res, rnodeDeployClient);

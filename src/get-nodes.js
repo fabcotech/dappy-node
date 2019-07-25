@@ -5,43 +5,24 @@ const log = require("../utils").log;
 
 const ajv = new Ajv();
 const schema = {
-  schemaId: "listen-data-at-name",
+  schemaId: "get-nodes",
   type: "object",
   properties: {
-    name: {
-      type: "object",
-      properties: {
-        unforgeables: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              g_private_body: {
-                type: "object",
-                properties: {
-                  id: {
-                    type: "array",
-                    items: { type: "number" }
-                  }
-                },
-                required: ["id"]
-              }
-            },
-            required: ["g_private_body"]
-          }
-        }
-      },
-      required: ["unforgeables"]
-    },
-    depth: { type: "number" }
+    network: {
+      type: "string"
+    }
   },
-  required: ["name", "depth"]
+  required: ["network"]
 };
+
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
 module.exports = function(req, res, rnodeClient) {
+  console.log(req.body);
+  console.log(typeof req.body);
   const valid = validate(req.body);
+  console.log(valid);
 
   if (!valid) {
     res
@@ -50,23 +31,42 @@ module.exports = function(req, res, rnodeClient) {
     return;
   }
 
-  if (
-    req.body.name.unforgeables[0] &&
-    req.body.name.unforgeables[0].g_private_body.id
-  ) {
-    req.body.name.unforgeables[0].g_private_body.id = Buffer.from(
-      new Uint8Array(req.body.name.unforgeables[0].g_private_body.id)
-    );
+  if (req.body.network !== process.env.DAPPY_NETWORK) {
+    res
+      .status(404)
+      .json([
+        `This nodes runs on the ${
+          process.env.DAPPY_NETWORK
+        } network, could not get names for ${req.body.network} network`
+      ]);
+    return;
   }
 
   rchainToolkit.grpc
-    .listenForDataAtName(req.body, rnodeClient)
+    .listenForDataAtName(
+      {
+        name: {
+          unforgeables: [
+            {
+              g_private_body: {
+                id: Buffer.from(
+                  process.env.DAPPY_NODES_UNFORGEABLE_NAME_ID,
+                  "hex"
+                )
+              }
+            }
+          ]
+        }
+      },
+      rnodeClient
+    )
     .then(listenForDataAtNameResponse => {
       let data;
       try {
         data = rchainToolkit.utils.getValueFromBlocks(
           listenForDataAtNameResponse.blockResults
         );
+        console.log("data", data);
         res.append("Content-Type", "text/plain; charset=UTF-8");
         res.send({
           success: true,

@@ -7,7 +7,7 @@ module.exports = async function(req, res, rnodeClient) {
   if (req.body.deployer && req.body.deployer.data) {
     req.body.deployer = Buffer.from(new Uint8Array(req.body.deployer.data));
   }
-  console.log(req.body);
+
   try {
     const either = await rchainToolkit.grpc.doDeployRaw(req.body, rnodeClient);
     if (either.success) {

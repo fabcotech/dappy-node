@@ -11,7 +11,9 @@ module.exports = async function(req, res, rnodeClient) {
       rnodeClient
     );
     res.append("Content-Type", "text/plain; charset=UTF-8");
-    res.send(privateNames);
+    res.send({
+      ids: privateNames.ids.map(id => Array.from(new Uint8Array(id)))
+    });
   } catch (err) {
     res.status(400).json(err.message);
   }
