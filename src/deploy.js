@@ -1,6 +1,7 @@
 const rchainToolkit = require("rchain-toolkit");
 
 module.exports = async function(req, res, rnodeClient) {
+  log("deploy");
   if (req.body.sig && req.body.sig.data) {
     req.body.sig = new Uint8Array(req.body.sig.data);
   }
@@ -16,6 +17,8 @@ module.exports = async function(req, res, rnodeClient) {
       res.status(400).json(either);
     }
   } catch (err) {
+    log("error : communication error with the node (GRPC endpoint)");
+    log(err);
     res.status(400).json(err.message);
   }
 };

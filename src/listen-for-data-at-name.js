@@ -41,6 +41,7 @@ ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
 module.exports = function(req, res, rnodeClient) {
+  log("listen-data-at-name");
   const valid = validate(req.body);
 
   if (!valid) {

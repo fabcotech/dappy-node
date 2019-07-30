@@ -19,10 +19,7 @@ ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
 module.exports = function(req, res, rnodeClient) {
-  console.log(req.body);
-  console.log(typeof req.body);
   const valid = validate(req.body);
-  console.log(valid);
 
   if (!valid) {
     res
@@ -66,7 +63,7 @@ module.exports = function(req, res, rnodeClient) {
         data = rchainToolkit.utils.getValueFromBlocks(
           listenForDataAtNameResponse.blockResults
         );
-        console.log("data", data);
+
         res.append("Content-Type", "text/plain; charset=UTF-8");
         res.send({
           success: true,
