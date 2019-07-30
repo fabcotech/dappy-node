@@ -1,5 +1,7 @@
 const rchainToolkit = require("rchain-toolkit");
 
+const log = require("../utils").log;
+
 module.exports = async function(req, res, rnodeClient) {
   log("deploy");
   if (req.body.sig && req.body.sig.data) {

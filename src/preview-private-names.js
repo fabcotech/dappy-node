@@ -1,5 +1,7 @@
 const rchainToolkit = require("rchain-toolkit");
 
+const log = require("../utils").log;
+
 module.exports = async function(req, res, rnodeClient) {
   log("preview-private-name");
   if (req.body.user && req.body.user.data) {
