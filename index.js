@@ -71,7 +71,7 @@ app.get("/get-records-for-publickey", async (req, res) => {
   }
   const keys = await redisSmembers(
     redisClient,
-    `publickey:${req.query.publickey}`
+    `public_key:${req.query.publickey}`
   );
   const records = await Promise.all(
     keys.map(k => redisHgetall(redisClient, `name:${k}`))

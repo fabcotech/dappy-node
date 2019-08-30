@@ -2,7 +2,7 @@ const log = require("./utils").log;
 const rchainToolkit = require("rchain-toolkit");
 const redisKeys = require("./utils").redisKeys;
 
-const storeNamesInRedis = async (redisClient, names) => {
+const storeNamesInRedis = async (redisClient, eMapBody) => {
   const nameKeys = await redisKeys(redisClient, "name:*");
   if (nameKeys.length) {
     await new Promise((res, rej) => {
@@ -14,7 +14,7 @@ const storeNamesInRedis = async (redisClient, names) => {
       });
     });
   }
-  const publickeyKeys = await redisKeys(redisClient, "publickey:*");
+  const publickeyKeys = await redisKeys(redisClient, "public_key:*");
   if (publickeyKeys.length) {
     await new Promise((res, rej) => {
       redisClient.del(...publickeyKeys, (err, resp) => {
@@ -27,19 +27,19 @@ const storeNamesInRedis = async (redisClient, names) => {
   }
 
   return new Promise(async (resolve, reject) => {
-    log("== " + names.length + " name(s) to store");
+    log("== " + eMapBody.kvs.length + " name(s) to store");
     let i = 0;
     const storeName = async () => {
-      if (i % 20 === 0 || i === names.length - 1) {
+      if (i % 20 === 0 || i === eMapBody.kvs.length - 1) {
         log("== processing name at index " + i);
       }
-      const kv = names[i];
+      const kv = eMapBody.kvs[i];
       if (!kv) {
         return resolve();
       }
-      const name = kv.key.exprs[0].g_string;
+      const name = kv.key.exprs[0].gString;
       const record = rchainToolkit.utils.rholangMapToJsObject(
-        kv.value.exprs[0].e_map_body
+        kv.value.exprs[0].eMapBody
       );
       const redisSetValues = [];
       for (key of Object.keys(record)) {
@@ -56,15 +56,19 @@ const storeNamesInRedis = async (redisClient, names) => {
         });
       });
       await new Promise((res, rej) => {
-        redisClient.sadd(`publickey:${record.publickey}`, name, (err, resp) => {
-          if (err) {
-            return rej(err);
+        redisClient.sadd(
+          `public_key:${record.public_key}`,
+          name,
+          (err, resp) => {
+            if (err) {
+              return rej(err);
+            }
+            res(resp);
           }
-          res(resp);
-        });
+        );
       });
 
-      if (i === names.length - 1) {
+      if (i === eMapBody.kvs.length - 1) {
         resolve();
       } else {
         i += 1;
@@ -80,23 +84,42 @@ module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
   log("names job initiated");
   log("== requesting the blockchain to get all names");
 
-  const nameByteArray = Buffer.from(
-    process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,
-    "hex"
-  );
-  const nameRequest = { ids: [{ id: Array.from(nameByteArray) }] };
+  const unforgeableNameQuery = {
+    unforgeables: [
+      {
+        g_private_body: {
+          id: Array.from(
+            new Uint8Array(
+              Buffer.from(process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID, "hex")
+            )
+          )
+        }
+      }
+    ]
+  };
 
   let listenDataAtNameResponse;
   try {
     listenDataAtNameResponse = await rchainToolkit.grpc.listenForDataAtName(
       {
-        name: nameRequest,
+        name: unforgeableNameQuery,
         depth: 90
       },
       rnodeClient
     );
   } catch (err) {
     log("error : Could not get data at name " + err);
+  }
+
+  if (
+    !listenDataAtNameResponse ||
+    !listenDataAtNameResponse.blockResults ||
+    listenDataAtNameResponse.blockResults.length === 0
+  ) {
+    log(
+      "error : could not find the records ressource on the blockchain, make sure that the Dappy records contract has been deployed"
+    );
+    return;
   }
 
   let data;
@@ -113,7 +136,7 @@ module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
   log("== beginning storing of names in db");
   const a = new Date().getTime();
   try {
-    await storeNamesInRedis(redisClient, data.exprs[0].e_map_body.kvs);
+    await storeNamesInRedis(redisClient, data.exprs[0].eMapBody);
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(
