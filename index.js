@@ -1,18 +1,22 @@
-const express = require("express");
+const WebSocket = require("ws");
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 const http = require("http");
 const redis = require("redis");
-const bodyParser = require("body-parser");
+
 const rchainToolkit = require("rchain-toolkit");
 
-const getNodesController = require("./src/get-nodes");
-const previewPrivateNamesController = require("./src/preview-private-names");
-const listenForDataAtNameController = require("./src/listen-for-data-at-name");
-const deployController = require("./src/deploy");
-const infoController = require("./src/info");
+const { getNodesWsHandler } = require("./src/get-nodes");
+const { previewPrivateNamesWsHandler } = require("./src/preview-private-names");
+const {
+  listenForDataAtNameWsHandler
+} = require("./src/listen-for-data-at-name");
+const {
+  listenForDataAtNameXWsHandler
+} = require("./src/listen-for-data-at-name-x");
+const { deployWsHandler } = require("./src/deploy");
 
-const getDappyNamesAndSaveToDb = require("./names").getDappyNamesAndSaveToDb;
+const { getDappyNamesAndSaveToDb } = require("./names");
 
 const log = require("./utils").log;
 const redisSmembers = require("./utils").redisSmembers;
@@ -23,8 +27,7 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
   require("dotenv").config();
 }
 
-const app = express();
-
+let rnodeVersion = undefined;
 let protobufsLoaded = false;
 let appReady = false;
 let rnodeDeployClient = undefined;
@@ -55,17 +58,7 @@ const initJobs = () => {
   }, process.env.JOBS_INTERVAL);
 };
 
-app.use(bodyParser.json());
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
-
-app.get("/get-records-for-publickey", async (req, res) => {
+/* app.get("/get-records-for-publickey", async (req, res) => {
   if (!req.query.publickey) {
     res.status(400).send("Missing query attribute publickey");
   }
@@ -77,9 +70,17 @@ app.get("/get-records-for-publickey", async (req, res) => {
     keys.map(k => redisHgetall(redisClient, `name:${k}`))
   );
   res.send(records);
-});
+}); */
 
-app.get("/get-all-records", async (req, res) => {
+const getAllRecordsWsHandler = async () => {
+  const keys = await redisKeys(redisClient, `name:*`);
+  const records = await Promise.all(
+    keys.map(k => redisHgetall(redisClient, k))
+  );
+  return records;
+};
+
+/* app.get("/get-all-records", async (req, res) => {
   const keys = await redisKeys(redisClient, `name:*`);
   const records = await Promise.all(
     keys.map(k => redisHgetall(redisClient, k))
@@ -94,22 +95,7 @@ app.get("/get-record", async (req, res) => {
   const record = await redisHgetall(redisClient, `name:${req.query.name}`);
   res.send(record);
 });
-
-app.get("/info", (req, res) => {
-  infoController(req, res);
-});
-app.post("/get-nodes", (req, res) => {
-  getNodesController(req, res, rnodeDeployClient);
-});
-app.post("/listen-for-data-at-name", (req, res) => {
-  listenForDataAtNameController(req, res, rnodeDeployClient);
-});
-app.post("/preview-private-names", (req, res) => {
-  previewPrivateNamesController(req, res, rnodeDeployClient);
-});
-app.post("/deploy", (req, res) => {
-  deployController(req, res, rnodeDeployClient);
-});
+ */
 
 const loadClient = async () => {
   rnodeDeployClient = await rchainToolkit.grpc.getGrpcDeployClient(
@@ -127,11 +113,12 @@ const loadClient = async () => {
   protobufsLoaded = true;
   if (appReady) {
     initJobs();
+    initWs();
   }
 };
 loadClient();
 
-app.listen(process.env.NODEJS_PORT, function() {
+/* app.listen(process.env.NODEJS_PORT, function() {
   log(`dappy-node listening on port ${process.env.NODEJS_PORT}!`);
   log(`RChain node host ${process.env.RNODE_HOST}`);
   log(`RChain node GRPC port ${process.env.RNODE_GRPC_PORT}`);
@@ -146,4 +133,245 @@ app.listen(process.env.NODEJS_PORT, function() {
       }
     }
   );
+}); */
+
+const ws = new WebSocket.Server({
+  host: "127.0.0.1",
+  port: process.env.NODEJS_PORT,
+  backlog: 1000,
+  maxPayload: 16100
 });
+
+ws.on("close", err => {
+  log("critical error : websocket connection closed");
+  log(err);
+});
+
+ws.on("error", err => {
+  log("critical error : websocket connection error");
+  log(err);
+});
+
+log(`dappy-node listening for websocket on port ${process.env.NODEJS_PORT}!`);
+log(`RChain node GRPC port ${process.env.RNODE_GRPC_PORT}`);
+log(`RChain node HTTP port ${process.env.RNODE_HTTP_PORT}`);
+http.get(
+  `http://${process.env.RNODE_HOST}:${process.env.RNODE_HTTP_PORT}/version`,
+  resp => {
+    log(`RChain node responding at ${process.env.RNODE_HOST}`);
+
+    if (resp.statusCode !== 200) {
+      process.exit();
+      return;
+    }
+
+    resp.setEncoding("utf8");
+    let rawData = "";
+    resp.on("data", chunk => {
+      rawData += chunk;
+    });
+
+    resp.on("end", () => {
+      log(`${rawData}\n`);
+      rnodeVersion = rawData;
+      appReady = true;
+      if (protobufsLoaded) {
+        initJobs();
+        initWs();
+      }
+      return;
+    });
+
+    resp.on("error", err => {
+      log("error: " + err);
+      process.exit();
+    });
+  }
+);
+
+const initWs = () => {
+  ws.on("connection", client => {
+    client.on("message", (a, b) => {
+      console.log("MESSAGE", a);
+      try {
+        const json = JSON.parse(a);
+
+        //
+        // =====================================
+        // ======== WEBSOCKET ENDPOINTS ========
+        // =====================================
+        //
+        // ======== INFO ========
+        if (json.type === "info") {
+          client.send(
+            JSON.stringify({
+              success: true,
+              requestId: json.requestId,
+              data: {
+                dappy_node_version: "0.1.0",
+                rnode_version: rnodeVersion,
+                rchain_names_unforgeable_name:
+                  process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,
+                rchain_names_registry_uri: process.env.RCHAIN_NAMES_REGISTRY_URI
+              }
+            })
+          );
+          // ======== DEPLOY ========
+        } else if (json.type === "deploy") {
+          deployWsHandler(json.body, rnodeDeployClient)
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  ...data,
+                  requestId: json.requestId
+                })
+              );
+            })
+            .catch(err => {
+              log("error : deploy ws handler");
+              log(err);
+              client.send(
+                JSON.stringify({
+                  success: false,
+                  requestId: json.requestId,
+                  error: { message: err.message }
+                })
+              );
+            });
+          // ======== LISTEN FOR DATA AT NAME ========
+        } else if (json.type === "listen-for-data-at-name") {
+          listenForDataAtNameWsHandler(json.body, rnodeDeployClient)
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  ...data,
+                  requestId: json.requestId
+                })
+              );
+            })
+            .catch(err => {
+              log("error : listen-for-data-at-name ws handler");
+              log(err);
+              client.send(
+                JSON.stringify({
+                  success: false,
+                  requestId: json.requestId,
+                  error: { message: err.message }
+                })
+              );
+            });
+        } else if (json.type === "listen-for-data-at-name-x") {
+          listenForDataAtNameXWsHandler(json.body, rnodeDeployClient)
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  ...data,
+                  requestId: json.requestId
+                })
+              );
+            })
+            .catch(err => {
+              log("error : listen-for-data-at-name-x ws handler");
+              log(err);
+              client.send(
+                JSON.stringify({
+                  success: false,
+                  requestId: json.requestId,
+                  error: { message: err.message }
+                })
+              );
+            });
+
+          // ======== PREVIEW PRIVATE NAMES ========
+        } else if (json.type === "preview-private-names") {
+          previewPrivateNamesWsHandler(json.body, rnodeDeployClient)
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  ...data,
+                  requestId: json.requestId
+                })
+              );
+            })
+            .catch(err => {
+              log("error : preview-private-names ws handler");
+              log(err);
+              client.send(
+                JSON.stringify({
+                  ...err,
+                  requestId: json.requestId
+                })
+              );
+            });
+
+          // ======== GET ALL RECORDS ========
+        } else if (json.type === "get-all-records") {
+          getAllRecordsWsHandler()
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  success: true,
+                  requestId: json.requestId,
+                  data: JSON.stringify(data)
+                })
+              );
+            })
+            .catch(err => {
+              log("error : get-all-records ws handler");
+              log(err);
+              console.log(err);
+            });
+
+          // ======== GET NODES ========
+        } else if (json.type === "get-nodes") {
+          getNodesWsHandler(json.body, rnodeDeployClient)
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  success: true,
+                  requestId: json.requestId,
+                  data: JSON.stringify(data)
+                })
+              );
+            })
+            .catch(err => {
+              log("error : get-nodes ws handler");
+              log(err);
+              err.requestId = json.requestId;
+              client.send(
+                JSON.stringify({
+                  ...err,
+                  requestId: json.requestId
+                })
+              );
+            });
+        } else {
+          client.send(
+            JSON.stringify({
+              success: false,
+              requestId: json.requestId,
+              error: { message: "Unknown request" }
+            })
+          );
+        }
+      } catch (err) {
+        console.log(err);
+        client.send({
+          success: false,
+          error: { message: "Unable to parse request" }
+        });
+      }
+    });
+
+    client.on("close", (a, b) => {
+      client.terminate();
+    });
+
+    client.on("error", err => {
+      client.send({
+        type: "websocket-error",
+        error: a
+      });
+    });
+  });
+};

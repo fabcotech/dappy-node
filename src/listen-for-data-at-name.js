@@ -40,49 +40,57 @@ const schema = {
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-module.exports = function(req, res, rnodeClient) {
+module.exports.listenForDataAtNameWsHandler = (body, rnodeClient) => {
   log("listen-data-at-name");
-  const valid = validate(req.body);
 
-  if (!valid) {
-    res
-      .status(400)
-      .json(validate.errors.map(e => `body${e.dataPath} ${e.message}`));
-    return;
-  }
+  return new Promise((resolve, reject) => {
+    const valid = validate(body);
 
-  if (
-    req.body.name.unforgeables[0] &&
-    req.body.name.unforgeables[0].g_private_body.id
-  ) {
-    req.body.name.unforgeables[0].g_private_body.id = Buffer.from(
-      new Uint8Array(req.body.name.unforgeables[0].g_private_body.id)
-    );
-  }
+    if (!valid) {
+      resolve({
+        success: false,
+        error: {
+          message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
+        }
+      });
+      return;
+    }
 
-  rchainToolkit.grpc
-    .listenForDataAtName(req.body, rnodeClient)
-    .then(listenForDataAtNameResponse => {
-      let data;
-      try {
-        data = rchainToolkit.utils.getValueFromBlocks(
-          listenForDataAtNameResponse.blockResults
-        );
-        res.append("Content-Type", "text/plain; charset=UTF-8");
-        res.send({
-          success: true,
-          data: data
-        });
-      } catch (err) {
-        res.status(200).json({
+    if (
+      body.name.unforgeables[0] &&
+      body.name.unforgeables[0].g_private_body.id
+    ) {
+      body.name.unforgeables[0].g_private_body.id = Buffer.from(
+        new Uint8Array(body.name.unforgeables[0].g_private_body.id)
+      );
+    }
+
+    rchainToolkit.grpc
+      .listenForDataAtName(body, rnodeClient)
+      .then(listenForDataAtNameResponse => {
+        let data;
+        try {
+          data = rchainToolkit.utils.getValueFromBlocks(
+            listenForDataAtNameResponse.blockResults
+          );
+          resolve({
+            success: true,
+            data: data
+          });
+        } catch (err) {
+          resolve({
+            success: false,
+            error: { message: err.message }
+          });
+        }
+      })
+      .catch(err => {
+        log("error : communication error with the node (GRPC endpoint)");
+        log(err);
+        reject({
           success: false,
-          error: { message: err.message }
+          error: { message: err.message || err }
         });
-      }
-    })
-    .catch(err => {
-      log("error : communication error with the node (GRPC endpoint)");
-      log(err);
-      res.status(500).json("Unable to communicate with the GRPC endpoint");
-    });
+      });
+  });
 };

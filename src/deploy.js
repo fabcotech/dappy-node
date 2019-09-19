@@ -2,25 +2,34 @@ const rchainToolkit = require("rchain-toolkit");
 
 const log = require("../utils").log;
 
-module.exports = async function(req, res, rnodeClient) {
+module.exports.deployWsHandler = (body, rnodeClient) => {
   log("deploy");
-  if (req.body.sig && req.body.sig.data) {
-    req.body.sig = new Uint8Array(req.body.sig.data);
-  }
-  if (req.body.deployer && req.body.deployer.data) {
-    req.body.deployer = Buffer.from(new Uint8Array(req.body.deployer.data));
-  }
 
-  try {
-    const either = await rchainToolkit.grpc.doDeployRaw(req.body, rnodeClient);
-    if (either.success) {
-      res.json(either);
-    } else {
-      res.status(400).json(either);
+  return new Promise(async (resolve, reject) => {
+    if (body.sig && body.sig.data) {
+      body.sig = new Uint8Array(body.sig.data);
     }
-  } catch (err) {
-    log("error : communication error with the node (GRPC endpoint)");
-    log(err);
-    res.status(400).json(err.message);
-  }
+    if (body.deployer && body.deployer.data) {
+      body.deployer = Buffer.from(new Uint8Array(body.deployer.data));
+    }
+
+    try {
+      const either = await rchainToolkit.grpc.doDeployRaw(body, rnodeClient);
+      if (either.success) {
+        resolve({
+          success: true,
+          data: either
+        });
+      } else {
+        resolve({
+          success: false,
+          error: { message: either.error.messages }
+        });
+      }
+    } catch (err) {
+      log("error : communication error with the node (GRPC endpoint)");
+      log(err);
+      reject(err.message);
+    }
+  });
 };
