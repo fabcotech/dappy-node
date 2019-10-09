@@ -57,13 +57,24 @@ module.exports.previewPrivateNamesWsHandler = (body, rnodeClient) => {
     }
 
     try {
-      privateNames = await rchainToolkit.grpc.previewPrivateNames(
+      privateNamesResponse = await rchainToolkit.grpc.previewPrivateNames(
         body,
         rnodeClient
       );
+
+      if (privateNamesResponse.error) {
+        resolve({
+          success: false,
+          error: { message: privateNamesResponse.error.messages }
+        });
+        return;
+      }
+
       resolve({
         success: true,
-        data: privateNames.ids.map(id => Array.from(new Uint8Array(id)))
+        data: privateNamesResponse.payload.ids.map(id =>
+          Array.from(new Uint8Array(id))
+        )
       });
     } catch (err) {
       log("error : communication error with the node (GRPC endpoint)");

@@ -14,16 +14,20 @@ module.exports.deployWsHandler = (body, rnodeClient) => {
     }
 
     try {
-      const either = await rchainToolkit.grpc.doDeployRaw(body, rnodeClient);
-      if (either.success) {
+      const deployResponse = await rchainToolkit.grpc.doDeploy(
+        body,
+        rnodeClient
+      );
+
+      if (deployResponse.error) {
         resolve({
-          success: true,
-          data: either
+          success: false,
+          error: { message: deployResponse.error.messages }
         });
       } else {
         resolve({
-          success: false,
-          error: { message: either.error.messages }
+          success: true,
+          data: deployResponse.result
         });
       }
     } catch (err) {

@@ -37,9 +37,9 @@ const storeNamesInRedis = async (redisClient, eMapBody) => {
       if (!kv) {
         return resolve();
       }
-      const name = kv.key.exprs[0].gString;
+      const name = kv.key.exprs[0].g_string;
       const record = rchainToolkit.utils.rholangMapToJsObject(
-        kv.value.exprs[0].eMapBody
+        kv.value.exprs[0].e_map_body
       );
       const redisSetValues = [];
       for (key of Object.keys(record)) {
@@ -136,7 +136,7 @@ module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
   log("== beginning storing of names in db");
   const a = new Date().getTime();
   try {
-    await storeNamesInRedis(redisClient, data.exprs[0].eMapBody);
+    await storeNamesInRedis(redisClient, data.exprs[0].e_map_body);
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(

@@ -37,6 +37,8 @@ const schema = {
   },
   required: ["name", "depth"]
 };
+module.exports.schema = schema;
+
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
@@ -68,20 +70,28 @@ module.exports.listenForDataAtNameWsHandler = (body, rnodeClient) => {
     rchainToolkit.grpc
       .listenForDataAtName(body, rnodeClient)
       .then(listenForDataAtNameResponse => {
-        let data;
-        try {
-          data = rchainToolkit.utils.getValueFromBlocks(
-            listenForDataAtNameResponse.blockResults
-          );
-          resolve({
-            success: true,
-            data: data
-          });
-        } catch (err) {
+        if (listenForDataAtNameResponse.error) {
           resolve({
             success: false,
-            error: { message: err.message }
+            error: { message: listenForDataAtNameResponse.error.messages }
           });
+        } else {
+          let data;
+          try {
+            data = rchainToolkit.utils.getValueFromBlocks(
+              listenForDataAtNameResponse.payload.blockInfo
+            );
+
+            resolve({
+              success: true,
+              data: data
+            });
+          } catch (err) {
+            resolve({
+              success: false,
+              error: { message: err.message }
+            });
+          }
         }
       })
       .catch(err => {

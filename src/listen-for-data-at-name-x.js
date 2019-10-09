@@ -40,19 +40,22 @@ module.exports.listenForDataAtNameXWsHandler = (body, rnodeClient) => {
       return b;
     });
 
-    console.log(bodyWithBuffers.map(n => n.name.unforgeables[0]));
-
     Promise.all(
       bodyWithBuffers.map(b =>
         rchainToolkit.grpc.listenForDataAtName(b, rnodeClient)
       )
     )
       .then(listenForDataAtNameResponses => {
-        console.log("THEN X");
         const data = listenForDataAtNameResponses.map(r => {
+          if (r.error) {
+            return {
+              success: false,
+              error: { message: r.error.messages }
+            };
+          }
           let d;
           try {
-            d = rchainToolkit.utils.getValueFromBlocks(r.blockResults);
+            d = rchainToolkit.utils.getValueFromBlocks(r.payload.blockInfo);
             return {
               success: true,
               data: d

@@ -73,11 +73,18 @@ const initJobs = () => {
 }); */
 
 const getAllRecordsWsHandler = async () => {
-  const keys = await redisKeys(redisClient, `name:*`);
-  const records = await Promise.all(
-    keys.map(k => redisHgetall(redisClient, k))
-  );
-  return records;
+  try {
+    const keys = await redisKeys(redisClient, `name:*`);
+    const records = await Promise.all(
+      keys.map(k => redisHgetall(redisClient, k))
+    );
+    return records;
+  } catch (err) {
+    return {
+      success: false,
+      error: { message: err }
+    };
+  }
 };
 
 /* app.get("/get-all-records", async (req, res) => {
@@ -319,7 +326,12 @@ const initWs = () => {
             .catch(err => {
               log("error : get-all-records ws handler");
               log(err);
-              console.log(err);
+              client.send(
+                JSON.stringify({
+                  ...err,
+                  requestId: json.requestId
+                })
+              );
             });
 
           // ======== GET NODES ========
