@@ -4,6 +4,9 @@ const protoLoader = require("@grpc/proto-loader");
 const http = require("http");
 const redis = require("redis");
 
+// will not override the env variables in docker-compose
+require("dotenv").config();
+
 const rchainToolkit = require("rchain-toolkit");
 
 const { getNodesWsHandler } = require("./src/get-nodes");
@@ -106,13 +109,13 @@ app.get("/get-record", async (req, res) => {
 
 const loadClient = async () => {
   rnodeDeployClient = await rchainToolkit.grpc.getGrpcDeployClient(
-    "localhost:40401",
+    `${process.env.RNODE_HOST}:${process.env.RNODE_GRPC_PORT}`,
     grpc,
     protoLoader
   );
 
   rnodeProposeClient = await rchainToolkit.grpc.getGrpcProposeClient(
-    "localhost:40401",
+    `${process.env.RNODE_HOST}:${process.env.RNODE_GRPC_PORT}`,
     grpc,
     protoLoader
   );
@@ -143,8 +146,8 @@ loadClient();
 }); */
 
 const ws = new WebSocket.Server({
-  host: "127.0.0.1",
-  port: process.env.NODEJS_PORT,
+  host: process.env.WS_HOST,
+  port: process.env.WS_PORT,
   backlog: 1000,
   maxPayload: 16100
 });
@@ -159,7 +162,9 @@ ws.on("error", err => {
   log(err);
 });
 
-log(`dappy-node listening for websocket on port ${process.env.NODEJS_PORT}!`);
+log(
+  `dappy-node listening for websocket on address ${process.env.WS_HOST}:${process.env.WS_PORT}!`
+);
 log(`RChain node GRPC port ${process.env.RNODE_GRPC_PORT}`);
 log(`RChain node HTTP port ${process.env.RNODE_HTTP_PORT}`);
 http.get(
@@ -199,7 +204,6 @@ http.get(
 const initWs = () => {
   ws.on("connection", client => {
     client.on("message", (a, b) => {
-      console.log("MESSAGE", a);
       try {
         const json = JSON.parse(a);
 

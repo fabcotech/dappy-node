@@ -1,6 +1,11 @@
 ## dappy-node
 
-Simple node/express server to serve as a gateway between dappy and a RChain node.
+This program exposes an API for Dappy users toi query, it includes:
+
+- Gateways from websocket to grpc for listen-data-at-name, deploy and preview-private-names GRPC calls
+- Redis database that maintains a dictionnary of all the names (domain names), with associated public keys and blockchain addresses
+
+For now it is only exposed through web socket and not http.
 
 ### run without docker (development)
 
@@ -18,11 +23,10 @@ node index
 
 ### run with docker (production)
 
+The env variables ar read primarly from docker-compose, and then from .env file, docker-compose variables are
 You must copy the .env.example file and name it .env so environment variables will be read from it.
 
-This docker-compose contains redis database and the node JS application
-
-RNode is not part of the docker-compose, it should be running on your host machine, with ports matching the one described in .env file.
+RChain's rnode is not part of the docker-compose, it should be running on your machine (local or remote), with ports and IP matching the one described in docker-compose file.
 
 ```
 # Build the image
@@ -34,4 +38,4 @@ docker-compose up --abort-on-container-exit
 
 dappy-node is plugged to the running rnode program !
 
-You can query it from dappy or your browser, check localhost:3000/version
+Now you should be able to add `ws://127.0.0.1:3000` entry in your dappy blockchain interface, wait a bit and make sure the client connects.
