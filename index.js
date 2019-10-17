@@ -35,6 +35,7 @@ let protobufsLoaded = false;
 let appReady = false;
 let rnodeDeployClient = undefined;
 let rnodeProposeClient = undefined;
+let deploysAwaiting = false;
 
 const redisClient = redis.createClient({
   db: 1,
@@ -53,8 +54,11 @@ const initJobs = () => {
 
   setInterval(async () => {
     try {
-      await rchainToolkit.grpc.propose({}, rnodeProposeClient);
-      log("Successfully created a block");
+      if (deploysAwaiting) {
+        await rchainToolkit.grpc.propose({}, rnodeProposeClient);
+        deploysAwaiting = false;
+        log("Successfully created a block");
+      }
     } catch (err) {
       log("error : Error when proposing : " + err);
     }
@@ -231,6 +235,7 @@ const initWs = () => {
         } else if (json.type === "deploy") {
           deployWsHandler(json.body, rnodeDeployClient)
             .then(data => {
+              deploysAwaiting = true;
               client.send(
                 JSON.stringify({
                   ...data,
