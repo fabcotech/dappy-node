@@ -2,7 +2,10 @@ const WebSocket = require("ws");
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 const http = require("http");
+const https = require("https");
 const redis = require("redis");
+const path = require("path");
+const fs = require("fs");
 
 // will not override the env variables in docker-compose
 require("dotenv").config();
@@ -149,12 +152,20 @@ loadClient();
   );
 }); */
 
+const options = {
+  key: fs.readFileSync(path.join(__dirname, "server-key.pem")),
+  cert: fs.readFileSync(path.join(__dirname, "server-crt.pem"))
+};
+
+const server = https.createServer(options);
+
 const ws = new WebSocket.Server({
-  host: process.env.WS_HOST,
-  port: process.env.WS_PORT,
+  server: server,
   backlog: 1000,
   maxPayload: 16100
 });
+
+server.listen(process.env.WS_PORT);
 
 ws.on("close", err => {
   log("critical error : websocket connection closed");
@@ -349,9 +360,8 @@ const initWs = () => {
             .then(data => {
               client.send(
                 JSON.stringify({
-                  success: true,
-                  requestId: json.requestId,
-                  data: JSON.stringify(data)
+                  ...data,
+                  requestId: json.requestId
                 })
               );
             })

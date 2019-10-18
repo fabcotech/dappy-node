@@ -7,6 +7,40 @@ This program exposes an API for Dappy users toi query, it includes:
 
 For now it is only exposed through web socket and not http.
 
+### Certificate generation / SSL setup
+
+#### hosts file edition (development)
+
+If you are in a development environment, or testing on your local machine, you must add an entry in your hosts file, and choose a fake domain name. This is because Dappy will refuse to establish SSL connection with an IP host.
+
+If you are on a remote server that is identified with a domain name, skip the hosts file edition step.
+
+For example, add the following line in your hosts file (`/etc/hosts` on linux/osx) (`C:\WINDOWS\system32\drivers\etc\hosts` on windows) :
+
+```
+127.0.0.1       localdappynode.com
+```
+
+#### Certificate generation
+
+The following lines will explain how to set a self-signed certificate, so clients (Dappy browsers) will connect securely to dappy nodes.
+
+Very simple, generate private key and certificate with the following command (replace very carefully the -subj parameters your data, and particularly the CN attribute that must match fake domain name (if dev) or real domain name).
+
+C = country code
+ST = state
+L = location
+0 = organization
+CN = Common name (the one that is important)
+
+```
+openssl req -x509 -days 365 -nodes -sha256 -newkey rsa:2048 -subj "/C=FR/CN=localdappynode.com/O=MyCompany" -keyout server-key.pem -out server-crt.pem
+```
+
+Two files should be generated, a `server-key.pem` file and a `server-crt.pem` file.
+
+!!! NEVER SHARE THE server-key.pem FILE WITH ANYONE, IT SHOULD STAY ON YOUR SERVER !!!
+
 ### run without docker (development)
 
 You have to have a RChain node running locally or remotely with GRPC api expôsed, and a redis server running also.
@@ -38,4 +72,4 @@ docker-compose up --abort-on-container-exit
 
 dappy-node is plugged to the running rnode program !
 
-Now you should be able to add `ws://127.0.0.1:3000` entry in your dappy blockchain interface, wait a bit and make sure the client connects.
+Now you should be able to add `wss://localdappynode.com:3000` entry in your dappy blockchain interface, wait a bit and make sure the client connects.

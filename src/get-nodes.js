@@ -19,7 +19,7 @@ ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
 module.exports.getNodesWsHandler = (body, rnodeClient) => {
-  console.log("get-nodes");
+  log("get-nodes");
 
   return new Promise((resolve, reject) => {
     const valid = validate(body);
@@ -63,21 +63,28 @@ module.exports.getNodesWsHandler = (body, rnodeClient) => {
         rnodeClient
       )
       .then(listenForDataAtNameResponse => {
-        let data;
-        try {
-          data = rchainToolkit.utils.getValueFromBlocks(
-            listenForDataAtNameResponse.blockResults
-          );
-
+        if (listenForDataAtNameResponse.error) {
           resolve({
-            success: true,
-            data: data
-          });
-        } catch (err) {
-          reject({
             success: false,
-            error: { message: err.message }
+            error: { message: listenForDataAtNameResponse.error.messages }
           });
+        } else {
+          let data;
+          try {
+            data = rchainToolkit.utils.getValueFromBlocks(
+              listenForDataAtNameResponse.payload.blockInfo
+            );
+
+            resolve({
+              success: true,
+              data: data
+            });
+          } catch (err) {
+            reject({
+              success: false,
+              error: { message: err.message }
+            });
+          }
         }
       })
       .catch(err => {
