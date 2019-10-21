@@ -33,6 +33,8 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
   require("dotenv").config();
 }
 
+const DAPPY_NODE_VERSION = "0.1.5";
+
 let rnodeVersion = undefined;
 let protobufsLoaded = false;
 let appReady = false;
@@ -135,37 +137,87 @@ const loadClient = async () => {
 };
 loadClient();
 
-/* app.listen(process.env.NODEJS_PORT, function() {
-  log(`dappy-node listening on port ${process.env.NODEJS_PORT}!`);
-  log(`RChain node host ${process.env.RNODE_HOST}`);
-  log(`RChain node GRPC port ${process.env.RNODE_GRPC_PORT}`);
-  log(`RChain node HTTP port ${process.env.RNODE_HTTP_PORT}`);
-  http.get(
-    `http://${process.env.RNODE_HOST}:${process.env.RNODE_HTTP_PORT}/version`,
-    resp => {
-      log("RChain node responding\n");
-      appReady = true;
-      if (protobufsLoaded) {
-        initJobs();
-      }
+// HTTP endpoint
+
+log(
+  `Listening for HTTP traffic on address ${process.env.HTTP_HOST}:${process.env.HTTP_PORT} !`
+);
+
+const serverHttp = http.createServer((req, res) => {
+  if (req.method === "GET" && req.url === "/info") {
+    res.setHeader("Content-Type", "application/json");
+    res.write(
+      JSON.stringify({
+        dappy_node_version: DAPPY_NODE_VERSION,
+        rnode_version: rnodeVersion,
+        rchain_names_unforgeable_name:
+          process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,
+        rchain_names_registry_uri: process.env.RCHAIN_NAMES_REGISTRY_URI
+      })
+    );
+    res.end();
+  } else if (req.method === "GET" && req.url.startsWith("/get-nodes")) {
+    const io = req.url.indexOf("?network=");
+
+    if (io === -1) {
+      res.statusCode = 400;
+      res.setHeader("Content-Type", "text/plain");
+      res.end('Bad Request please provide "network" url parameter');
+      return;
     }
+    const network = req.url.substr(io + 9, 1000);
+
+    getNodesWsHandler({ network: network }, rnodeDeployClient)
+      .then(resp => {
+        if (resp.success) {
+          res.setHeader("Content-Type", "application/json");
+          res.write(JSON.stringify(resp));
+          res.end();
+        } else {
+          res.statusCode = 404;
+          res.setHeader("Content-Type", "text/plain");
+          res.end(resp.error.message);
+          return;
+        }
+      })
+      .catch(err => {
+        console.log(err);
+        res.statusCode = 404;
+        res.setHeader("Content-Type", "text/plain");
+        res.end(err);
+      });
+  }
+});
+
+serverHttp.listen(process.env.HTTP_PORT);
+
+// SSL endpoint
+
+let serverHttps;
+
+if (process.argv.includes("--ssl")) {
+  log(
+    `Listening for SSL/websocket on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (SSL handled by nodeJS)`
   );
-}); */
-
-const options = {
-  key: fs.readFileSync(path.join(__dirname, "server-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "server-crt.pem"))
-};
-
-const server = https.createServer(options);
+  const options = {
+    key: fs.readFileSync(path.join(__dirname, "server-key.pem")),
+    cert: fs.readFileSync(path.join(__dirname, "server-crt.pem"))
+  };
+  serverHttps = https.createServer(options);
+} else {
+  log(
+    `Listening for websocket on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (SSL not handled by nodeJS)`
+  );
+  serverHttps = http.createServer();
+}
 
 const ws = new WebSocket.Server({
-  server: server,
+  server: serverHttps,
   backlog: 1000,
   maxPayload: 16100
 });
 
-server.listen(process.env.WS_PORT);
+serverHttps.listen(process.env.HTTPS_PORT);
 
 ws.on("close", err => {
   log("critical error : websocket connection closed");
@@ -177,9 +229,6 @@ ws.on("error", err => {
   log(err);
 });
 
-log(
-  `dappy-node listening for websocket on address ${process.env.WS_HOST}:${process.env.WS_PORT}!`
-);
 log(`RChain node GRPC port ${process.env.RNODE_GRPC_PORT}`);
 log(`RChain node HTTP port ${process.env.RNODE_HTTP_PORT}`);
 http.get(
@@ -234,7 +283,7 @@ const initWs = () => {
               success: true,
               requestId: json.requestId,
               data: {
-                dappy_node_version: "0.1.0",
+                dappy_node_version: DAPPY_NODE_VERSION,
                 rnode_version: rnodeVersion,
                 rchain_names_unforgeable_name:
                   process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,
