@@ -112,9 +112,9 @@ module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
   }
 
   if (
-    !listenDataAtNameResponse ||
-    !listenDataAtNameResponse.blockResults ||
-    listenDataAtNameResponse.blockResults.length === 0
+    !listenDataAtNameResponse.payload ||
+    !listenDataAtNameResponse.payload.blockInfo ||
+    listenDataAtNameResponse.payload.blockInfo.length === 0
   ) {
     log(
       "error : could not find the records ressource on the blockchain, make sure that the Dappy records contract has been deployed"
@@ -125,7 +125,7 @@ module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
   let data;
   try {
     data = rchainToolkit.utils.getValueFromBlocks(
-      listenDataAtNameResponse.blockResults
+      listenDataAtNameResponse.payload.blockInfo
     );
   } catch (err) {
     log("error : something went wrong when querying the node");
