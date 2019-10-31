@@ -437,10 +437,10 @@ const initWs = () => {
         }
       } catch (err) {
         console.log(err);
-        client.send({
+        client.send(JSON.stringify({
           success: false,
           error: { message: "Unable to parse request" }
-        });
+        }));
       }
     });
 
