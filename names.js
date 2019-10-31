@@ -2,7 +2,9 @@ const log = require("./utils").log;
 const rchainToolkit = require("rchain-toolkit");
 const redisKeys = require("./utils").redisKeys;
 
-const storeNamesInRedis = async (redisClient, eMapBody) => {
+const storeNamesInRedis = async (redisClient, rhoVal) => {
+  const records = rchainToolkit.utils.rhoValToJs(rhoVal);
+
   const nameKeys = await redisKeys(redisClient, "name:*");
   if (nameKeys.length) {
     await new Promise((res, rej) => {
@@ -27,38 +29,41 @@ const storeNamesInRedis = async (redisClient, eMapBody) => {
   }
 
   return new Promise(async (resolve, reject) => {
-    log("== " + eMapBody.kvs.length + " name(s) to store");
+    const keys = Object.keys(records);
+    const l = keys.length;
     let i = 0;
     const storeName = async () => {
-      if (i % 20 === 0 || i === eMapBody.kvs.length - 1) {
-        log("== processing name at index " + i);
-      }
-      const kv = eMapBody.kvs[i];
-      if (!kv) {
+      const k = keys[i];
+      if (!k) {
         return resolve();
       }
-      const name = kv.key.exprs[0].g_string;
-      const record = rchainToolkit.utils.rholangMapToJsObject(
-        kv.value.exprs[0].e_map_body
-      );
+      const record = records[k];
       const redisSetValues = [];
       for (key of Object.keys(record)) {
         redisSetValues.push(key);
-        redisSetValues.push(record[key]);
+        if (key === "servers") {
+          redisSetValues.push(JSON.stringify(record[key]));
+        } else {
+          redisSetValues.push(record[key]);
+        }
       }
 
       await new Promise((res, rej) => {
-        redisClient.hmset(`name:${name}`, ...redisSetValues, (err, resp) => {
-          if (err) {
-            return rej(err);
+        redisClient.hmset(
+          `name:${record.name}`,
+          ...redisSetValues,
+          (err, resp) => {
+            if (err) {
+              return rej(err);
+            }
+            res(resp);
           }
-          res(resp);
-        });
+        );
       });
       await new Promise((res, rej) => {
         redisClient.sadd(
           `public_key:${record.public_key}`,
-          name,
+          record.name,
           (err, resp) => {
             if (err) {
               return rej(err);
@@ -68,8 +73,8 @@ const storeNamesInRedis = async (redisClient, eMapBody) => {
         );
       });
 
-      if (i === eMapBody.kvs.length - 1) {
-        resolve();
+      if (i === l - 1) {
+        resolve(l);
       } else {
         i += 1;
         await storeName();
@@ -81,9 +86,6 @@ const storeNamesInRedis = async (redisClient, eMapBody) => {
 };
 
 module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
-  log("names job initiated");
-  log("== requesting the blockchain to get all names");
-
   const unforgeableNameQuery = {
     unforgeables: [
       {
@@ -133,16 +135,13 @@ module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
     return;
   }
 
-  log("== beginning storing of names in db");
   const a = new Date().getTime();
   try {
-    await storeNamesInRedis(redisClient, data.exprs[0].e_map_body);
+    const recordsProcessed = await storeNamesInRedis(redisClient, data);
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(
-      "== successfully re-stored all names from the blockchain, it took " +
-        s +
-        " seconds"
+      `== successfully stored ${recordsProcessed} names from the blockchain, it took ${s} seconds`
     );
   } catch (err) {
     log("error: something went wrong when initialized the storing of names");

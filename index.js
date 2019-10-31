@@ -90,6 +90,7 @@ const getAllRecordsWsHandler = async () => {
     const records = await Promise.all(
       keys.map(k => redisHgetall(redisClient, k))
     );
+
     return records;
   } catch (err) {
     return {

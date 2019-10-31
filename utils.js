@@ -48,3 +48,17 @@ module.exports.redisHgetall = (client, pattern) => {
     });
   });
 };
+
+// Careful, it is different than the function that build
+// the unforgeable query for dappy-node
+module.exports.buildUnforgeableNameQuery = unforgeableName => {
+  return {
+    unforgeables: [
+      {
+        g_private_body: {
+          id: Buffer.from(unforgeableName, "hex")
+        }
+      }
+    ]
+  };
+};

@@ -1,7 +1,7 @@
 const Ajv = require("ajv");
 const rchainToolkit = require("rchain-toolkit");
 
-const log = require("../utils").log;
+const { buildUnforgeableNameQuery, log } = require("../utils");
 
 const ajv = new Ajv();
 const schema = {
@@ -47,18 +47,10 @@ module.exports.getNodesWsHandler = (body, rnodeClient) => {
     rchainToolkit.grpc
       .listenForDataAtName(
         {
-          name: {
-            unforgeables: [
-              {
-                g_private_body: {
-                  id: Buffer.from(
-                    process.env.DAPPY_NODES_UNFORGEABLE_NAME_ID,
-                    "hex"
-                  )
-                }
-              }
-            ]
-          }
+          name: buildUnforgeableNameQuery(
+            process.env.DAPPY_NODES_UNFORGEABLE_NAME_ID
+          ),
+          depth: 1000
         },
         rnodeClient
       )
@@ -75,9 +67,11 @@ module.exports.getNodesWsHandler = (body, rnodeClient) => {
               listenForDataAtNameResponse.payload.blockInfo
             );
 
+            const nodes = rchainToolkit.utils.rhoValToJs(data);
+
             resolve({
               success: true,
-              data: data
+              data: nodes
             });
           } catch (err) {
             reject({
