@@ -292,6 +292,15 @@ const initWs = () => {
               }
             })
           );
+          // ======== PING/PONG ========
+        } else if (json.type === "ping") {
+          client.send(
+            JSON.stringify({
+              success: true,
+              requestId: json.requestId,
+              data: "pong"
+            })
+          );
           // ======== DEPLOY ========
         } else if (json.type === "deploy") {
           deployWsHandler(json.body, rnodeDeployClient)
@@ -437,10 +446,12 @@ const initWs = () => {
         }
       } catch (err) {
         console.log(err);
-        client.send(JSON.stringify({
-          success: false,
-          error: { message: "Unable to parse request" }
-        }));
+        client.send(
+          JSON.stringify({
+            success: false,
+            error: { message: "Unable to parse request" }
+          })
+        );
       }
     });
 
