@@ -12,17 +12,16 @@ require("dotenv").config();
 
 const rchainToolkit = require("rchain-toolkit");
 
-const { getNodesWsHandler } = require("./src/get-nodes");
-const { previewPrivateNamesWsHandler } = require("./src/preview-private-names");
-const {
-  listenForDataAtNameWsHandler
-} = require("./src/listen-for-data-at-name");
+const { getNodesWsHandler } = require("./get-nodes");
+const { previewPrivateNamesWsHandler } = require("./preview-private-names");
+const { listenForDataAtNameWsHandler } = require("./listen-for-data-at-name");
 const {
   listenForDataAtNameXWsHandler
-} = require("./src/listen-for-data-at-name-x");
-const { deployWsHandler } = require("./src/deploy");
+} = require("./listen-for-data-at-name-x");
+const { deployWsHandler } = require("./deploy");
 
-const { getDappyNamesAndSaveToDb } = require("./names");
+const { getDappyNamesAndSaveToDb } = require("./jobs/names");
+const { getLastFinalizedBlockNumber } = require("./jobs/last-block");
 
 const log = require("./utils").log;
 const redisSmembers = require("./utils").redisSmembers;
@@ -36,6 +35,8 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
 const DAPPY_NODE_VERSION = "0.1.5";
 
 let rnodeVersion = undefined;
+let lastFinalizedBlockNumber = undefined;
+
 let protobufsLoaded = false;
 let appReady = false;
 let rnodeDeployClient = undefined;
@@ -53,8 +54,24 @@ redisClient.on("error", err => {
 
 const initJobs = () => {
   getDappyNamesAndSaveToDb(rnodeDeployClient, redisClient);
+  getLastFinalizedBlockNumber(rnodeDeployClient, redisClient)
+    .then(a => {
+      lastFinalizedBlockNumber = a;
+    })
+    .catch(err => {
+      log("failed to get last finalized block height");
+      console.log(err);
+    });
   setInterval(() => {
     getDappyNamesAndSaveToDb(rnodeDeployClient, redisClient);
+    getLastFinalizedBlockNumber(rnodeDeployClient, redisClient)
+      .then(a => {
+        lastFinalizedBlockNumber = a;
+      })
+      .catch(err => {
+        log("failed to get last finalized block height");
+        console.log(err);
+      });
   }, process.env.JOBS_INTERVAL);
 
   setInterval(async () => {
@@ -150,6 +167,7 @@ const serverHttp = http.createServer((req, res) => {
     res.write(
       JSON.stringify({
         dappy_node_version: DAPPY_NODE_VERSION,
+        last_finalized_block_number: lastFinalizedBlockNumber,
         rnode_version: rnodeVersion,
         rchain_names_unforgeable_name:
           process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,
@@ -201,8 +219,8 @@ if (process.argv.includes("--ssl")) {
     `Listening for SSL/websocket on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (SSL handled by nodeJS)`
   );
   const options = {
-    key: fs.readFileSync(path.join(__dirname, "server-key.pem")),
-    cert: fs.readFileSync(path.join(__dirname, "server-crt.pem"))
+    key: fs.readFileSync(path.join(__dirname, "../server-key.pem")),
+    cert: fs.readFileSync(path.join(__dirname, "../server-crt.pem"))
   };
   serverHttps = https.createServer(options);
 } else {
@@ -271,7 +289,6 @@ const initWs = () => {
     client.on("message", (a, b) => {
       try {
         const json = JSON.parse(a);
-
         //
         // =====================================
         // ======== WEBSOCKET ENDPOINTS ========
@@ -285,6 +302,7 @@ const initWs = () => {
               requestId: json.requestId,
               data: {
                 dappy_node_version: DAPPY_NODE_VERSION,
+                last_finalized_block_number: lastFinalizedBlockNumber,
                 rnode_version: rnodeVersion,
                 rchain_names_unforgeable_name:
                   process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,

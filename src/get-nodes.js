@@ -1,7 +1,7 @@
 const Ajv = require("ajv");
 const rchainToolkit = require("rchain-toolkit");
 
-const { buildUnforgeableNameQuery, log } = require("../utils");
+const { buildUnforgeableNameQuery, log } = require("./utils");
 
 const ajv = new Ajv();
 const schema = {
@@ -67,6 +67,7 @@ module.exports.getNodesWsHandler = (body, rnodeClient) => {
               listenForDataAtNameResponse.payload.blockInfo
             );
 
+            // todo why empty ?
             const nodes = rchainToolkit.utils.rhoValToJs(data);
 
             resolve({

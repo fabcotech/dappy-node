@@ -28,22 +28,6 @@ Unencrypted/HTTP (regular HTTP GET requests):
 - /info : General node version number and information
 - /get-nodes?network=NETWORK_NAME : Get the nodes powering this network (expressend in rholang AST format)
 
-### Certificate generation / SSL setup
-
-#### hosts file edition (development)
-
-If you are in a development environment, or testing on your local machine and you want to make sure that SSL connection between Dappy browser and dappy-node works, you must add an entry in your hosts file, and choose a fake domain name. This is because Dappy will refuse to establish SSL connection with an IP host.
-
-If you are on a remote server that is identified with a domain name, skip the hosts file edition step.
-
-For example, add the following line in your hosts file (`/etc/hosts` on linux/osx) (`C:\WINDOWS\system32\drivers\etc\hosts` on windows) :
-
-```
-127.0.0.1       localdappynode.com
-```
-
-When Dappy browser will try to reach `localdappynode.com:3000`, it will be redirected to this dappy-node program.
-
 ### Environment variables
 
 Wether you run with or without docker, you must setup some RChain related env variables :
@@ -56,6 +40,8 @@ Wether you run with or without docker, you must setup some RChain related env va
 
 ##### Certificate generation (development)
 
+https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-in-ubuntu-16-04
+
 The following lines will explain how to set a self-signed certificate, so clients (Dappy browsers) will connect securely to dappy nodes.
 
 Very simple, generate private key and certificate with the following command (replace very carefully the -subj parameters your data, and particularly the CN attribute that must match fake domain name (if dev) or real domain name).
@@ -67,7 +53,7 @@ L = location
 CN = Common name (the one that is important)
 
 ```
-openssl req -x509 -days 365 -nodes -sha256 -newkey rsa:2048 -subj "/C=FR/CN=localdappynode.com/O=MyCompany" -keyout server-key.pem -out server-crt.pem
+openssl req -x509 -days 365 -nodes -sha256 -newkey rsa:2048 -subj "/C=FR/CN=localhost/O=MyCompany" -keyout server-key.pem -out server-crt.pem
 ```
 
 Two files should be generated, a `server-key.pem` file and a `server-crt.pem` file.
@@ -85,7 +71,7 @@ git clone https://github.com/fabcotech/dappy-node.git
 cd dapppy-node
 npm install
 
-node index --ssl
+node src/index --ssl
 ```
 
 ### run with docker (production)
@@ -96,7 +82,7 @@ You must copy the .env.example file and name it .env so environment variables wi
 
 RChain's rnode is not part of the docker-compose, it should be running on your machine (local or remote), with ports and IP matching the one described in docker-compose file.
 
-**Important** : the docker does not handle SSL. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You must not use CA related certificate. But generate a self-signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
+**Important** : the docker / nodeJS application must not handle SSL. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You must not use CA related certificate. But generate a self-signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
 
 ```
 git clone https://github.com/fabcotech/dappy-node.git

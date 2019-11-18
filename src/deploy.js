@@ -1,6 +1,6 @@
 const rchainToolkit = require("rchain-toolkit");
 
-const log = require("../utils").log;
+const log = require("./utils").log;
 
 module.exports.deployWsHandler = (body, rnodeClient) => {
   log("deploy");

@@ -1,6 +1,7 @@
-const log = require("./utils").log;
 const rchainToolkit = require("rchain-toolkit");
-const redisKeys = require("./utils").redisKeys;
+
+const log = require("../utils").log;
+const redisKeys = require("../utils").redisKeys;
 
 const storeNamesInRedis = async (redisClient, rhoVal) => {
   const records = rchainToolkit.utils.rhoValToJs(rhoVal);

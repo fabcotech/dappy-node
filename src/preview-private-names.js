@@ -1,7 +1,7 @@
 const rchainToolkit = require("rchain-toolkit");
 const Ajv = require("ajv");
 
-const log = require("../utils").log;
+const log = require("./utils").log;
 
 const ajv = new Ajv();
 const schema = {
