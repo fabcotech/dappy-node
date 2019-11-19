@@ -78,6 +78,8 @@ node src/index --ssl
 
 The environment variables are read primarly from docker-compose, and then from .env file. The port/IP related variables must be set in the `docker-compose`, the RChain related variables can be set only in the `.env` file.
 
+**important** : if you node can create block (has stake participation) set the RNODE_DEPLOY\_\* variables the same values than the 3 others, if not you must reference a node to which the deploys will be sent.
+
 You must copy the .env.example file and name it .env so environment variables will be read from it.
 
 RChain's rnode is not part of the docker-compose, it should be running on your machine (local or remote), with ports and IP matching the one described in docker-compose file.

@@ -39,6 +39,7 @@ let lastFinalizedBlockNumber = undefined;
 
 let protobufsLoaded = false;
 let appReady = false;
+let rnodeClient = undefined;
 let rnodeDeployClient = undefined;
 let rnodeProposeClient = undefined;
 let deploysAwaiting = false;
@@ -53,8 +54,8 @@ redisClient.on("error", err => {
 });
 
 const initJobs = () => {
-  getDappyNamesAndSaveToDb(rnodeDeployClient, redisClient);
-  getLastFinalizedBlockNumber(rnodeDeployClient, redisClient)
+  getDappyNamesAndSaveToDb(rnodeClient, redisClient);
+  getLastFinalizedBlockNumber(rnodeClient, redisClient)
     .then(a => {
       lastFinalizedBlockNumber = a;
     })
@@ -63,8 +64,8 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    getDappyNamesAndSaveToDb(rnodeDeployClient, redisClient);
-    getLastFinalizedBlockNumber(rnodeDeployClient, redisClient)
+    getDappyNamesAndSaveToDb(rnodeClient, redisClient);
+    getLastFinalizedBlockNumber(rnodeClient, redisClient)
       .then(a => {
         lastFinalizedBlockNumber = a;
       })
@@ -136,6 +137,12 @@ app.get("/get-record", async (req, res) => {
 
 const loadClient = async () => {
   rnodeDeployClient = await rchainToolkit.grpc.getGrpcDeployClient(
+    `${process.env.RNODE_DEPLOY_HOST}:${process.env.RNODE_DEPLOY_GRPC_PORT}`,
+    grpc,
+    protoLoader
+  );
+
+  rnodeClient = await rchainToolkit.grpc.getGrpcDeployClient(
     `${process.env.RNODE_HOST}:${process.env.RNODE_GRPC_PORT}`,
     grpc,
     protoLoader
@@ -186,7 +193,7 @@ const serverHttp = http.createServer((req, res) => {
     }
     const network = req.url.substr(io + 9, 1000);
 
-    getNodesWsHandler({ network: network }, rnodeDeployClient)
+    getNodesWsHandler({ network: network }, rnodeClient)
       .then(resp => {
         if (resp.success) {
           res.setHeader("Content-Type", "application/json");
@@ -247,7 +254,10 @@ ws.on("error", err => {
   log("critical error : websocket connection error");
   log(err);
 });
-
+console.log("");
+log(`RChain deploy node GRPC port ${process.env.RNODE_DEPLOY_GRPC_PORT}`);
+log(`RChain deploy node HTTP port ${process.env.RNODE_DEPLOY_HTTP_PORT}`);
+log(`RChain node deploy is at ${process.env.RNODE_DEPLOY_HOST}\n`);
 log(`RChain node GRPC port ${process.env.RNODE_GRPC_PORT}`);
 log(`RChain node HTTP port ${process.env.RNODE_HTTP_PORT}`);
 http.get(
@@ -344,7 +354,7 @@ const initWs = () => {
             });
           // ======== LISTEN FOR DATA AT NAME ========
         } else if (json.type === "listen-for-data-at-name") {
-          listenForDataAtNameWsHandler(json.body, rnodeDeployClient)
+          listenForDataAtNameWsHandler(json.body, rnodeClient)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -365,7 +375,7 @@ const initWs = () => {
               );
             });
         } else if (json.type === "listen-for-data-at-name-x") {
-          listenForDataAtNameXWsHandler(json.body, rnodeDeployClient)
+          listenForDataAtNameXWsHandler(json.body, rnodeClient)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -388,7 +398,7 @@ const initWs = () => {
 
           // ======== PREVIEW PRIVATE NAMES ========
         } else if (json.type === "preview-private-names") {
-          previewPrivateNamesWsHandler(json.body, rnodeDeployClient)
+          previewPrivateNamesWsHandler(json.body, rnodeClient)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -433,7 +443,7 @@ const initWs = () => {
 
           // ======== GET NODES ========
         } else if (json.type === "get-nodes") {
-          getNodesWsHandler(json.body, rnodeDeployClient)
+          getNodesWsHandler(json.body, rnodeClient)
             .then(data => {
               client.send(
                 JSON.stringify({
