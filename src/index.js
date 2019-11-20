@@ -75,17 +75,19 @@ const initJobs = () => {
       });
   }, process.env.JOBS_INTERVAL);
 
-  setInterval(async () => {
-    try {
-      if (deploysAwaiting) {
-        await rchainToolkit.grpc.propose({}, rnodeProposeClient);
-        deploysAwaiting = false;
-        log("Successfully created a block");
+  if (process.env.RNODE_HOST === process.env.RNODE_DEPLOY_HOST) {
+    setInterval(async () => {
+      try {
+        if (deploysAwaiting) {
+          await rchainToolkit.grpc.propose({}, rnodeProposeClient);
+          deploysAwaiting = false;
+          log("Successfully created a block");
+        }
+      } catch (err) {
+        log("error : Error when proposing : " + err);
       }
-    } catch (err) {
-      log("error : Error when proposing : " + err);
-    }
-  }, process.env.JOBS_INTERVAL);
+    }, process.env.JOBS_INTERVAL);
+  }
 };
 
 /* app.get("/get-records-for-publickey", async (req, res) => {
