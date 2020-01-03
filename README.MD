@@ -11,22 +11,22 @@ For now it is only exposed through web socket and not http.
 
 This program must be accessible through encrypted/SSL and also regular HTTP traffic. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port.
 
-List of the methods for each kind of traffic :
+List of the methods exposed for each kind of traffic :
 
 Encrypted/SSL (only websocket) :
 
-- info : General node version number and information
-- get-nodes?network=NETWORK_NAME : Get the nodes powering this network (expressend in rholang AST format)
-- get-all-records" : Get all the name records
-- deploy : Deploy a rholang term
-- listen-for-data-at-name : Listen for a name on the blockchain
-- listen-for-data-at-name-x : Listen for multiple names on the blockchain
-- preview-private-names : predict the private name (unforgeable name) value for a given public key / timestamp.
+- `info` : General node version number and information
+- `get-nodes?network=NETWORK_NAME` : Get the nodes powering this network (expressend in rholang AST format)
+- `get-all-records` : Get all the name records
+- `deploy` : Deploy a rholang term
+- `listen-for-data-at-name` : Get unforgeable name value on the blockchain
+- `listen-for-data-at-name-x` : Get multiple unforgeable names value on the blockchain
+- `preview-private-names` : predict the unforgeable name (unforgeable name) id for a given public key / timestamp.
 
 Unencrypted/HTTP (regular HTTP GET requests):
 
-- /info : General node version number and information
-- /get-nodes?network=NETWORK_NAME : Get the nodes powering this network (expressend in rholang AST format)
+- `/info` : General node version number and information
+- `/get-nodes?network=NETWORK_NAME` : Get the nodes powering this network (expressed in rholang AST format)
 
 ### Environment variables
 
@@ -36,13 +36,11 @@ Wether you run with or without docker, you must setup some RChain related env va
 - `RCHAIN_NAMES_REGISTRY_URI` : Registry URI of the records on chain . (uploaded with [rchain-names](https://github.com/fabcotech/rchain-names) repo)
 - `DAPPY_NODES_UNFORGEABLE_NAME_ID`: Unforgeable name ID of the Dappy nodes on chain . (uploaded with [rchain-names](https://github.com/fabcotech/rchain-names) repo)
 
-### Run without docker (development)
-
-##### Certificate generation (development)
+### Certificate generation (development)
 
 https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-in-ubuntu-16-04
 
-The following lines will explain how to set a self-signed certificate, so clients (Dappy browsers) will connect securely to dappy nodes.
+The following lines will explain how to set a self-signed certificate, so clients (Dappy browsers) will connect securely to dappy node. Dappy browser refuses non-encrypted traffic so you have to do it even if in development.
 
 Very simple, generate private key and certificate with the following command (replace very carefully the -subj parameters your data, and particularly the CN attribute that must match fake domain name (if dev) or real domain name).
 
@@ -60,21 +58,25 @@ Two files should be generated, a `server-key.pem` file and a `server-crt.pem` fi
 
 !!! NEVER SHARE THE server-key.pem FILE WITH ANYONE, IT SHOULD STAY ON YOUR SERVER !!!
 
+### Run without docker (development)
+
 ##### Program execution
 
 You have to have a RChain node running locally or remotely with GRPC api exposed, and a redis server running also.
 
-You must copy the .env.example file, name it .env so environment variables will be read from it. Of course you must also edit the .env variables so it fits with your rnode program and variables.
+You must copy the `.env.example` file, name it `.env` so environment variables will be read from it. Of course you must also edit the `.env` variables so it fits with your rnode program and variables.
 
 ```
 git clone https://github.com/fabcotech/dappy-node.git
 cd dapppy-node
 npm install
 
-node src/index --ssl
+node src/index.js --ssl
 ```
 
-### run with docker (production)
+### run with docker (development or production)
+
+#### Production
 
 The environment variables are read primarly from docker-compose, and then from .env file. The port/IP related variables must be set in the `docker-compose`, the RChain related variables can be set only in the `.env` file.
 
@@ -84,7 +86,7 @@ You must copy the .env.example file and name it .env so environment variables wi
 
 RChain's rnode is not part of the docker-compose, it should be running on your machine (local or remote), with ports and IP matching the one described in docker-compose file.
 
-**Important** : the docker / nodeJS application must not handle SSL. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You must not use CA related certificate. But generate a self-signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
+**Important (prod only)** : we advise you not to handle SSL in the docker / nodeJS application. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You must not use CA related certificate. But generate a self-signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
 
 ```
 git clone https://github.com/fabcotech/dappy-node.git
@@ -99,4 +101,16 @@ docker-compose up --abort-on-container-exit
 
 dappy-node is plugged to the running rnode program !
 
-Now you should be able to add `wss://localdappynode.com:3000` entry in your dappy blockchain interface, wait a bit and make sure the client connects.
+#### Development
+
+If you use dappy-node for development purpose, you can let docker / nodeJS handle the SSL. Go to the `docker-compose` file and add the `--ssl` parameter to the `command` line :
+
+`command: sh -c 'npm i && node src/index.js --ssl'`
+
+Node JS will try to read the `server-crt.pem` (certificate) and `server-key.pem` (private key). You can run the program with the same commands as above:
+
+```
+docker-compose up --abort-on-container-exit
+```
+
+If you encounter any bug, please create an issue, or report it on the chat group. https://discord.gg/8Cu5UFV
