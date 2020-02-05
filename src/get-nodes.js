@@ -1,7 +1,7 @@
 const Ajv = require("ajv");
 const rchainToolkit = require("rchain-toolkit");
 
-const { buildUnforgeableNameQuery, log } = require("./utils");
+const { log } = require("./utils");
 
 const ajv = new Ajv();
 const schema = {
@@ -18,7 +18,7 @@ const schema = {
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-module.exports.getNodesWsHandler = (body, rnodeClient) => {
+module.exports.getNodesWsHandler = (body, httpUrl) => {
   log("get-nodes");
 
   return new Promise((resolve, reject) => {
@@ -44,43 +44,32 @@ module.exports.getNodesWsHandler = (body, rnodeClient) => {
       return;
     }
 
-    rchainToolkit.grpc
-      .listenForDataAtName(
-        {
-          name: buildUnforgeableNameQuery(
-            process.env.DAPPY_NODES_UNFORGEABLE_NAME_ID
-          ),
-          depth: 1000
+    rchainToolkit.http
+      .dataAtName(httpUrl, {
+        name: {
+          UnforgPrivate: { data: process.env.DAPPY_NODES_UNFORGEABLE_NAME_ID }
         },
-        rnodeClient
-      )
-      .then(listenForDataAtNameResponse => {
-        if (listenForDataAtNameResponse.error) {
-          resolve({
+        depth: 1000
+      })
+      .then(dataAtNameResponse => {
+        const parsedResponse = JSON.parse(dataAtNameResponse);
+
+        if (!parsedResponse.exprs.length) {
+          reject({
             success: false,
-            error: { message: listenForDataAtNameResponse.error.messages }
+            error: { message: "nodes resource not found on the blockchain" }
           });
-        } else {
-          let data;
-          try {
-            data = rchainToolkit.utils.getValueFromBlocks(
-              listenForDataAtNameResponse.payload.blockInfo
-            );
-
-            // todo why empty ?
-            const nodes = rchainToolkit.utils.rhoValToJs(data);
-
-            resolve({
-              success: true,
-              data: nodes
-            });
-          } catch (err) {
-            reject({
-              success: false,
-              error: { message: err.message }
-            });
-          }
+          return;
         }
+
+        const jsObject = rchainToolkit.utils.rhoValToJs(
+          parsedResponse.exprs[parsedResponse.exprs.length - 1].expr
+        );
+
+        resolve({
+          success: true,
+          data: jsObject
+        });
       })
       .catch(err => {
         log("error : communication error with the node (GRPC endpoint)");

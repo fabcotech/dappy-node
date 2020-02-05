@@ -30,6 +30,6 @@ services:
     expose:
       - 3000
       - 80
-    command: sh -c 'npm i && node src/index.js'
+    command: sh -c 'npm i && node src/index.js --ssl'
     depends_on:
       - redis

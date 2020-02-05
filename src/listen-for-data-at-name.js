@@ -11,27 +11,17 @@ const schema = {
     name: {
       type: "object",
       properties: {
-        unforgeables: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              g_private_body: {
-                type: "object",
-                properties: {
-                  id: {
-                    type: "array",
-                    items: { type: "number" }
-                  }
-                },
-                required: ["id"]
-              }
-            },
-            required: ["g_private_body"]
-          }
+        UnforgPrivate: {
+          type: "object",
+          properties: {
+            data: {
+              type: "string"
+            }
+          },
+          require: ["data"]
         }
       },
-      required: ["unforgeables"]
+      required: ["UnforgPrivate"]
     },
     depth: { type: "number" }
   },
@@ -42,7 +32,7 @@ module.exports.schema = schema;
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-module.exports.listenForDataAtNameWsHandler = (body, rnodeClient) => {
+module.exports.listenForDataAtNameWsHandler = (body, httpUrl) => {
   log("listen-data-at-name");
 
   return new Promise((resolve, reject) => {
@@ -58,41 +48,16 @@ module.exports.listenForDataAtNameWsHandler = (body, rnodeClient) => {
       return;
     }
 
-    if (
-      body.name.unforgeables[0] &&
-      body.name.unforgeables[0].g_private_body.id
-    ) {
-      body.name.unforgeables[0].g_private_body.id = Buffer.from(
-        new Uint8Array(body.name.unforgeables[0].g_private_body.id)
-      );
-    }
+    rchainToolkit.http
+      .dataAtName(httpUrl, body)
+      .then(dataAtNameResponse => {
+        const parsedResponse = JSON.parse(dataAtNameResponse);
 
-    rchainToolkit.grpc
-      .listenForDataAtName(body, rnodeClient)
-      .then(listenForDataAtNameResponse => {
-        if (listenForDataAtNameResponse.error) {
-          resolve({
-            success: false,
-            error: { message: listenForDataAtNameResponse.error.messages }
-          });
-        } else {
-          let data;
-          try {
-            data = rchainToolkit.utils.getValueFromBlocks(
-              listenForDataAtNameResponse.payload.blockInfo
-            );
-
-            resolve({
-              success: true,
-              data: data
-            });
-          } catch (err) {
-            resolve({
-              success: false,
-              error: { message: err.message }
-            });
-          }
-        }
+        resolve({
+          success: true,
+          data: parsedResponse.exprs[parsedResponse.exprs.length - 1]
+        });
+        return;
       })
       .catch(err => {
         log("error : communication error with the node (GRPC endpoint)");

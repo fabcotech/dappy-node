@@ -19,6 +19,7 @@ const {
   listenForDataAtNameXWsHandler
 } = require("./listen-for-data-at-name-x");
 const { deployWsHandler } = require("./deploy");
+const { prepareDeployWsHandler } = require("./prepare-deploy");
 
 const { getDappyNamesAndSaveToDb } = require("./jobs/names");
 const { getLastFinalizedBlockNumber } = require("./jobs/last-block");
@@ -40,9 +41,9 @@ let lastFinalizedBlockNumber = undefined;
 let protobufsLoaded = false;
 let appReady = false;
 let rnodeClient = undefined;
-let rnodeDeployClient = undefined;
 let rnodeProposeClient = undefined;
 let deploysAwaiting = false;
+let rnodeHttpUrl;
 
 const redisClient = redis.createClient({
   db: 1,
@@ -54,7 +55,7 @@ redisClient.on("error", err => {
 });
 
 const initJobs = () => {
-  getDappyNamesAndSaveToDb(rnodeClient, redisClient);
+  getDappyNamesAndSaveToDb(rnodeHttpUrl, redisClient);
   getLastFinalizedBlockNumber(rnodeClient, redisClient)
     .then(a => {
       lastFinalizedBlockNumber = a;
@@ -64,7 +65,7 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    getDappyNamesAndSaveToDb(rnodeClient, redisClient);
+    getDappyNamesAndSaveToDb(rnodeHttpUrl, redisClient);
     getLastFinalizedBlockNumber(rnodeClient, redisClient)
       .then(a => {
         lastFinalizedBlockNumber = a;
@@ -138,16 +139,11 @@ app.get("/get-record", async (req, res) => {
  */
 
 const loadClient = async () => {
-  rnodeDeployClient = await rchainToolkit.grpc.getGrpcDeployClient(
-    `${process.env.RNODE_DEPLOY_HOST}:${process.env.RNODE_DEPLOY_GRPC_PORT}`,
-    grpc,
-    protoLoader
-  );
-
-  rnodeClient = await rchainToolkit.grpc.getGrpcDeployClient(
+  rnodeClient = await rchainToolkit.grpc.getClient(
     `${process.env.RNODE_HOST}:${process.env.RNODE_GRPC_PORT}`,
     grpc,
-    protoLoader
+    protoLoader,
+    "deployService"
   );
 
   rnodeProposeClient = await rchainToolkit.grpc.getGrpcProposeClient(
@@ -155,6 +151,8 @@ const loadClient = async () => {
     grpc,
     protoLoader
   );
+
+  rnodeHttpUrl = `${process.env.RNODE_DEPLOY_HOST}:${process.env.RNODE_HTTP_PORT}`;
 
   protobufsLoaded = true;
   if (appReady) {
@@ -195,7 +193,7 @@ const serverHttp = http.createServer((req, res) => {
     }
     const network = req.url.substr(io + 9, 1000);
 
-    getNodesWsHandler({ network: network }, rnodeClient)
+    getNodesWsHandler({ network: network }, rnodeHttpUrl)
       .then(resp => {
         if (resp.success) {
           res.setHeader("Content-Type", "application/json");
@@ -242,7 +240,7 @@ if (process.argv.includes("--ssl")) {
 const ws = new WebSocket.Server({
   server: serverHttps,
   backlog: 1000,
-  maxPayload: 16100
+  maxPayload: 256100
 });
 
 serverHttps.listen(process.env.HTTPS_PORT);
@@ -333,7 +331,7 @@ const initWs = () => {
           );
           // ======== DEPLOY ========
         } else if (json.type === "deploy") {
-          deployWsHandler(json.body, rnodeDeployClient)
+          deployWsHandler(json.body, rnodeHttpUrl)
             .then(data => {
               deploysAwaiting = true;
               client.send(
@@ -354,9 +352,31 @@ const initWs = () => {
                 })
               );
             });
+          // ======== PREPARE DEPLOY ========
+        } else if (json.type === "prepare-deploy") {
+          prepareDeployWsHandler(json.body, rnodeHttpUrl)
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  ...data,
+                  requestId: json.requestId
+                })
+              );
+            })
+            .catch(err => {
+              log("error : prepare deploy ws handler");
+              log(err);
+              client.send(
+                JSON.stringify({
+                  success: false,
+                  requestId: json.requestId,
+                  error: { message: err.message }
+                })
+              );
+            });
           // ======== LISTEN FOR DATA AT NAME ========
         } else if (json.type === "listen-for-data-at-name") {
-          listenForDataAtNameWsHandler(json.body, rnodeClient)
+          listenForDataAtNameWsHandler(json.body, rnodeHttpUrl)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -377,7 +397,7 @@ const initWs = () => {
               );
             });
         } else if (json.type === "listen-for-data-at-name-x") {
-          listenForDataAtNameXWsHandler(json.body, rnodeClient)
+          listenForDataAtNameXWsHandler(json.body, rnodeHttpUrl)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -445,7 +465,7 @@ const initWs = () => {
 
           // ======== GET NODES ========
         } else if (json.type === "get-nodes") {
-          getNodesWsHandler(json.body, rnodeClient)
+          getNodesWsHandler(json.body, rnodeHttpUrl)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -490,9 +510,10 @@ const initWs = () => {
     });
 
     client.on("error", err => {
+      console.log(err);
       client.send({
         type: "websocket-error",
-        error: a
+        error: err
       });
     });
   });

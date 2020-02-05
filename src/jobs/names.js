@@ -3,9 +3,7 @@ const rchainToolkit = require("rchain-toolkit");
 const log = require("../utils").log;
 const redisKeys = require("../utils").redisKeys;
 
-const storeNamesInRedis = async (redisClient, rhoVal) => {
-  const records = rchainToolkit.utils.rhoValToJs(rhoVal);
-
+const storeNamesInRedis = async (redisClient, records) => {
   const nameKeys = await redisKeys(redisClient, "name:*");
   if (nameKeys.length) {
     await new Promise((res, rej) => {
@@ -86,38 +84,24 @@ const storeNamesInRedis = async (redisClient, rhoVal) => {
   });
 };
 
-module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
-  const unforgeableNameQuery = {
-    unforgeables: [
-      {
-        g_private_body: {
-          id: Array.from(
-            new Uint8Array(
-              Buffer.from(process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID, "hex")
-            )
-          )
-        }
-      }
-    ]
-  };
-
-  let listenDataAtNameResponse;
+module.exports.getDappyNamesAndSaveToDb = async (httpUrl, redisClient) => {
+  let dataAtNameResponse;
   try {
-    listenDataAtNameResponse = await rchainToolkit.grpc.listenForDataAtName(
-      {
-        name: unforgeableNameQuery,
-        depth: 90
+    dataAtNameResponse = await rchainToolkit.http.dataAtName(httpUrl, {
+      name: {
+        UnforgPrivate: { data: process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID }
       },
-      rnodeClient
-    );
+      depth: 10
+    });
   } catch (err) {
     log("error : Could not get data at name " + err);
   }
 
+  const parsedResponse = JSON.parse(dataAtNameResponse);
   if (
-    !listenDataAtNameResponse.payload ||
-    !listenDataAtNameResponse.payload.blockInfo ||
-    listenDataAtNameResponse.payload.blockInfo.length === 0
+    !parsedResponse.exprs ||
+    !parsedResponse.exprs[0] ||
+    !parsedResponse.exprs[0].expr
   ) {
     log(
       "error : could not find the records ressource on the blockchain, make sure that the Dappy records contract has been deployed"
@@ -127,8 +111,8 @@ module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
 
   let data;
   try {
-    data = rchainToolkit.utils.getValueFromBlocks(
-      listenDataAtNameResponse.payload.blockInfo
+    data = rchainToolkit.utils.rhoValToJs(
+      parsedResponse.exprs[parsedResponse.exprs.length - 1].expr
     );
   } catch (err) {
     log("error : something went wrong when querying the node");
@@ -142,7 +126,8 @@ module.exports.getDappyNamesAndSaveToDb = async (rnodeClient, redisClient) => {
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(
-      `== successfully stored ${recordsProcessed} names from the blockchain, it took ${s} seconds`
+      `== successfully stored ${recordsProcessed ||
+        0} names from the blockchain, it took ${s} seconds`
     );
   } catch (err) {
     log("error: something went wrong when initialized the storing of names");

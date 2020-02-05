@@ -1,7 +1,7 @@
 const Ajv = require("ajv");
 const rchainToolkit = require("rchain-toolkit");
 
-const listenDataAtNameBopdySchema = require("./listen-for-data-at-name").schema;
+const listenDataAtNameBodySchema = require("./listen-for-data-at-name").schema;
 
 const log = require("./utils").log;
 
@@ -9,13 +9,13 @@ const ajv = new Ajv();
 const schema = {
   schemaId: "listen-data-at-name-x",
   type: "array",
-  items: listenDataAtNameBopdySchema
+  items: listenDataAtNameBodySchema
 };
 
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-module.exports.listenForDataAtNameXWsHandler = (body, rnodeClient) => {
+module.exports.listenForDataAtNameXWsHandler = (body, httpUrl) => {
   log("listen-data-at-name-x");
 
   return new Promise((resolve, reject) => {
@@ -31,42 +31,17 @@ module.exports.listenForDataAtNameXWsHandler = (body, rnodeClient) => {
       return;
     }
 
-    const bodyWithBuffers = body.map(b => {
-      if (b.name.unforgeables[0] && b.name.unforgeables[0].g_private_body.id) {
-        b.name.unforgeables[0].g_private_body.id = Buffer.from(
-          new Uint8Array(b.name.unforgeables[0].g_private_body.id)
-        );
-      }
-      return b;
-    });
-
     Promise.all(
-      bodyWithBuffers.map(b =>
-        rchainToolkit.grpc.listenForDataAtName(b, rnodeClient)
-      )
+      bodyWithBuffers.map(b => rchainToolkit.http.dataAtName(httpUrl, b))
     )
-      .then(listenForDataAtNameResponses => {
-        const data = listenForDataAtNameResponses.map(r => {
-          if (r.error) {
-            return {
-              success: false,
-              error: { message: r.error.messages }
-            };
-          }
-          let d;
-          try {
-            d = rchainToolkit.utils.getValueFromBlocks(r.payload.blockInfo);
-            return {
-              success: true,
-              data: d
-            };
-          } catch (err) {
-            console.log(err);
-            return {
-              success: false,
-              error: { message: err.message }
-            };
-          }
+      .then(dataAtNameResponses => {
+        const data = dataAtNameResponses.map(r => {
+          const parsedResponse = JSON.parse(dataAtNameResponse);
+
+          return {
+            success: true,
+            data: parsedResponse.exprs[parsedResponse.exprs.length - 1]
+          };
         });
 
         resolve({
