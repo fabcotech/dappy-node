@@ -21,15 +21,15 @@ services:
       - HTTP_HOST=0.0.0.0
       - HTTP_PORT=3000
       - HTTPS_PORT=3001
-      - READ_ONLY_HOST=https://node2.testnet.rchain-dev.tk
+      - READ_ONLY_HOST=http://172.17.0.1
       - READ_ONLY_HTTP_PORT=40403
-      - VALIDATOR_HOST=https://node2.testnet.rchain-dev.tk
+      - VALIDATOR_HOST=http://172.17.0.1
       - VALIDATOR_GRPC_PROPOSE_PORT=40401
       - VALIDATOR_HTTP_PORT=40403
 
     expose:
       - 3000
       - 80
-    command: sh -c 'npm i && node src/index.js --ssl'
+    command: sh -c 'npm i && node src/index.js'
     depends_on:
       - redis

@@ -78,19 +78,23 @@ node src/index.js --ssl
 
 #### Production
 
-The environment variables are read primarly from docker-compose, and then from .env file. The port/IP related variables must be set in the `docker-compose`, the RChain related variables can be set only in the `.env` file.
+The environment variables are read primarly from `docker-compose.yml`, and then from `.env` file. We advise you to set the ports/IP/network related variables must be set in the `docker-compose.yml`, and the RChain related variables in `.env` file.
 
-**important** : if you node can create block (has stake participation) set the RNODE_DEPLOY\_\* variables the same values than the 3 others, if not you must reference a node to which the deploys will be sent.
+Copy the `.env.example` file, name it `.env` and update the variables in it (you can remove the ones that are already in `docker-compose.yml` for clarity).
 
-You must copy the .env.example file and name it .env so environment variables will be read from it.
+**important (1)** : Check that the IP address of the gateway between the Docker host and the bridge network is 172.17.0.1. If not, change it in `docker-compose.yml`. Check this page https://docs.docker.com/network/network-tutorial-standalone/.
 
-RChain's rnode is not part of the docker-compose, it should be running on your machine (local or remote), with ports and IP matching the one described in docker-compose file.
+**important (2)** : if you node can create block (has stake participation) you will reference only one node in the VALIDATOR\_\* and READ_ONLY\_\*, if your node is read only you must reference a node (validator) to which the deploys will be sent.
 
-**Important (prod only)** : we advise you not to handle SSL in the docker / nodeJS application. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You must not use CA related certificate. But generate a self-signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
+RChain's rnode is not part of the docker-compose, it should be running on your machine (local or remote), with ports and IP matching the one described in `docker-compose.yml` file.
+
+**Important (3)** : we advise you not to handle SSL in the docker / nodeJS application. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You must not use CA related certificate. But generate a self-signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
 
 ```
 git clone https://github.com/fabcotech/dappy-node.git
 cd dapppy-node
+
+# Update .env and docker-compose.yml variables
 
 # Build the image
 docker-compose build
@@ -110,6 +114,7 @@ If you use dappy-node for development purpose, you can let docker / nodeJS handl
 Node JS will try to read the `server-crt.pem` (certificate) and `server-key.pem` (private key). You can run the program with the same commands as above:
 
 ```
+docker-compose build
 docker-compose up --abort-on-container-exit
 ```
 
