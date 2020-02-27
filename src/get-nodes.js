@@ -45,11 +45,13 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
     }
 
     rchainToolkit.http
-      .dataAtName(httpUrl, {
-        name: {
-          UnforgPrivate: { data: process.env.DAPPY_NODES_UNFORGEABLE_NAME_ID }
-        },
-        depth: 1000
+      .exploreDeploy(httpUrl, {
+        term: `new return, nodesCh, lookup(\`rho:registry:lookup\`), stdout(\`rho:io:stdout\`) in {
+          lookup!(\`rho:id:${process.env.DAPPY_NODES_REGISTRY_URI}\`, *nodesCh) |
+          for(nodes <- nodesCh) {
+            return!(*nodes)
+          }
+        }`
       })
       .then(dataAtNameResponse => {
         const parsedResponse = JSON.parse(dataAtNameResponse);
@@ -63,7 +65,7 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
         }
 
         const jsObject = rchainToolkit.utils.rhoValToJs(
-          parsedResponse.exprs[parsedResponse.exprs.length - 1].expr
+          parsedResponse.exprs[0].expr
         );
 
         resolve({

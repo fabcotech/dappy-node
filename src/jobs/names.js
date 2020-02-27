@@ -87,14 +87,17 @@ const storeNamesInRedis = async (redisClient, records) => {
 module.exports.getDappyNamesAndSaveToDb = async (httpUrl, redisClient) => {
   let dataAtNameResponse;
   try {
-    dataAtNameResponse = await rchainToolkit.http.dataAtName(httpUrl, {
-      name: {
-        UnforgPrivate: { data: process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID }
-      },
-      depth: 10
+    dataAtNameResponse = await rchainToolkit.http.exploreDeploy(httpUrl, {
+      term: `new return, nodesCh, lookup(\`rho:registry:lookup\`), stdout(\`rho:io:stdout\`) in {
+        lookup!(\`rho:id:${process.env.RCHAIN_NAMES_REGISTRY_URI}\`, *nodesCh) |
+        for(nodes <- nodesCh) {
+          return!(*nodes)
+        }
+      }`
     });
   } catch (err) {
-    log("error : Could not get data at name " + err);
+    log("Could not get data at name " + err, "error");
+    return;
   }
 
   const parsedResponse = JSON.parse(dataAtNameResponse);
@@ -104,19 +107,19 @@ module.exports.getDappyNamesAndSaveToDb = async (httpUrl, redisClient) => {
     !parsedResponse.exprs[0].expr
   ) {
     log(
-      "error : could not find the records ressource on the blockchain, make sure that the Dappy records contract has been deployed"
+      "Could not get .exprs[0].expr, make sure that the Dappy records contract has been deployed, value:",
+      "error"
     );
+    console.log(parsedResponse);
     return;
   }
 
   let data;
   try {
-    data = rchainToolkit.utils.rhoValToJs(
-      parsedResponse.exprs[parsedResponse.exprs.length - 1].expr
-    );
+    data = rchainToolkit.utils.rhoValToJs(parsedResponse.exprs[0].expr);
   } catch (err) {
-    log("error : something went wrong when querying the node");
-    log(err);
+    log("Something went wrong when querying the node, value:", "error");
+    console.log(err);
     return;
   }
 
@@ -130,7 +133,7 @@ module.exports.getDappyNamesAndSaveToDb = async (httpUrl, redisClient) => {
         0} names from the blockchain, it took ${s} seconds`
     );
   } catch (err) {
-    log("error: something went wrong when initialized the storing of names");
-    log(err);
+    log("Something went wrong when initialized the storing of names", "error");
+    console.log(err);
   }
 };

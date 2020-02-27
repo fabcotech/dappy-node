@@ -19,6 +19,8 @@ const {
   listenForDataAtNameXWsHandler
 } = require("./listen-for-data-at-name-x");
 const { deployWsHandler } = require("./deploy");
+const { exploreDeployWsHandler } = require("./explore-deploy");
+const { exploreDeployXWsHandler } = require("./explore-deploy-x");
 const { prepareDeployWsHandler } = require("./prepare-deploy");
 
 const { getDappyNamesAndSaveToDb } = require("./jobs/names");
@@ -40,10 +42,8 @@ let lastFinalizedBlockNumber = undefined;
 
 let protobufsLoaded = false;
 let appReady = false;
-let rnodeClient = undefined;
 let rnodeProposeClient = undefined;
 let deploysAwaiting = false;
-let rnodeHttpUrl;
 
 const redisClient = redis.createClient({
   db: 1,
@@ -55,8 +55,8 @@ redisClient.on("error", err => {
 });
 
 const initJobs = () => {
-  getDappyNamesAndSaveToDb(rnodeHttpUrl, redisClient);
-  getLastFinalizedBlockNumber(rnodeClient, redisClient)
+  getDappyNamesAndSaveToDb(httpUrlReadOnly, redisClient);
+  getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
     .then(a => {
       lastFinalizedBlockNumber = a;
     })
@@ -65,8 +65,8 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    getDappyNamesAndSaveToDb(rnodeHttpUrl, redisClient);
-    getLastFinalizedBlockNumber(rnodeClient, redisClient)
+    getDappyNamesAndSaveToDb(httpUrlReadOnly, redisClient);
+    getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
       .then(a => {
         lastFinalizedBlockNumber = a;
       })
@@ -138,21 +138,45 @@ app.get("/get-record", async (req, res) => {
 });
  */
 
-const loadClient = async () => {
-  rnodeClient = await rchainToolkit.grpc.getClient(
-    `${process.env.RNODE_HOST}:${process.env.RNODE_GRPC_PORT}`,
-    grpc,
-    protoLoader,
-    "deployService"
-  );
+if (
+  !process.env.READ_ONLY_HOST.startsWith("https://") &&
+  !process.env.READ_ONLY_HOST.startsWith("http://")
+) {
+  log("READ_ONLY_HOST must start with http:// or https://", "error");
+  process.exit();
+}
+if (
+  !process.env.VALIDATOR_HOST.startsWith("https://") &&
+  !process.env.VALIDATOR_HOST.startsWith("http://")
+) {
+  log("VALIDATOR_HOST must start with http:// or https://", "error");
+  process.exit();
+}
+log("host (read-only):                   " + process.env.READ_ONLY_HOST);
+log("host (read-only) HTTP port:         " + process.env.READ_ONLY_HTTP_PORT);
+log("host (validator):                   " + process.env.VALIDATOR_HOST);
+log("host (validator) HTTP port:         " + process.env.VALIDATOR_HTTP_PORT);
+log(
+  "host (validator) GRPC propose port: " +
+    process.env.VALIDATOR_GRPC_PROPOSE_PORT
+);
 
+let httpUrlReadOnly = `${process.env.READ_ONLY_HOST}:${process.env.READ_ONLY_HTTP_PORT}`;
+if (!process.env.READ_ONLY_HTTP_PORT) {
+  httpUrlReadOnly = process.env.READ_ONLY_HOST;
+}
+let httpUrlValidator = `${process.env.VALIDATOR_HOST}:${process.env.VALIDATOR_HTTP_PORT}`;
+if (!process.env.VALIDATOR_HTTP_PORT) {
+  httpUrlValidator = process.env.VALIDATOR_HOST;
+}
+const grpcUrlValidator = `${process.env.VALIDATOR_HOST}:${process.env.VALIDATOR_GRPC_PROPOSE_PORT}`;
+
+const loadClient = async () => {
   rnodeProposeClient = await rchainToolkit.grpc.getGrpcProposeClient(
-    `${process.env.RNODE_HOST}:${process.env.RNODE_GRPC_PORT}`,
+    grpcUrlValidator,
     grpc,
     protoLoader
   );
-
-  rnodeHttpUrl = `${process.env.RNODE_DEPLOY_HOST}:${process.env.RNODE_HTTP_PORT}`;
 
   protobufsLoaded = true;
   if (appReady) {
@@ -173,12 +197,12 @@ const serverHttp = http.createServer((req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.write(
       JSON.stringify({
-        dappy_node_version: DAPPY_NODE_VERSION,
-        last_finalized_block_number: lastFinalizedBlockNumber,
-        rnode_version: rnodeVersion,
-        rchain_names_unforgeable_name:
-          process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,
-        rchain_names_registry_uri: process.env.RCHAIN_NAMES_REGISTRY_URI
+        dappyNodeVersion: DAPPY_NODE_VERSION,
+        lastFinalizedBlockNumber: lastFinalizedBlockNumber,
+        rnodeVersion: rnodeVersion,
+        rchainNamesRegistryUriEntry:
+          process.env.RCHAIN_NAMES_REGISTRY_URI_ENTRY,
+        rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI
       })
     );
     res.end();
@@ -193,7 +217,7 @@ const serverHttp = http.createServer((req, res) => {
     }
     const network = req.url.substr(io + 9, 1000);
 
-    getNodesWsHandler({ network: network }, rnodeHttpUrl)
+    getNodesWsHandler({ network: network }, httpUrlReadOnly)
       .then(resp => {
         if (resp.success) {
           res.setHeader("Content-Type", "application/json");
@@ -255,19 +279,16 @@ ws.on("error", err => {
   log(err);
 });
 console.log("");
-log(`RChain deploy node GRPC port ${process.env.RNODE_DEPLOY_GRPC_PORT}`);
-log(`RChain deploy node HTTP port ${process.env.RNODE_DEPLOY_HTTP_PORT}`);
-log(`RChain node deploy is at ${process.env.RNODE_DEPLOY_HOST}\n`);
-log(`RChain node GRPC port ${process.env.RNODE_GRPC_PORT}`);
-log(`RChain node HTTP port ${process.env.RNODE_HTTP_PORT}`);
-http.get(
-  `http://${process.env.RNODE_HOST}:${process.env.RNODE_HTTP_PORT}/version`,
+
+(httpUrlReadOnly.startsWith("https://") ? https : http).get(
+  `${httpUrlReadOnly}/version`,
   resp => {
-    log(`RChain node responding at ${process.env.RNODE_HOST}`);
+    log(`RChain node responding at ${httpUrlReadOnly}/version`);
 
     if (resp.statusCode !== 200) {
+      log("Status code different from 200", "error");
+      console.log(resp.statusCode);
       process.exit();
-      return;
     }
 
     resp.setEncoding("utf8");
@@ -311,12 +332,12 @@ const initWs = () => {
               success: true,
               requestId: json.requestId,
               data: {
-                dappy_node_version: DAPPY_NODE_VERSION,
-                last_finalized_block_number: lastFinalizedBlockNumber,
-                rnode_version: rnodeVersion,
-                rchain_names_unforgeable_name:
-                  process.env.RCHAIN_NAMES_UNFORGEABLE_NAME_ID,
-                rchain_names_registry_uri: process.env.RCHAIN_NAMES_REGISTRY_URI
+                dappyNodeVersion: DAPPY_NODE_VERSION,
+                lastFinalizedBlockNumber: lastFinalizedBlockNumber,
+                rnodeVersion: rnodeVersion,
+                rchainNamesRegistryUriEntry:
+                  process.env.RCHAIN_NAMES_REGISTRY_URI_ENTRY,
+                rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI
               }
             })
           );
@@ -331,7 +352,7 @@ const initWs = () => {
           );
           // ======== DEPLOY ========
         } else if (json.type === "deploy") {
-          deployWsHandler(json.body, rnodeHttpUrl)
+          deployWsHandler(json.body, httpUrlValidator)
             .then(data => {
               deploysAwaiting = true;
               client.send(
@@ -342,8 +363,8 @@ const initWs = () => {
               );
             })
             .catch(err => {
-              log("error : deploy ws handler");
-              log(err);
+              log("error : deploy ws handler", "error");
+              console.log(err);
               client.send(
                 JSON.stringify({
                   success: false,
@@ -354,7 +375,7 @@ const initWs = () => {
             });
           // ======== PREPARE DEPLOY ========
         } else if (json.type === "prepare-deploy") {
-          prepareDeployWsHandler(json.body, rnodeHttpUrl)
+          prepareDeployWsHandler(json.body, httpUrlReadOnly)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -364,8 +385,52 @@ const initWs = () => {
               );
             })
             .catch(err => {
-              log("error : prepare deploy ws handler");
-              log(err);
+              log("error : prepare deploy ws handler", "error");
+              console.log(err);
+              client.send(
+                JSON.stringify({
+                  success: false,
+                  requestId: json.requestId,
+                  error: { message: err.message }
+                })
+              );
+            });
+          // ======== EXPLORE DEPLOY ========
+        } else if (json.type === "explore-deploy") {
+          exploreDeployWsHandler(json.body, httpUrlReadOnly)
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  ...data,
+                  requestId: json.requestId
+                })
+              );
+            })
+            .catch(err => {
+              log("error : explore deploy ws handler", "error");
+              console.log(err);
+              client.send(
+                JSON.stringify({
+                  success: false,
+                  requestId: json.requestId,
+                  error: { message: err.message }
+                })
+              );
+            });
+          // ======== EXPLORE DEPLOY X ========
+        } else if (json.type === "explore-deploy-x") {
+          exploreDeployXWsHandler(json.body, httpUrlReadOnly)
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  ...data,
+                  requestId: json.requestId
+                })
+              );
+            })
+            .catch(err => {
+              log("error : explore deploy x ws handler", "error");
+              console.log(err);
               client.send(
                 JSON.stringify({
                   success: false,
@@ -376,7 +441,7 @@ const initWs = () => {
             });
           // ======== LISTEN FOR DATA AT NAME ========
         } else if (json.type === "listen-for-data-at-name") {
-          listenForDataAtNameWsHandler(json.body, rnodeHttpUrl)
+          listenForDataAtNameWsHandler(json.body, httpUrlReadOnly)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -386,8 +451,8 @@ const initWs = () => {
               );
             })
             .catch(err => {
-              log("error : listen-for-data-at-name ws handler");
-              log(err);
+              log("error : listen-for-data-at-name ws handler", "error");
+              console.log(err);
               client.send(
                 JSON.stringify({
                   success: false,
@@ -397,7 +462,7 @@ const initWs = () => {
               );
             });
         } else if (json.type === "listen-for-data-at-name-x") {
-          listenForDataAtNameXWsHandler(json.body, rnodeHttpUrl)
+          listenForDataAtNameXWsHandler(json.body, httpUrlReadOnly)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -407,8 +472,8 @@ const initWs = () => {
               );
             })
             .catch(err => {
-              log("error : listen-for-data-at-name-x ws handler");
-              log(err);
+              log("error : listen-for-data-at-name-x ws handler", "error");
+              console.log(err);
               client.send(
                 JSON.stringify({
                   success: false,
@@ -417,29 +482,6 @@ const initWs = () => {
                 })
               );
             });
-
-          // ======== PREVIEW PRIVATE NAMES ========
-        } else if (json.type === "preview-private-names") {
-          previewPrivateNamesWsHandler(json.body, rnodeClient)
-            .then(data => {
-              client.send(
-                JSON.stringify({
-                  ...data,
-                  requestId: json.requestId
-                })
-              );
-            })
-            .catch(err => {
-              log("error : preview-private-names ws handler");
-              log(err);
-              client.send(
-                JSON.stringify({
-                  ...err,
-                  requestId: json.requestId
-                })
-              );
-            });
-
           // ======== GET ALL RECORDS ========
         } else if (json.type === "get-all-records") {
           getAllRecordsWsHandler()
@@ -453,8 +495,8 @@ const initWs = () => {
               );
             })
             .catch(err => {
-              log("error : get-all-records ws handler");
-              log(err);
+              log("error : get-all-records ws handler", "error");
+              console.log(err);
               client.send(
                 JSON.stringify({
                   ...err,
@@ -465,7 +507,7 @@ const initWs = () => {
 
           // ======== GET NODES ========
         } else if (json.type === "get-nodes") {
-          getNodesWsHandler(json.body, rnodeHttpUrl)
+          getNodesWsHandler(json.body, httpUrlReadOnly)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -475,8 +517,8 @@ const initWs = () => {
               );
             })
             .catch(err => {
-              log("error : get-nodes ws handler");
-              log(err);
+              log("error : get-nodes ws handler", "error");
+              console.log(err);
               err.requestId = json.requestId;
               client.send(
                 JSON.stringify({

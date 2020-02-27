@@ -1,39 +1,23 @@
 const Ajv = require("ajv");
 const rchainToolkit = require("rchain-toolkit");
 
+const exploreDeployBodySchema = require("./explore-deploy").schema;
+
 const log = require("./utils").log;
 
 const ajv = new Ajv();
 const schema = {
-  schemaId: "listen-data-at-name",
-  type: "object",
-  properties: {
-    name: {
-      type: "object",
-      properties: {
-        UnforgPrivate: {
-          type: "object",
-          properties: {
-            data: {
-              type: "string"
-            }
-          },
-          require: ["data"]
-        }
-      },
-      required: ["UnforgPrivate"]
-    },
-    depth: { type: "number" }
-  },
-  required: ["name", "depth"]
+  schemaId: "explore-deploy-x",
+  type: "array",
+  items: exploreDeployBodySchema
 };
-module.exports.schema = schema;
 
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-module.exports.listenForDataAtNameWsHandler = (body, httpUrl) => {
-  log("listen-data-at-name");
+module.exports.exploreDeployXWsHandler = (body, httpUrl) => {
+  log("explore-deploy-x");
+
   return new Promise((resolve, reject) => {
     const valid = validate(body);
 
@@ -47,16 +31,19 @@ module.exports.listenForDataAtNameWsHandler = (body, httpUrl) => {
       return;
     }
 
-    rchainToolkit.http
-      .dataAtName(httpUrl, body)
-      .then(dataAtNameResponse => {
-        const parsedResponse = JSON.parse(dataAtNameResponse);
+    Promise.all(body.map(b => rchainToolkit.http.exploreDeploy(httpUrl, b)))
+      .then(exploreDeployResponses => {
+        const data = exploreDeployResponses.map(r => {
+          return {
+            success: true,
+            data: r
+          };
+        });
 
         resolve({
           success: true,
-          data: parsedResponse.exprs[parsedResponse.exprs.length - 1]
+          data: { results: data }
         });
-        return;
       })
       .catch(err => {
         log("error : communication error with the node (GRPC endpoint)");

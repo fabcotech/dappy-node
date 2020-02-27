@@ -2,28 +2,22 @@ const rchainToolkit = require("rchain-toolkit");
 
 const log = require("../utils").log;
 
-module.exports.getLastFinalizedBlockNumber = async rnodeDeployClient => {
-  let getBlocksResponse;
-
+module.exports.getLastFinalizedBlockNumber = async httpUrlReadOnly => {
+  let validAfterBlockNumber;
   try {
-    getBlocksResponse = await rchainToolkit.grpc.lastFinalizedBlock(
-      rnodeDeployClient
-    );
+    validAfterBlockNumber = JSON.parse(
+      await rchainToolkit.http.blocks(httpUrlReadOnly, {
+        position: 1
+      })
+    )[0].blockNumber;
   } catch (err) {
-    throw new Error("Could not get last finalized block");
+    log("Unable to get last finalized block", "error");
+    throw new Error(err);
   }
 
-  if (
-    !getBlocksResponse.blockInfo ||
-    !getBlocksResponse.blockInfo.blockNumber
-  ) {
-    throw new Error("could not find the last block on the blockchain");
-  }
-
-  const int = parseInt(getBlocksResponse.blockInfo.blockNumber, 10);
-  const intWithOffset = Math.floor(int / 12) * 12;
+  const intWithOffset = Math.floor(validAfterBlockNumber / 12) * 12;
   log(
-    `got last finalized block height at ${int}, rounded it to ${intWithOffset} (base 12)`
+    `got last finalized block height at ${validAfterBlockNumber}, rounded it to ${intWithOffset} (base 12)`
   );
 
   return intWithOffset;

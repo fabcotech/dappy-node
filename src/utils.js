@@ -1,6 +1,16 @@
-const log = a => {
-  console.log(new Date().toISOString(), a);
+const log = (a, level = "info") => {
+  if (level === "warning") {
+    console.log("\x1b[33m%s\x1b[0m", new Date().toISOString() + " [WARN] " + a);
+  } else if (level === "error") {
+    console.log(
+      "\x1b[31m%s\x1b[0m",
+      new Date().toISOString() + " [ERROR] " + a
+    );
+  } else {
+    console.log(new Date().toISOString(), a);
+  }
 };
+
 module.exports.log = log;
 
 module.exports.redisKeys = (client, pattern) => {

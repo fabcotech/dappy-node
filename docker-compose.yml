@@ -21,12 +21,12 @@ services:
       - HTTP_HOST=0.0.0.0
       - HTTP_PORT=3000
       - HTTPS_PORT=3001
-      - RNODE_HOST=172.17.0.1
-      - RNODE_GRPC_PORT=40401
-      - RNODE_HTTP_PORT=40403
-      - RNODE_DEPLOY_HOST=172.17.0.1
-      - RNODE_DEPLOY_GRPC_PORT=40401
-      - RNODE_DEPLOY_HTTP_PORT=40403
+      - READ_ONLY_HOST=https://node2.testnet.rchain-dev.tk
+      - READ_ONLY_HTTP_PORT=40403
+      - VALIDATOR_HOST=https://node2.testnet.rchain-dev.tk
+      - VALIDATOR_GRPC_PROPOSE_PORT=40401
+      - VALIDATOR_HTTP_PORT=40403
+
     expose:
       - 3000
       - 80
