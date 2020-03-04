@@ -1,7 +1,7 @@
 const Ajv = require("ajv");
 const rchainToolkit = require("rchain-toolkit");
 
-const { log } = require("./utils");
+const { log, getRecordsTerm } = require("./utils");
 
 const ajv = new Ajv();
 const schema = {
@@ -46,17 +46,12 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
 
     rchainToolkit.http
       .exploreDeploy(httpUrl, {
-        term: `new return, nodesCh, lookup(\`rho:registry:lookup\`), stdout(\`rho:io:stdout\`) in {
-          lookup!(\`rho:id:${process.env.DAPPY_NODES_REGISTRY_URI}\`, *nodesCh) |
-          for(nodes <- nodesCh) {
-            return!(*nodes)
-          }
-        }`
+        term: getRecordsTerm(process.env.DAPPY_NODES_REGISTRY_URI)
       })
       .then(dataAtNameResponse => {
         const parsedResponse = JSON.parse(dataAtNameResponse);
 
-        if (!parsedResponse.exprs.length) {
+        if (!parsedResponse.expr.length) {
           reject({
             success: false,
             error: { message: "nodes resource not found on the blockchain" }
@@ -64,9 +59,7 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
           return;
         }
 
-        const jsObject = rchainToolkit.utils.rhoValToJs(
-          parsedResponse.exprs[0].expr
-        );
+        const jsObject = rchainToolkit.utils.rhoValToJs(parsedResponse.expr[0]);
 
         resolve({
           success: true,

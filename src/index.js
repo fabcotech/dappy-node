@@ -23,7 +23,7 @@ const { exploreDeployWsHandler } = require("./explore-deploy");
 const { exploreDeployXWsHandler } = require("./explore-deploy-x");
 const { prepareDeployWsHandler } = require("./prepare-deploy");
 
-const { getDappyNamesAndSaveToDb } = require("./jobs/names");
+const { getDappyRecordsAndSaveToDb } = require("./jobs/records");
 const { getLastFinalizedBlockNumber } = require("./jobs/last-block");
 
 const log = require("./utils").log;
@@ -55,7 +55,7 @@ redisClient.on("error", err => {
 });
 
 const initJobs = () => {
-  getDappyNamesAndSaveToDb(httpUrlReadOnly, redisClient);
+  getDappyRecordsAndSaveToDb(httpUrlReadOnly, redisClient);
   getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
     .then(a => {
       lastFinalizedBlockNumber = a;
@@ -65,7 +65,7 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    getDappyNamesAndSaveToDb(httpUrlReadOnly, redisClient);
+    getDappyRecordsAndSaveToDb(httpUrlReadOnly, redisClient);
     getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
       .then(a => {
         lastFinalizedBlockNumber = a;
@@ -97,7 +97,7 @@ const initJobs = () => {
   }
   const keys = await redisSmembers(
     redisClient,
-    `public_key:${req.query.publickey}`
+    `publicKey:${req.query.publickey}`
   );
   const records = await Promise.all(
     keys.map(k => redisHgetall(redisClient, `name:${k}`))
@@ -351,6 +351,15 @@ const initWs = () => {
             })
           );
           // ======== DEPLOY ========
+        } else if (json.type === "last-finalized-block-number") {
+          log("last-finalized-block-number");
+          client.send(
+            JSON.stringify({
+              success: true,
+              data: lastFinalizedBlockNumber,
+              requestId: json.requestId
+            })
+          );
         } else if (json.type === "deploy") {
           deployWsHandler(json.body, httpUrlValidator)
             .then(data => {

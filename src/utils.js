@@ -13,6 +13,20 @@ const log = (a, level = "info") => {
 
 module.exports.log = log;
 
+module.exports.getRecordsTerm = registryUri => {
+  return `new return, filesModuleCh, readCh, lookup(\`rho:registry:lookup\`) in {
+    lookup!(\`rho:id:${registryUri}\`, *filesModuleCh) |
+    for(filesModuleReader <- filesModuleCh) {
+      new x in {
+        filesModuleReader!(*x) |
+        for (y <- x) {
+          return!(*y)
+        }
+      }
+    }
+  }`;
+};
+
 module.exports.redisKeys = (client, pattern) => {
   return new Promise((resolve, reject) => {
     client.keys(pattern, (err, res) => {

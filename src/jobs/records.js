@@ -1,9 +1,60 @@
 const rchainToolkit = require("rchain-toolkit");
+const Ajv = require("ajv");
 
 const log = require("../utils").log;
 const redisKeys = require("../utils").redisKeys;
+const getRecordsTerm = require("../utils").getRecordsTerm;
 
-const storeNamesInRedis = async (redisClient, records) => {
+const ajv = new Ajv();
+const schema = {
+  schemaId: "dappy-record",
+  type: "object",
+  properties: {
+    name: {
+      type: "string"
+    },
+    publicKey: {
+      type: "string"
+    },
+    address: {
+      type: "string"
+    },
+    nonce: {
+      type: "string"
+    },
+    signature: {
+      type: "string"
+    },
+    servers: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          ip: {
+            type: "string"
+          },
+          host: {
+            type: "string"
+          },
+          cert: {
+            type: "string"
+          },
+          primary: {
+            type: "boolean"
+          }
+        },
+        required: ["ip", "host", "cert"]
+      }
+    }
+  },
+  required: ["name", "publicKey", "servers", "nonce"]
+};
+module.exports.schema = schema;
+
+ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
+const validate = ajv.compile(schema);
+
+const storeRecordsInRedis = async (redisClient, records) => {
   const nameKeys = await redisKeys(redisClient, "name:*");
   if (nameKeys.length) {
     await new Promise((res, rej) => {
@@ -15,7 +66,7 @@ const storeNamesInRedis = async (redisClient, records) => {
       });
     });
   }
-  const publickeyKeys = await redisKeys(redisClient, "public_key:*");
+  const publickeyKeys = await redisKeys(redisClient, "publicKey:*");
   if (publickeyKeys.length) {
     await new Promise((res, rej) => {
       redisClient.del(...publickeyKeys, (err, resp) => {
@@ -37,6 +88,12 @@ const storeNamesInRedis = async (redisClient, records) => {
         return resolve();
       }
       const record = records[k];
+      const valid = validate(record);
+
+      if (!valid) {
+        log("invalid record " + k, "warning");
+        return resolve();
+      }
       const redisSetValues = [];
       for (key of Object.keys(record)) {
         redisSetValues.push(key);
@@ -61,7 +118,7 @@ const storeNamesInRedis = async (redisClient, records) => {
       });
       await new Promise((res, rej) => {
         redisClient.sadd(
-          `public_key:${record.public_key}`,
+          `publicKey:${record.publicKey}`,
           record.name,
           (err, resp) => {
             if (err) {
@@ -84,16 +141,12 @@ const storeNamesInRedis = async (redisClient, records) => {
   });
 };
 
-module.exports.getDappyNamesAndSaveToDb = async (httpUrl, redisClient) => {
+module.exports.getDappyRecordsAndSaveToDb = async (httpUrl, redisClient) => {
   let dataAtNameResponse;
+
   try {
     dataAtNameResponse = await rchainToolkit.http.exploreDeploy(httpUrl, {
-      term: `new return, nodesCh, lookup(\`rho:registry:lookup\`), stdout(\`rho:io:stdout\`) in {
-        lookup!(\`rho:id:${process.env.RCHAIN_NAMES_REGISTRY_URI}\`, *nodesCh) |
-        for(nodes <- nodesCh) {
-          return!(*nodes)
-        }
-      }`
+      term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI)
     });
   } catch (err) {
     log("Could not get data at name " + err, "error");
@@ -101,13 +154,9 @@ module.exports.getDappyNamesAndSaveToDb = async (httpUrl, redisClient) => {
   }
 
   const parsedResponse = JSON.parse(dataAtNameResponse);
-  if (
-    !parsedResponse.exprs ||
-    !parsedResponse.exprs[0] ||
-    !parsedResponse.exprs[0].expr
-  ) {
+  if (!parsedResponse.expr || !parsedResponse.expr[0]) {
     log(
-      "Could not get .exprs[0].expr, make sure that the Dappy records contract has been deployed, value:",
+      "Could not get .expr[0], make sure that the Dappy records contract has been deployed, value:",
       "error"
     );
     console.log(parsedResponse);
@@ -116,7 +165,7 @@ module.exports.getDappyNamesAndSaveToDb = async (httpUrl, redisClient) => {
 
   let data;
   try {
-    data = rchainToolkit.utils.rhoValToJs(parsedResponse.exprs[0].expr);
+    data = rchainToolkit.utils.rhoValToJs(parsedResponse.expr[0]).records;
   } catch (err) {
     log("Something went wrong when querying the node, value:", "error");
     console.log(err);
@@ -125,15 +174,18 @@ module.exports.getDappyNamesAndSaveToDb = async (httpUrl, redisClient) => {
 
   const a = new Date().getTime();
   try {
-    const recordsProcessed = await storeNamesInRedis(redisClient, data);
+    const recordsProcessed = await storeRecordsInRedis(redisClient, data);
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(
       `== successfully stored ${recordsProcessed ||
-        0} names from the blockchain, it took ${s} seconds`
+        0} records from the blockchain, it took ${s} seconds`
     );
   } catch (err) {
-    log("Something went wrong when initialized the storing of names", "error");
+    log(
+      "Something went wrong when initialized the storing of records",
+      "error"
+    );
     console.log(err);
   }
 };

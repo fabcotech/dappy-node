@@ -37,7 +37,7 @@ module.exports.exploreDeployWsHandler = (body, httpUrl) => {
 
     try {
       const exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
-        rnodeHttpUrl,
+        httpUrl,
         {
           term: body.term
         }
