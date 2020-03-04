@@ -27,6 +27,15 @@ module.exports.getRecordsTerm = registryUri => {
   }`;
 };
 
+module.exports.getRecordTerm = registryUri => {
+  return `new return, recordCh, readCh, lookup(\`rho:registry:lookup\`) in {
+    lookup!(\`${registryUri}\`, *recordCh) |
+    for(record <- recordCh) {
+      return!(*record)
+    }
+  }`;
+};
+
 module.exports.redisKeys = (client, pattern) => {
   return new Promise((resolve, reject) => {
     client.keys(pattern, (err, res) => {

@@ -66,6 +66,8 @@ const initJobs = () => {
     });
   setInterval(() => {
     getDappyRecordsAndSaveToDb(httpUrlReadOnly, redisClient);
+  }, process.env.NAMES_JOB_INTERVAL);
+  setInterval(() => {
     getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
       .then(a => {
         lastFinalizedBlockNumber = a;
@@ -74,7 +76,7 @@ const initJobs = () => {
         log("failed to get last finalized block height");
         console.log(err);
       });
-  }, process.env.JOBS_INTERVAL);
+  }, process.env.LAST_BLOCK_JOB_INTERVAL);
 
   if (process.env.RNODE_HOST === process.env.RNODE_DEPLOY_HOST) {
     setInterval(async () => {

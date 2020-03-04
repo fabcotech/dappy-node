@@ -1,9 +1,7 @@
 const rchainToolkit = require("rchain-toolkit");
 const Ajv = require("ajv");
 
-const log = require("../utils").log;
-const redisKeys = require("../utils").redisKeys;
-const getRecordsTerm = require("../utils").getRecordsTerm;
+const { log, redisKeys, getRecordsTerm, getRecordTerm } = require("../utils");
 
 const ajv = new Ajv();
 const schema = {
@@ -54,7 +52,7 @@ module.exports.schema = schema;
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-const storeRecordsInRedis = async (redisClient, records) => {
+const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
   const nameKeys = await redisKeys(redisClient, "name:*");
   if (nameKeys.length) {
     await new Promise((res, rej) => {
@@ -87,12 +85,39 @@ const storeRecordsInRedis = async (redisClient, records) => {
       if (!k) {
         return resolve();
       }
-      const record = records[k];
+      const registryUri = records[k];
+
+      try {
+        dataAtNameResponse = await rchainToolkit.http.exploreDeploy(httpUrl, {
+          term: getRecordTerm(registryUri)
+        });
+      } catch (err) {
+        log("Name " + k + ": could not explore-deploy " + err, "error");
+        if (i === l - 1) {
+          resolve(l);
+        } else {
+          i += 1;
+          await storeName();
+        }
+        return;
+      }
+
+      const record = rchainToolkit.utils.rhoValToJs(
+        JSON.parse(dataAtNameResponse).expr[0]
+      );
+
       const valid = validate(record);
 
       if (!valid) {
         log("invalid record " + k, "warning");
-        return resolve();
+        console.log(validate.errors);
+        if (i === l - 1) {
+          resolve(l);
+        } else {
+          i += 1;
+          await storeName();
+        }
+        return;
       }
       const redisSetValues = [];
       for (key of Object.keys(record)) {
@@ -174,7 +199,11 @@ module.exports.getDappyRecordsAndSaveToDb = async (httpUrl, redisClient) => {
 
   const a = new Date().getTime();
   try {
-    const recordsProcessed = await storeRecordsInRedis(redisClient, data);
+    const recordsProcessed = await storeRecordsInRedis(
+      redisClient,
+      data,
+      httpUrl
+    );
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(
