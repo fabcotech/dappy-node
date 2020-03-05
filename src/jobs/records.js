@@ -52,6 +52,7 @@ module.exports.schema = schema;
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
+let running = false;
 const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
   const nameKeys = await redisKeys(redisClient, "name:*");
   if (nameKeys.length) {
@@ -88,9 +89,12 @@ const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
       const registryUri = records[k];
 
       try {
-        dataAtNameResponse = await rchainToolkit.http.exploreDeploy(httpUrl, {
-          term: getRecordTerm(registryUri)
-        });
+        exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
+          httpUrl,
+          {
+            term: getRecordTerm(registryUri)
+          }
+        );
       } catch (err) {
         log("Name " + k + ": could not explore-deploy " + err, "error");
         if (i === l - 1) {
@@ -103,7 +107,7 @@ const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
       }
 
       const record = rchainToolkit.utils.rhoValToJs(
-        JSON.parse(dataAtNameResponse).expr[0]
+        JSON.parse(exploreDeployResponse).expr[0]
       );
 
       const valid = validate(record);
@@ -168,6 +172,11 @@ const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
 
 module.exports.getDappyRecordsAndSaveToDb = async (httpUrl, redisClient) => {
   let dataAtNameResponse;
+  if (running) {
+    log("records job already running");
+    return;
+  }
+  running = true;
 
   try {
     dataAtNameResponse = await rchainToolkit.http.exploreDeploy(httpUrl, {
@@ -210,11 +219,13 @@ module.exports.getDappyRecordsAndSaveToDb = async (httpUrl, redisClient) => {
       `== successfully stored ${recordsProcessed ||
         0} records from the blockchain, it took ${s} seconds`
     );
+    running = false;
   } catch (err) {
     log(
       "Something went wrong when initialized the storing of records",
       "error"
     );
     console.log(err);
+    running = false;
   }
 };
