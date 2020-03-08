@@ -71,8 +71,10 @@ git clone https://github.com/fabcotech/dappy-node.git
 cd dapppy-node
 npm install
 
-node src/index.js --ssl
+node src/index.js node --max-old-space-size=8192 src/index.js --ssl
 ```
+
+**Note:** Of course set the 8192 value according to the capabilities of your server. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
 
 ### run with docker (development or production)
 
@@ -89,6 +91,8 @@ Copy the `.env.example` file, name it `.env` and update the variables in it (you
 RChain's rnode is not part of the docker-compose, it should be running on your machine (local or remote), with ports and IP matching the one described in `docker-compose.yml` file.
 
 **Important (3)** : we advise you not to handle SSL in the docker / nodeJS application. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You must not use CA related certificate. But generate a self-signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
+
+**Important (4)** : Check the `--max-old-space-size` in the node start script. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
 
 ```
 git clone https://github.com/fabcotech/dappy-node.git
@@ -109,7 +113,7 @@ dappy-node is plugged to the running rnode program !
 
 If you use dappy-node for development purpose, you can let docker / nodeJS handle the SSL. Go to the `docker-compose` file and add the `--ssl` parameter to the `command` line :
 
-`command: sh -c 'npm i && node src/index.js --ssl'`
+`command: sh -c 'npm i && node --max-old-space-size=8192 src/index.js --ssl'`
 
 Node JS will try to read the `server-crt.pem` (certificate) and `server-key.pem` (private key). You can run the program with the same commands as above:
 

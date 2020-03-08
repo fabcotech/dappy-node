@@ -11,25 +11,25 @@ services:
     volumes:
       - ./:/var/www/app
     ports:
-      - 3000:3000 # HTTP_PORT
-      - 3001:3001 # HTTPS_PORT
+      - 3001:3001 # HTTP_PORT
+      - 3002:3002 # HTTPS_PORT
     env_file:
       - .env
     environment:
       - NODE_ENV=production
       - REDIS_HOST=redis
       - HTTP_HOST=0.0.0.0
-      - HTTP_PORT=3000
-      - HTTPS_PORT=3001
-      - READ_ONLY_HOST=http://172.17.0.1
+      - HTTP_PORT=3001
+      - HTTPS_PORT=3002
+      - READ_ONLY_HOST=http://observer.testnet.rchain.coop
       - READ_ONLY_HTTP_PORT=40403
-      - VALIDATOR_HOST=http://172.17.0.1
+      - VALIDATOR_HOST=http://node2.testnet.rchain-dev.tk
       - VALIDATOR_GRPC_PROPOSE_PORT=40401
       - VALIDATOR_HTTP_PORT=40403
 
     expose:
       - 3000
       - 80
-    command: sh -c 'npm i && node src/index.js'
+    command: sh -c 'npm i && node --max-old-space-size=8192 src/index.js --ssl'
     depends_on:
       - redis
