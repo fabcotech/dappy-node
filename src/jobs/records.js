@@ -82,6 +82,9 @@ const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
     const l = keys.length;
     let i = 0;
     const storeName = async () => {
+      if (i % 10 === 0) {
+        log(`starting name n°${i}`);
+      }
       const k = keys[i];
       if (!k) {
         return resolve();
@@ -177,6 +180,7 @@ module.exports.getDappyRecordsAndSaveToDb = async (httpUrl, redisClient) => {
     return;
   }
   running = true;
+  log("started names job");
 
   try {
     dataAtNameResponse = await rchainToolkit.http.exploreDeploy(httpUrl, {
