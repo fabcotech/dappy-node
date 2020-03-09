@@ -32,39 +32,26 @@ module.exports.schema = schema;
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-module.exports.listenForDataAtNameWsHandler = (body, httpUrl) => {
+module.exports.listenForDataAtNameWsHandler = async (body, httpUrl) => {
   log("listen-data-at-name");
-  return new Promise((resolve, reject) => {
-    const valid = validate(body);
 
-    if (!valid) {
-      resolve({
-        success: false,
-        error: {
-          message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
-        }
-      });
-      return;
-    }
+  const valid = validate(body);
 
-    rchainToolkit.http
-      .dataAtName(httpUrl, body)
-      .then(dataAtNameResponse => {
-        const parsedResponse = JSON.parse(dataAtNameResponse);
+  if (!valid) {
+    return {
+      success: false,
+      error: {
+        message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
+      }
+    };
+  }
 
-        resolve({
-          success: true,
-          data: parsedResponse.exprs[parsedResponse.exprs.length - 1]
-        });
-        return;
-      })
-      .catch(err => {
-        log("error : communication error with the node (GRPC endpoint)");
-        log(err);
-        reject({
-          success: false,
-          error: { message: err.message || err }
-        });
-      });
-  });
+  const dataAtNameResponse = await rchainToolkit.http.dataAtName(httpUrl, body);
+
+  const parsedResponse = JSON.parse(dataAtNameResponse);
+
+  return {
+    success: true,
+    data: parsedResponse.exprs[parsedResponse.exprs.length - 1]
+  };
 };

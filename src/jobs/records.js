@@ -64,7 +64,6 @@ module.exports.schema = schema;
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-let running = false;
 const storeRecordsInRedis = async records => {
   const nameKeys = await redisKeys(redisClient, "name:*");
   if (nameKeys.length) {
@@ -94,9 +93,6 @@ const storeRecordsInRedis = async records => {
     const l = keys.length;
     let i = 0;
     const storeName = async () => {
-      if (i % 10 === 0) {
-        log(`starting name n°${i}`, "warning");
-      }
       const k = keys[i];
       if (!k) {
         return resolve();
@@ -186,13 +182,7 @@ const storeRecordsInRedis = async records => {
 };
 
 const getDappyRecordsAndSaveToDb = async () => {
-  let dataAtNameResponse;
-  if (running) {
-    log("records job already running");
-    return;
-  }
-  running = true;
-  log("started names job", "warning");
+  log("started names job");
 
   try {
     dataAtNameResponse = await rchainToolkit.http.exploreDeploy(
@@ -234,8 +224,7 @@ const getDappyRecordsAndSaveToDb = async () => {
       `== successfully stored ${recordsProcessed ||
         0} records from the blockchain, it took ${s} seconds`
     );
-    console.log("KILL");
-    running = false;
+    log("KILL records job process");
     return;
   } catch (err) {
     log(
@@ -243,8 +232,7 @@ const getDappyRecordsAndSaveToDb = async () => {
       "error"
     );
     console.log(err);
-    console.log("KILL");
-    running = false;
+    log("KILL records job process");
     return;
   }
 };

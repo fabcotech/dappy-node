@@ -15,43 +15,34 @@ const schema = {
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-module.exports.exploreDeployXWsHandler = (body, httpUrl) => {
+module.exports.exploreDeployXWsHandler = async (body, httpUrl) => {
   log("explore-deploy-x");
 
-  return new Promise((resolve, reject) => {
-    const valid = validate(body);
+  const valid = validate(body);
 
-    if (!valid) {
-      resolve({
-        success: false,
-        error: {
-          message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
-        }
-      });
-      return;
-    }
+  if (!valid) {
+    resolve({
+      success: false,
+      error: {
+        message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
+      }
+    });
+    return;
+  }
 
-    Promise.all(body.map(b => rchainToolkit.http.exploreDeploy(httpUrl, b)))
-      .then(exploreDeployResponses => {
-        const data = exploreDeployResponses.map(r => {
-          return {
-            success: true,
-            data: r
-          };
-        });
+  const exploreDeployResponses = await Promise.all(
+    body.map(b => rchainToolkit.http.exploreDeploy(httpUrl, b))
+  );
 
-        resolve({
-          success: true,
-          data: { results: data }
-        });
-      })
-      .catch(err => {
-        log("error : communication error with the node (GRPC endpoint)");
-        log(err);
-        reject({
-          success: false,
-          error: { message: err.message || err }
-        });
-      });
+  const data = exploreDeployResponses.map(r => {
+    return {
+      success: true,
+      data: r
+    };
   });
+
+  return {
+    success: true,
+    data: { results: data }
+  };
 };

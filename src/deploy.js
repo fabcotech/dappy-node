@@ -52,39 +52,30 @@ const schema = {
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-module.exports.deployWsHandler = (body, httpUrl) => {
+module.exports.deployWsHandler = async (body, httpUrl) => {
   log("deploy");
 
-  return new Promise(async (resolve, reject) => {
-    const valid = validate(body);
+  const valid = validate(body);
 
-    if (!valid) {
-      reject({
-        success: false,
-        error: {
-          message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
-        }
-      });
-      return;
-    }
-
-    try {
-      const deployResponse = await rchainToolkit.http.deploy(httpUrl, body);
-      if (!deployResponse.startsWith('"Success')) {
-        resolve({
-          success: false,
-          error: { message: deployResponse }
-        });
-      } else {
-        resolve({
-          success: true,
-          data: deployResponse
-        });
+  if (!valid) {
+    return {
+      success: false,
+      error: {
+        message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
       }
-    } catch (err) {
-      log("error : communication error with the node (GRPC endpoint)");
-      log(err);
-      reject(err.message);
-    }
-  });
+    };
+  }
+
+  const deployResponse = await rchainToolkit.http.deploy(httpUrl, body);
+  if (!deployResponse.startsWith('"Success')) {
+    return {
+      success: false,
+      error: { message: deployResponse }
+    };
+  } else {
+    return {
+      success: true,
+      data: deployResponse
+    };
+  }
 };

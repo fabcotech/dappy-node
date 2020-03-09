@@ -368,7 +368,7 @@ console.log("");
 
 const initWs = () => {
   ws.on("connection", client => {
-    client.on("message", (a, b) => {
+    client.on("message", async (a, b) => {
       try {
         const json = JSON.parse(a);
         //
@@ -412,115 +412,124 @@ const initWs = () => {
             })
           );
         } else if (json.type === "deploy") {
-          deployWsHandler(json.body, httpUrlValidator)
-            .then(data => {
-              deploysAwaiting = true;
-              client.send(
-                JSON.stringify({
-                  ...data,
-                  requestId: json.requestId
-                })
-              );
-            })
-            .catch(err => {
-              log("error : deploy ws handler", "error");
-              console.log(err);
-              client.send(
-                JSON.stringify({
-                  success: false,
-                  requestId: json.requestId,
-                  error: { message: err.message }
-                })
-              );
-            });
+          try {
+            const data = await deployWsHandler(json.body, httpUrlValidator);
+            client.send(
+              JSON.stringify({
+                ...data,
+                requestId: json.requestId
+              })
+            );
+          } catch (err) {
+            log("Communication error with the node (GRPC endpoint)", "error");
+            console.log(err);
+            client.send(
+              JSON.stringify({
+                success: false,
+                requestId: json.requestId,
+                error: { message: err.message || err }
+              })
+            );
+          }
+
           // ======== PREPARE DEPLOY ========
         } else if (json.type === "prepare-deploy") {
-          prepareDeployWsHandler(json.body, httpUrlReadOnly)
-            .then(data => {
-              client.send(
-                JSON.stringify({
-                  ...data,
-                  requestId: json.requestId
-                })
-              );
-            })
-            .catch(err => {
-              log("error : prepare deploy ws handler", "error");
-              console.log(err);
-              client.send(
-                JSON.stringify({
-                  success: false,
-                  requestId: json.requestId,
-                  error: { message: err.message }
-                })
-              );
-            });
+          try {
+            const data = await prepareDeployWsHandler(
+              json.body,
+              httpUrlReadOnly
+            );
+
+            client.send(
+              JSON.stringify({
+                ...data,
+                requestId: json.requestId
+              })
+            );
+          } catch (err) {
+            log("error : prepare deploy ws handler", "error");
+            console.log(err);
+            client.send(
+              JSON.stringify({
+                success: false,
+                requestId: json.requestId,
+                error: { message: err.message }
+              })
+            );
+          }
           // ======== EXPLORE DEPLOY ========
         } else if (json.type === "explore-deploy") {
-          exploreDeployWsHandler(json.body, httpUrlReadOnly)
-            .then(data => {
-              client.send(
-                JSON.stringify({
-                  ...data,
-                  requestId: json.requestId
-                })
-              );
-            })
-            .catch(err => {
-              log("error : explore deploy ws handler", "error");
-              console.log(err);
-              client.send(
-                JSON.stringify({
-                  success: false,
-                  requestId: json.requestId,
-                  error: { message: err.message }
-                })
-              );
-            });
+          try {
+            const data = await exploreDeployWsHandler(
+              json.body,
+              httpUrlReadOnly
+            );
+            client.send(
+              JSON.stringify({
+                ...data,
+                requestId: json.requestId
+              })
+            );
+          } catch (err) {
+            log("error : explore deploy ws handler", "error");
+            console.log(err);
+            client.send(
+              JSON.stringify({
+                success: false,
+                requestId: json.requestId,
+                error: { message: err.message }
+              })
+            );
+          }
           // ======== EXPLORE DEPLOY X ========
         } else if (json.type === "explore-deploy-x") {
-          exploreDeployXWsHandler(json.body, httpUrlReadOnly)
-            .then(data => {
-              client.send(
-                JSON.stringify({
-                  ...data,
-                  requestId: json.requestId
-                })
-              );
-            })
-            .catch(err => {
-              log("error : explore deploy x ws handler", "error");
-              console.log(err);
-              client.send(
-                JSON.stringify({
-                  success: false,
-                  requestId: json.requestId,
-                  error: { message: err.message }
-                })
-              );
-            });
+          try {
+            const data = await exploreDeployXWsHandler(
+              json.body,
+              httpUrlReadOnly
+            );
+            client.send(
+              JSON.stringify({
+                ...data,
+                requestId: json.requestId
+              })
+            );
+          } catch (err) {
+            log("error : explore deploy x ws handler", "error");
+            console.log(err);
+            client.send(
+              JSON.stringify({
+                success: false,
+                requestId: json.requestId,
+                error: { message: err.message }
+              })
+            );
+          }
           // ======== LISTEN FOR DATA AT NAME ========
         } else if (json.type === "listen-for-data-at-name") {
-          listenForDataAtNameWsHandler(json.body, httpUrlReadOnly)
-            .then(data => {
-              client.send(
-                JSON.stringify({
-                  ...data,
-                  requestId: json.requestId
-                })
-              );
-            })
-            .catch(err => {
-              log("error : listen-for-data-at-name ws handler", "error");
-              console.log(err);
-              client.send(
-                JSON.stringify({
-                  success: false,
-                  requestId: json.requestId,
-                  error: { message: err.message }
-                })
-              );
-            });
+          try {
+            const data = await listenForDataAtNameWsHandler(
+              json.body,
+              httpUrlReadOnly
+            );
+
+            client.send(
+              JSON.stringify({
+                ...data,
+                requestId: json.requestId
+              })
+            );
+          } catch (err) {
+            log("error : listen-for-data-at-name ws handler", "error");
+            console.log(err);
+            client.send(
+              JSON.stringify({
+                success: false,
+                requestId: json.requestId,
+                error: { message: err.message }
+              })
+            );
+          }
         } else if (json.type === "listen-for-data-at-name-x") {
           listenForDataAtNameXWsHandler(json.body, httpUrlReadOnly)
             .then(data => {

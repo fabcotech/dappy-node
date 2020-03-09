@@ -24,36 +24,27 @@ const schema = {
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-module.exports.prepareDeployWsHandler = (body, httpUrl) => {
+module.exports.prepareDeployWsHandler = async (body, httpUrl) => {
   log("prepare-deploy");
 
-  return new Promise(async (resolve, reject) => {
-    const valid = validate(body);
+  const valid = validate(body);
 
-    if (!valid) {
-      reject({
-        success: false,
-        error: {
-          message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
-        }
-      });
-      return;
-    }
+  if (!valid) {
+    return {
+      success: false,
+      error: {
+        message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
+      }
+    };
+  }
 
-    try {
-      const prepareDeployResponse = await rchainToolkit.http.prepareDeploy(
-        httpUrl,
-        body
-      );
+  const prepareDeployResponse = await rchainToolkit.http.prepareDeploy(
+    httpUrl,
+    body
+  );
 
-      resolve({
-        success: true,
-        data: prepareDeployResponse
-      });
-    } catch (err) {
-      log("error : communication error with the node (GRPC endpoint)");
-      log(err);
-      reject(err.message);
-    }
-  });
+  return {
+    success: true,
+    data: prepareDeployResponse
+  };
 };
