@@ -69,10 +69,11 @@ const runRecordsChildProcessJob = () => {
     log(`RECORDS JOBS ERROR : ${data}`, "error");
   });
   child.stdout.on("data", data => {
+    console.log(data.toString());
     if (data.toString().includes("KILL")) {
-      recordsJobRunning = false;
       child.stdin.pause();
       child.kill(2);
+      recordsJobRunning = false;
     }
   });
   // never triggered
