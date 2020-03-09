@@ -54,6 +54,15 @@ redisClient.on("error", err => {
   log("error : redis error " + err);
 });
 
+setInterval(() => {
+  const m = process.memoryUsage();
+  let a = "";
+  Object.keys(m).forEach(k => {
+    a += `${k}: ${Math.round(m[k] / 10000) / 100} `;
+  });
+  console.log(a);
+}, 2000);
+
 const initJobs = () => {
   getDappyRecordsAndSaveToDb(httpUrlReadOnly, redisClient);
   getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
