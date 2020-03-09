@@ -7,7 +7,6 @@ const log = (a, level = "info") => {
       new Date().toISOString() + " [ERROR] " + a
     );
   } else {
-    return;
     console.log(new Date().toISOString(), a);
   }
 };

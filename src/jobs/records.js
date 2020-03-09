@@ -1,7 +1,19 @@
 const rchainToolkit = require("rchain-toolkit");
 const Ajv = require("ajv");
+require("dotenv").config();
+const redis = require("redis");
 
 const { log, redisKeys, getRecordsTerm, getRecordTerm } = require("../utils");
+
+let httpUrlReadOnly = `${process.env.READ_ONLY_HOST}:${process.env.READ_ONLY_HTTP_PORT}`;
+if (!process.env.READ_ONLY_HTTP_PORT) {
+  httpUrlReadOnly = process.env.READ_ONLY_HOST;
+}
+
+const redisClient = redis.createClient({
+  db: 1,
+  host: process.env.REDIS_HOST
+});
 
 const ajv = new Ajv();
 const schema = {
@@ -53,7 +65,7 @@ ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
 let running = false;
-const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
+const storeRecordsInRedis = async records => {
   const nameKeys = await redisKeys(redisClient, "name:*");
   if (nameKeys.length) {
     await new Promise((res, rej) => {
@@ -83,7 +95,7 @@ const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
     let i = 0;
     const storeName = async () => {
       if (i % 10 === 0) {
-        log(`starting name n°${i}`);
+        log(`starting name n°${i}`, "warning");
       }
       const k = keys[i];
       if (!k) {
@@ -93,7 +105,7 @@ const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
 
       try {
         exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
-          httpUrl,
+          httpUrlReadOnly,
           {
             term: getRecordTerm(registryUri)
           }
@@ -173,19 +185,22 @@ const storeRecordsInRedis = async (redisClient, records, httpUrl) => {
   });
 };
 
-module.exports.getDappyRecordsAndSaveToDb = async (httpUrl, redisClient) => {
+const getDappyRecordsAndSaveToDb = async () => {
   let dataAtNameResponse;
   if (running) {
     log("records job already running");
     return;
   }
   running = true;
-  log("started names job");
+  log("started names job", "warning");
 
   try {
-    dataAtNameResponse = await rchainToolkit.http.exploreDeploy(httpUrl, {
-      term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI)
-    });
+    dataAtNameResponse = await rchainToolkit.http.exploreDeploy(
+      httpUrlReadOnly,
+      {
+        term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI)
+      }
+    );
   } catch (err) {
     log("Could not get data at name " + err, "error");
     return;
@@ -212,24 +227,26 @@ module.exports.getDappyRecordsAndSaveToDb = async (httpUrl, redisClient) => {
 
   const a = new Date().getTime();
   try {
-    const recordsProcessed = await storeRecordsInRedis(
-      redisClient,
-      data,
-      httpUrl
-    );
+    const recordsProcessed = await storeRecordsInRedis(data);
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(
       `== successfully stored ${recordsProcessed ||
         0} records from the blockchain, it took ${s} seconds`
     );
+    console.log("KILL");
     running = false;
+    return;
   } catch (err) {
     log(
       "Something went wrong when initialized the storing of records",
       "error"
     );
     console.log(err);
+    console.log("KILL");
     running = false;
+    return;
   }
 };
+
+return getDappyRecordsAndSaveToDb();

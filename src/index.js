@@ -6,6 +6,7 @@ const https = require("https");
 const redis = require("redis");
 const path = require("path");
 const fs = require("fs");
+const { spawn } = require("child_process");
 
 // will not override the env variables in docker-compose
 require("dotenv").config();
@@ -54,6 +55,44 @@ redisClient.on("error", err => {
   log("error : redis error " + err);
 });
 
+let recordsJobRunning = false;
+const runRecordsChildProcessJob = () => {
+  if (recordsJobRunning) {
+    return;
+  }
+  recordsJobRunning = true;
+  const child = spawn("node", ["./src/jobs/records"]);
+  child.stderr.on("data", data => {
+    log(`RECORDS JOBS : ${data}`, "error");
+  });
+  child.on("error", data => {
+    log(`RECORDS JOBS ERROR : ${data}`, "error");
+  });
+  child.stdout.on("data", data => {
+    if (data.toString().includes("KILL")) {
+      recordsJobRunning = false;
+      child.stdin.pause();
+      child.kill(2);
+    }
+  });
+  // never triggered
+  child.on("exit", a => {
+    if (a) {
+      log("RECORDS JOBS process exits with following command", "error");
+      console.log(a);
+      recordsJobRunning = false;
+    }
+  });
+  // never triggered
+  child.on("close", a => {
+    if (a) {
+      log("RECORDS JOBS process closes with following command", "error");
+      console.log(a);
+      recordsJobRunning = false;
+    }
+  });
+};
+
 setInterval(() => {
   const m = process.memoryUsage();
   let a = "";
@@ -64,7 +103,7 @@ setInterval(() => {
 }, 2000);
 
 const initJobs = () => {
-  getDappyRecordsAndSaveToDb(httpUrlReadOnly, redisClient);
+  runRecordsChildProcessJob();
   getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
     .then(a => {
       lastFinalizedBlockNumber = a;
@@ -74,7 +113,7 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    getDappyRecordsAndSaveToDb(httpUrlReadOnly, redisClient);
+    runRecordsChildProcessJob();
   }, process.env.NAMES_JOB_INTERVAL);
   setInterval(() => {
     getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
