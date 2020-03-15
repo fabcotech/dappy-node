@@ -36,7 +36,7 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
   require("dotenv").config();
 }
 
-const DAPPY_NODE_VERSION = "0.1.5";
+const DAPPY_NODE_VERSION = "0.2.1";
 
 let rnodeVersion = undefined;
 let lastFinalizedBlockNumber = undefined;
