@@ -72,6 +72,8 @@ cd dapppy-node
 npm install
 
 node src/index.js node --max-old-space-size=8192 src/index.js --ssl
+# or with pm2 (fine for production)
+pm2 start ecosystem.config.js  --node-args="--max-old-space-size=8192"
 ```
 
 **Note:** Of course set the 8192 value according to the capabilities of your server. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.

@@ -1,12 +1,12 @@
 {
   "name": "dappy-node",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Dappy main node program, stores the name records and provides a simple HTTP interface to interact with rnode",
   "author": "FABCO",
   "repository": "https://github.com/fabcotech/dappy-node.git",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=development node index"
+    "start": "NODE_ENV=development node --max-old-space-size=4096 src/index.js"
   },
   "license": "MIT",
   "dependencies": {
