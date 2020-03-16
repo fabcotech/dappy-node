@@ -28,7 +28,6 @@ const { getDappyRecordsAndSaveToDb } = require("./jobs/records");
 const { getLastFinalizedBlockNumber } = require("./jobs/last-block");
 
 const log = require("./utils").log;
-const redisSmembers = require("./utils").redisSmembers;
 const redisHgetall = require("./utils").redisHgetall;
 const redisKeys = require("./utils").redisKeys;
 
@@ -96,7 +95,7 @@ const runRecordsChildProcessJob = () => {
 
 const initJobs = () => {
   runRecordsChildProcessJob();
-  getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
+  getLastFinalizedBlockNumber(httpUrlReadOnly)
     .then(a => {
       lastFinalizedBlockNumber = a;
     })
@@ -108,7 +107,7 @@ const initJobs = () => {
     runRecordsChildProcessJob();
   }, process.env.NAMES_JOB_INTERVAL);
   setInterval(() => {
-    getLastFinalizedBlockNumber(httpUrlReadOnly, redisClient)
+    getLastFinalizedBlockNumber(httpUrlReadOnly)
       .then(a => {
         lastFinalizedBlockNumber = a;
       })
@@ -149,7 +148,7 @@ const initJobs = () => {
 
 const getAllRecordsWsHandler = async () => {
   try {
-    const keys = await redisKeys(redisClient, `name:*`);
+    const keys = await redisKeys(redisClient, `name:${process.env.REDIS_DB}:*`);
     const records = await Promise.all(
       keys.map(k => redisHgetall(redisClient, k))
     );

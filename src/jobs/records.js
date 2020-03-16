@@ -65,7 +65,10 @@ ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
 const storeRecordsInRedis = async records => {
-  const nameKeys = await redisKeys(redisClient, "name:*");
+  const nameKeys = await redisKeys(
+    redisClient,
+    `name:${process.env.REDIS_DB}:*`
+  );
   if (nameKeys.length) {
     await new Promise((res, rej) => {
       redisClient.del(...nameKeys, (err, resp) => {
@@ -76,7 +79,10 @@ const storeRecordsInRedis = async records => {
       });
     });
   }
-  const publickeyKeys = await redisKeys(redisClient, "publicKey:*");
+  const publickeyKeys = await redisKeys(
+    redisClient,
+    `publicKey:${process.env.REDIS_DB}:*`
+  );
   if (publickeyKeys.length) {
     await new Promise((res, rej) => {
       redisClient.del(...publickeyKeys, (err, resp) => {
@@ -146,7 +152,7 @@ const storeRecordsInRedis = async records => {
 
       await new Promise((res, rej) => {
         redisClient.hmset(
-          `name:${record.name}`,
+          `name:${process.env.REDIS_DB}:${record.name}`,
           ...redisSetValues,
           (err, resp) => {
             if (err) {
@@ -158,7 +164,7 @@ const storeRecordsInRedis = async records => {
       });
       await new Promise((res, rej) => {
         redisClient.sadd(
-          `publicKey:${record.publicKey}`,
+          `publicKey:${process.env.REDIS_DB}:${record.publicKey}`,
           record.name,
           (err, resp) => {
             if (err) {
