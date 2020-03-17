@@ -66,6 +66,12 @@ You have to have a RChain node running locally or remotely with GRPC api exposed
 
 You must copy the `.env.example` file, name it `.env` so environment variables will be read from it. Of course you must also edit the `.env` variables so it fits with your rnode program and variables.
 
+**Note :** values in `.env.example` are kept up to date do dappy-node can start on a valid Dappy network connected to RChain's testnet.
+
+`DAPPY_NETWORK` is read by Dappy browser, to know what is the name of the Dappy network, currently it needs the network to be called betanetwork, could it be on mainnet or testnet.
+
+`RCHAIN_NETWORK` is also read by Dappy browser, it is important that user know if the Dappy network is connected to mainnet, testnet, or another local network.
+
 ```
 git clone https://github.com/fabcotech/dappy-node.git
 cd dapppy-node

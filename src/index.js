@@ -243,7 +243,8 @@ const serverHttp = http.createServer((req, res) => {
         rnodeVersion: rnodeVersion,
         rchainNamesRegistryUriEntry:
           process.env.RCHAIN_NAMES_REGISTRY_URI_ENTRY,
-        rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI
+        rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
+        rchainNetwork: process.env.RCHAIN_NETWORK
       })
     );
     res.end();
@@ -378,7 +379,8 @@ const initWs = () => {
                 rnodeVersion: rnodeVersion,
                 rchainNamesRegistryUriEntry:
                   process.env.RCHAIN_NAMES_REGISTRY_URI_ENTRY,
-                rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI
+                rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
+                rchainNetwork: process.env.RCHAIN_NETWORK
               }
             })
           );
