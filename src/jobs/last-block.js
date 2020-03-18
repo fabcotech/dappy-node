@@ -1,6 +1,7 @@
 const rchainToolkit = require("rchain-toolkit");
 
 const log = require("../utils").log;
+const getRecordsTerm = require("../utils").getRecordsTerm;
 
 module.exports.getLastFinalizedBlockNumber = async httpUrlReadOnly => {
   let validAfterBlockNumber;
@@ -16,9 +17,27 @@ module.exports.getLastFinalizedBlockNumber = async httpUrlReadOnly => {
   }
 
   const intWithOffset = Math.floor(validAfterBlockNumber / 12) * 12;
+
+  try {
+    namePrice = rchainToolkit.utils.rhoValToJs(
+      JSON.parse(
+        await rchainToolkit.http.exploreDeploy(httpUrlReadOnly, {
+          term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI)
+        })
+      ).expr[0]
+    ).price;
+  } catch (err) {
+    log("Unable to get name price", "error");
+    throw new Error(err);
+  }
+
   log(
-    `got last finalized block height at ${validAfterBlockNumber}, rounded it to ${intWithOffset} (base 12)`
+    `Finalized block height : ${intWithOffset} (base 12 rounding), name price : ${namePrice /
+      100000000} REVs`
   );
 
-  return intWithOffset;
+  return {
+    lastFinalizedBlockNumber: intWithOffset,
+    namePrice: namePrice
+  };
 };

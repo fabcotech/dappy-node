@@ -14,24 +14,15 @@ const log = (a, level = "info") => {
 module.exports.log = log;
 
 module.exports.getRecordsTerm = registryUri => {
-  return `new return, filesModuleCh, readCh, lookup(\`rho:registry:lookup\`) in {
-    lookup!(\`rho:id:${registryUri}\`, *filesModuleCh) |
-    for(filesModuleReader <- filesModuleCh) {
+  return `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
+    lookup!(\`rho:id:${registryUri}\`, *entryCh) |
+    for(entry <- entryCh) {
       new x in {
-        filesModuleReader!(*x) |
+        entry!(({ "type": "READ" }, *x)) |
         for (y <- x) {
           return!(*y)
         }
       }
-    }
-  }`;
-};
-
-module.exports.getRecordTerm = registryUri => {
-  return `new return, recordCh, readCh, lookup(\`rho:registry:lookup\`) in {
-    lookup!(\`${registryUri}\`, *recordCh) |
-    for(record <- recordCh) {
-      return!(*record)
     }
   }`;
 };

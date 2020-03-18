@@ -39,6 +39,7 @@ const DAPPY_NODE_VERSION = "0.2.1";
 
 let rnodeVersion = undefined;
 let lastFinalizedBlockNumber = undefined;
+let namePrice = undefined;
 
 let protobufsLoaded = false;
 let appReady = false;
@@ -97,7 +98,8 @@ const initJobs = () => {
   runRecordsChildProcessJob();
   getLastFinalizedBlockNumber(httpUrlReadOnly)
     .then(a => {
-      lastFinalizedBlockNumber = a;
+      lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
+      namePrice = a.namePrice;
     })
     .catch(err => {
       log("failed to get last finalized block height");
@@ -109,7 +111,8 @@ const initJobs = () => {
   setInterval(() => {
     getLastFinalizedBlockNumber(httpUrlReadOnly)
       .then(a => {
-        lastFinalizedBlockNumber = a;
+        lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
+        namePrice = a.namePrice;
       })
       .catch(err => {
         log("failed to get last finalized block height");
@@ -241,10 +244,9 @@ const serverHttp = http.createServer((req, res) => {
         dappyNodeVersion: DAPPY_NODE_VERSION,
         lastFinalizedBlockNumber: lastFinalizedBlockNumber,
         rnodeVersion: rnodeVersion,
-        rchainNamesRegistryUriEntry:
-          process.env.RCHAIN_NAMES_REGISTRY_URI_ENTRY,
         rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
-        rchainNetwork: process.env.RCHAIN_NETWORK
+        rchainNetwork: process.env.RCHAIN_NETWORK,
+        namePrice: namePrice
       })
     );
     res.end();
@@ -377,10 +379,9 @@ const initWs = () => {
                 dappyNodeVersion: DAPPY_NODE_VERSION,
                 lastFinalizedBlockNumber: lastFinalizedBlockNumber,
                 rnodeVersion: rnodeVersion,
-                rchainNamesRegistryUriEntry:
-                  process.env.RCHAIN_NAMES_REGISTRY_URI_ENTRY,
                 rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
-                rchainNetwork: process.env.RCHAIN_NETWORK
+                rchainNetwork: process.env.RCHAIN_NETWORK,
+                namePrice: namePrice
               }
             })
           );
