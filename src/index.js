@@ -23,7 +23,8 @@ const { deployWsHandler } = require("./deploy");
 const { exploreDeployWsHandler } = require("./explore-deploy");
 const { exploreDeployXWsHandler } = require("./explore-deploy-x");
 const { prepareDeployWsHandler } = require("./prepare-deploy");
-
+const { getAllRecordsWsHandler } = require("./get-all-records");
+const { getOneRecordWsHandler } = require("./get-one-record");
 const { getDappyRecordsAndSaveToDb } = require("./jobs/records");
 const { getLastFinalizedBlockNumber } = require("./jobs/last-block");
 
@@ -148,22 +149,6 @@ const initJobs = () => {
   );
   res.send(records);
 }); */
-
-const getAllRecordsWsHandler = async () => {
-  try {
-    const keys = await redisKeys(redisClient, `name:${process.env.REDIS_DB}:*`);
-    const records = await Promise.all(
-      keys.map(k => redisHgetall(redisClient, k))
-    );
-
-    return records;
-  } catch (err) {
-    return {
-      success: false,
-      error: { message: err }
-    };
-  }
-};
 
 /* app.get("/get-all-records", async (req, res) => {
   const keys = await redisKeys(redisClient, `name:*`);
@@ -546,7 +531,7 @@ const initWs = () => {
             });
           // ======== GET ALL RECORDS ========
         } else if (json.type === "get-all-records") {
-          getAllRecordsWsHandler()
+          getAllRecordsWsHandler(redisClient)
             .then(data => {
               client.send(
                 JSON.stringify({
@@ -566,7 +551,28 @@ const initWs = () => {
                 })
               );
             });
-
+          // ======== GET ONE RECORD ========
+        } else if (json.type === "get-one-record") {
+          getOneRecordWsHandler(json.body, redisClient)
+            .then(data => {
+              client.send(
+                JSON.stringify({
+                  success: true,
+                  requestId: json.requestId,
+                  data: JSON.stringify(data)
+                })
+              );
+            })
+            .catch(err => {
+              log("error : get-one-record ws handler", "error");
+              console.log(err);
+              client.send(
+                JSON.stringify({
+                  ...err,
+                  requestId: json.requestId
+                })
+              );
+            });
           // ======== GET NODES ========
         } else if (json.type === "get-nodes") {
           getNodesWsHandler(json.body, httpUrlReadOnly)
