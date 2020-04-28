@@ -12,7 +12,7 @@ if (!process.env.READ_ONLY_HTTP_PORT) {
 
 const redisClient = redis.createClient({
   db: 1,
-  host: process.env.REDIS_HOST
+  host: process.env.REDIS_HOST,
 });
 
 const ajv = new Ajv();
@@ -21,19 +21,19 @@ const schema = {
   type: "object",
   properties: {
     name: {
-      type: "string"
+      type: "string",
     },
     publicKey: {
-      type: "string"
+      type: "string",
     },
     address: {
-      type: "string"
+      type: "string",
     },
     nonce: {
-      type: "string"
+      type: "string",
     },
     signature: {
-      type: "string"
+      type: "string",
     },
     servers: {
       type: "array",
@@ -41,30 +41,30 @@ const schema = {
         type: "object",
         properties: {
           ip: {
-            type: "string"
+            type: "string",
           },
           host: {
-            type: "string"
+            type: "string",
           },
           cert: {
-            type: "string"
+            type: "string",
           },
           primary: {
-            type: "boolean"
-          }
+            type: "boolean",
+          },
         },
-        required: ["ip", "host", "cert"]
-      }
-    }
+        required: ["ip", "host", "cert"],
+      },
+    },
   },
-  required: ["name", "publicKey", "servers", "nonce"]
+  required: ["name", "publicKey", "servers", "nonce"],
 };
 module.exports.schema = schema;
 
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-const storeRecordsInRedis = async records => {
+const storeRecordsInRedis = async (records) => {
   const nameKeys = await redisKeys(
     redisClient,
     `name:${process.env.REDIS_DB}:*`
@@ -101,7 +101,13 @@ const storeRecordsInRedis = async records => {
     const storeName = async () => {
       const k = keys[i];
       if (!k) {
-        return resolve();
+        if (i === l - 1) {
+          resolve(l);
+        } else {
+          i += 1;
+          await storeName();
+        }
+        return;
       }
       const registryUri = records[k];
 
@@ -109,7 +115,7 @@ const storeRecordsInRedis = async records => {
         exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
           httpUrlReadOnly,
           {
-            term: getRecordTerm(registryUri)
+            term: getRecordTerm(registryUri),
           }
         );
       } catch (err) {
@@ -191,10 +197,10 @@ const getDappyRecordsAndSaveToDb = async () => {
   log("started names job");
 
   try {
-    dataAtNameResponse = await rchainToolkit.http.exploreDeploy(
+    exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
       httpUrlReadOnly,
       {
-        term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI)
+        term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI),
       }
     );
   } catch (err) {
@@ -202,7 +208,7 @@ const getDappyRecordsAndSaveToDb = async () => {
     return;
   }
 
-  const parsedResponse = JSON.parse(dataAtNameResponse);
+  const parsedResponse = JSON.parse(exploreDeployResponse);
   if (!parsedResponse.expr || !parsedResponse.expr[0]) {
     log(
       "Could not get .expr[0], make sure that the Dappy records contract has been deployed, value:",
@@ -227,8 +233,9 @@ const getDappyRecordsAndSaveToDb = async () => {
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(
-      `== successfully stored ${recordsProcessed ||
-        0} records from the blockchain, it took ${s} seconds`
+      `== successfully stored ${
+        recordsProcessed || 0
+      } records from the blockchain, it took ${s} seconds`
     );
     log("KILL records job process");
     return;

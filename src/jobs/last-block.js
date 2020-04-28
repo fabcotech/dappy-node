@@ -3,12 +3,12 @@ const rchainToolkit = require("rchain-toolkit");
 const log = require("../utils").log;
 const getRecordsTerm = require("../utils").getRecordsTerm;
 
-module.exports.getLastFinalizedBlockNumber = async httpUrlReadOnly => {
+module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
   let validAfterBlockNumber;
   try {
     validAfterBlockNumber = JSON.parse(
       await rchainToolkit.http.blocks(httpUrlReadOnly, {
-        position: 1
+        position: 1,
       })
     )[0].blockNumber;
   } catch (err) {
@@ -22,7 +22,7 @@ module.exports.getLastFinalizedBlockNumber = async httpUrlReadOnly => {
     namePrice = rchainToolkit.utils.rhoValToJs(
       JSON.parse(
         await rchainToolkit.http.exploreDeploy(httpUrlReadOnly, {
-          term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI)
+          term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI),
         })
       ).expr[0]
     ).price;
@@ -32,12 +32,13 @@ module.exports.getLastFinalizedBlockNumber = async httpUrlReadOnly => {
   }
 
   log(
-    `Finalized block height : ${intWithOffset} (base 12 rounding), name price : ${namePrice /
-      100000000} REVs`
+    `Finalized block height : ${intWithOffset} (base 12 rounding), name price : ${
+      namePrice / 100000000
+    } REVs`
   );
 
   return {
     lastFinalizedBlockNumber: intWithOffset,
-    namePrice: namePrice
+    namePrice: namePrice,
   };
 };
