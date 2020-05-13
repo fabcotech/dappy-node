@@ -208,7 +208,15 @@ const getDappyRecordsAndSaveToDb = async () => {
     return;
   }
 
-  const parsedResponse = JSON.parse(exploreDeployResponse);
+  let parsedResponse;
+  try {
+    parsedResponse = JSON.parse(exploreDeployResponse);
+  } catch (err) {
+    log("Could parse explore-deploy response as JSON", "error");
+    console.log(exploreDeployResponse);
+    return;
+  }
+
   if (!parsedResponse.expr || !parsedResponse.expr[0]) {
     log(
       "Could not get .expr[0], make sure that the Dappy records contract has been deployed, value:",

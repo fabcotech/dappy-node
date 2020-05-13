@@ -18,16 +18,29 @@ module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
 
   const intWithOffset = Math.floor(validAfterBlockNumber / 12) * 12;
 
+  let exploreDeployResult;
+  try {
+    exploreDeployResult = await rchainToolkit.http.exploreDeploy(
+      httpUrlReadOnly,
+      {
+        term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI),
+      }
+    );
+  } catch (err) {
+    log("Unable to explore-deploy for name price", "error");
+    throw new Error(err);
+  }
+
   try {
     namePrice = rchainToolkit.utils.rhoValToJs(
-      JSON.parse(
-        await rchainToolkit.http.exploreDeploy(httpUrlReadOnly, {
-          term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI),
-        })
-      ).expr[0]
+      JSON.parse(exploreDeployResult).expr[0]
     ).price;
   } catch (err) {
-    log("Unable to get name price", "error");
+    log(
+      "Unable to parse explore-deploy result as JSON for name price",
+      "error"
+    );
+    console.log(exploreDeployResult);
     throw new Error(err);
   }
 
