@@ -101,7 +101,7 @@ const storeRecordsInRedis = async (records) => {
     const storeName = async () => {
       const k = keys[i];
       if (!k) {
-        if (i === l - 1) {
+        if (i === l - 1 || l === 0) {
           resolve(l);
         } else {
           i += 1;
