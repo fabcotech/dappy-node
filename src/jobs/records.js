@@ -193,7 +193,7 @@ const storeRecordsInRedis = async (records) => {
   });
 };
 
-const getDappyRecordsAndSaveToDb = async () => {
+module.exports.getDappyRecordsAndSaveToDb = async () => {
   log("started names job");
 
   try {
@@ -245,7 +245,6 @@ const getDappyRecordsAndSaveToDb = async () => {
         recordsProcessed || 0
       } records from the blockchain, it took ${s} seconds`
     );
-    log("KILL records job process");
     return;
   } catch (err) {
     log(
@@ -257,5 +256,3 @@ const getDappyRecordsAndSaveToDb = async () => {
     return;
   }
 };
-
-return getDappyRecordsAndSaveToDb();

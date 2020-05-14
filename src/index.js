@@ -17,7 +17,7 @@ const { getNodesWsHandler } = require("./get-nodes");
 const { previewPrivateNamesWsHandler } = require("./preview-private-names");
 const { listenForDataAtNameWsHandler } = require("./listen-for-data-at-name");
 const {
-  listenForDataAtNameXWsHandler
+  listenForDataAtNameXWsHandler,
 } = require("./listen-for-data-at-name-x");
 const { deployWsHandler } = require("./deploy");
 const { exploreDeployWsHandler } = require("./explore-deploy");
@@ -49,60 +49,31 @@ let deploysAwaiting = false;
 
 const redisClient = redis.createClient({
   db: 1,
-  host: process.env.REDIS_HOST
+  host: process.env.REDIS_HOST,
 });
 
-redisClient.on("error", err => {
+redisClient.on("error", (err) => {
   log("error : redis error " + err);
 });
 
 let recordsJobRunning = false;
-const runRecordsChildProcessJob = () => {
+const runRecordsChildProcessJob = async () => {
   if (recordsJobRunning) {
     return;
   }
   recordsJobRunning = true;
-  const child = spawn("node", ["./src/jobs/records"]);
-  child.stderr.on("data", data => {
-    log(`RECORDS JOBS : ${data}`, "error");
-  });
-  child.on("error", data => {
-    log(`RECORDS JOBS ERROR : ${data}`, "error");
-  });
-  child.stdout.on("data", data => {
-    console.log(data.toString());
-    if (data.toString().includes("KILL")) {
-      child.stdin.pause();
-      child.kill(2);
-      recordsJobRunning = false;
-    }
-  });
-  // never triggered
-  child.on("exit", a => {
-    if (a) {
-      log("RECORDS JOBS process exits with following command", "error");
-      console.log(a);
-      recordsJobRunning = false;
-    }
-  });
-  // never triggered
-  child.on("close", a => {
-    if (a) {
-      log("RECORDS JOBS process closes with following command", "error");
-      console.log(a);
-      recordsJobRunning = false;
-    }
-  });
+  await getDappyRecordsAndSaveToDb();
+  recordsJobRunning = false;
 };
 
 const initJobs = () => {
   runRecordsChildProcessJob();
   getLastFinalizedBlockNumber(httpUrlReadOnly)
-    .then(a => {
+    .then((a) => {
       lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
       namePrice = a.namePrice;
     })
-    .catch(err => {
+    .catch((err) => {
       log("failed to get last finalized block height");
       console.log(err);
     });
@@ -111,11 +82,11 @@ const initJobs = () => {
   }, process.env.NAMES_JOB_INTERVAL);
   setInterval(() => {
     getLastFinalizedBlockNumber(httpUrlReadOnly)
-      .then(a => {
+      .then((a) => {
         lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
         namePrice = a.namePrice;
       })
-      .catch(err => {
+      .catch((err) => {
         log("failed to get last finalized block height");
         console.log(err);
       });
@@ -231,7 +202,7 @@ const serverHttp = http.createServer((req, res) => {
         rnodeVersion: rnodeVersion,
         rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
         rchainNetwork: process.env.RCHAIN_NETWORK,
-        namePrice: namePrice
+        namePrice: namePrice,
       })
     );
     res.end();
@@ -247,7 +218,7 @@ const serverHttp = http.createServer((req, res) => {
     const network = req.url.substr(io + 9, 1000);
 
     getNodesWsHandler({ network: network }, httpUrlReadOnly)
-      .then(resp => {
+      .then((resp) => {
         if (resp.success) {
           res.setHeader("Content-Type", "application/json");
           res.write(JSON.stringify(resp));
@@ -259,7 +230,7 @@ const serverHttp = http.createServer((req, res) => {
           return;
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         res.statusCode = 404;
         res.setHeader("Content-Type", "text/plain");
@@ -280,7 +251,7 @@ if (process.argv.includes("--ssl")) {
   );
   const options = {
     key: fs.readFileSync(path.join(__dirname, "../server-key.pem")),
-    cert: fs.readFileSync(path.join(__dirname, "../server-crt.pem"))
+    cert: fs.readFileSync(path.join(__dirname, "../server-crt.pem")),
   };
   serverHttps = https.createServer(options);
 } else {
@@ -293,17 +264,17 @@ if (process.argv.includes("--ssl")) {
 const ws = new WebSocket.Server({
   server: serverHttps,
   backlog: 1000,
-  maxPayload: 256100
+  maxPayload: 256100,
 });
 
 serverHttps.listen(process.env.HTTPS_PORT);
 
-ws.on("close", err => {
+ws.on("close", (err) => {
   log("critical error : websocket connection closed");
   log(err);
 });
 
-ws.on("error", err => {
+ws.on("error", (err) => {
   log("critical error : websocket connection error");
   log(err);
 });
@@ -311,7 +282,7 @@ console.log("");
 
 (httpUrlReadOnly.startsWith("https://") ? https : http).get(
   `${httpUrlReadOnly}/version`,
-  resp => {
+  (resp) => {
     log(`RChain node responding at ${httpUrlReadOnly}/version`);
 
     if (resp.statusCode !== 200) {
@@ -322,7 +293,7 @@ console.log("");
 
     resp.setEncoding("utf8");
     let rawData = "";
-    resp.on("data", chunk => {
+    resp.on("data", (chunk) => {
       rawData += chunk;
     });
 
@@ -337,7 +308,7 @@ console.log("");
       return;
     });
 
-    resp.on("error", err => {
+    resp.on("error", (err) => {
       log("error: " + err);
       process.exit();
     });
@@ -345,7 +316,7 @@ console.log("");
 );
 
 const initWs = () => {
-  ws.on("connection", client => {
+  ws.on("connection", (client) => {
     client.on("message", async (a, b) => {
       try {
         const json = JSON.parse(a);
@@ -366,8 +337,8 @@ const initWs = () => {
                 rnodeVersion: rnodeVersion,
                 rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
                 rchainNetwork: process.env.RCHAIN_NETWORK,
-                namePrice: namePrice
-              }
+                namePrice: namePrice,
+              },
             })
           );
           // ======== PING/PONG ========
@@ -376,7 +347,7 @@ const initWs = () => {
             JSON.stringify({
               success: true,
               requestId: json.requestId,
-              data: "pong"
+              data: "pong",
             })
           );
           // ======== DEPLOY ========
@@ -386,7 +357,7 @@ const initWs = () => {
             JSON.stringify({
               success: true,
               data: lastFinalizedBlockNumber,
-              requestId: json.requestId
+              requestId: json.requestId,
             })
           );
         } else if (json.type === "deploy") {
@@ -395,7 +366,7 @@ const initWs = () => {
             client.send(
               JSON.stringify({
                 ...data,
-                requestId: json.requestId
+                requestId: json.requestId,
               })
             );
           } catch (err) {
@@ -405,7 +376,7 @@ const initWs = () => {
               JSON.stringify({
                 success: false,
                 requestId: json.requestId,
-                error: { message: err.message || err }
+                error: { message: err.message || err },
               })
             );
           }
@@ -421,7 +392,7 @@ const initWs = () => {
             client.send(
               JSON.stringify({
                 ...data,
-                requestId: json.requestId
+                requestId: json.requestId,
               })
             );
           } catch (err) {
@@ -431,7 +402,7 @@ const initWs = () => {
               JSON.stringify({
                 success: false,
                 requestId: json.requestId,
-                error: { message: err.message }
+                error: { message: err.message },
               })
             );
           }
@@ -445,7 +416,7 @@ const initWs = () => {
             client.send(
               JSON.stringify({
                 ...data,
-                requestId: json.requestId
+                requestId: json.requestId,
               })
             );
           } catch (err) {
@@ -455,7 +426,7 @@ const initWs = () => {
               JSON.stringify({
                 success: false,
                 requestId: json.requestId,
-                error: { message: err.message }
+                error: { message: err.message },
               })
             );
           }
@@ -469,7 +440,7 @@ const initWs = () => {
             client.send(
               JSON.stringify({
                 ...data,
-                requestId: json.requestId
+                requestId: json.requestId,
               })
             );
           } catch (err) {
@@ -479,7 +450,7 @@ const initWs = () => {
               JSON.stringify({
                 success: false,
                 requestId: json.requestId,
-                error: { message: err.message }
+                error: { message: err.message },
               })
             );
           }
@@ -494,7 +465,7 @@ const initWs = () => {
             client.send(
               JSON.stringify({
                 ...data,
-                requestId: json.requestId
+                requestId: json.requestId,
               })
             );
           } catch (err) {
@@ -504,94 +475,94 @@ const initWs = () => {
               JSON.stringify({
                 success: false,
                 requestId: json.requestId,
-                error: { message: err.message }
+                error: { message: err.message },
               })
             );
           }
         } else if (json.type === "listen-for-data-at-name-x") {
           listenForDataAtNameXWsHandler(json.body, httpUrlReadOnly)
-            .then(data => {
+            .then((data) => {
               client.send(
                 JSON.stringify({
                   ...data,
-                  requestId: json.requestId
+                  requestId: json.requestId,
                 })
               );
             })
-            .catch(err => {
+            .catch((err) => {
               log("error : listen-for-data-at-name-x ws handler", "error");
               console.log(err);
               client.send(
                 JSON.stringify({
                   success: false,
                   requestId: json.requestId,
-                  error: { message: err.message }
+                  error: { message: err.message },
                 })
               );
             });
           // ======== GET ALL RECORDS ========
         } else if (json.type === "get-all-records") {
           getAllRecordsWsHandler(redisClient)
-            .then(data => {
+            .then((data) => {
               client.send(
                 JSON.stringify({
                   success: true,
                   requestId: json.requestId,
-                  data: JSON.stringify(data)
+                  data: JSON.stringify(data),
                 })
               );
             })
-            .catch(err => {
+            .catch((err) => {
               log("error : get-all-records ws handler", "error");
               console.log(err);
               client.send(
                 JSON.stringify({
                   ...err,
-                  requestId: json.requestId
+                  requestId: json.requestId,
                 })
               );
             });
           // ======== GET ONE RECORD ========
         } else if (json.type === "get-one-record") {
           getOneRecordWsHandler(json.body, redisClient)
-            .then(data => {
+            .then((data) => {
               client.send(
                 JSON.stringify({
                   success: true,
                   requestId: json.requestId,
-                  data: JSON.stringify(data)
+                  data: JSON.stringify(data),
                 })
               );
             })
-            .catch(err => {
+            .catch((err) => {
               log("error : get-one-record ws handler", "error");
               console.log(err);
               client.send(
                 JSON.stringify({
                   ...err,
-                  requestId: json.requestId
+                  requestId: json.requestId,
                 })
               );
             });
           // ======== GET NODES ========
         } else if (json.type === "get-nodes") {
           getNodesWsHandler(json.body, httpUrlReadOnly)
-            .then(data => {
+            .then((data) => {
               client.send(
                 JSON.stringify({
                   ...data,
-                  requestId: json.requestId
+                  requestId: json.requestId,
                 })
               );
             })
-            .catch(err => {
+            .catch((err) => {
               log("error : get-nodes ws handler", "error");
               console.log(err);
               err.requestId = json.requestId;
               client.send(
                 JSON.stringify({
                   ...err,
-                  requestId: json.requestId
+                  requestId: json.requestId,
                 })
               );
             });
@@ -600,7 +571,7 @@ const initWs = () => {
             JSON.stringify({
               success: false,
               requestId: json.requestId,
-              error: { message: "Unknown request" }
+              error: { message: "Unknown request" },
             })
           );
         }
@@ -609,7 +580,7 @@ const initWs = () => {
         client.send(
           JSON.stringify({
             success: false,
-            error: { message: "Unable to parse request" }
+            error: { message: "Unable to parse request" },
           })
         );
       }
@@ -619,11 +590,11 @@ const initWs = () => {
       client.terminate();
     });
 
-    client.on("error", err => {
+    client.on("error", (err) => {
       console.log(err);
       client.send({
         type: "websocket-error",
-        error: err
+        error: err,
       });
     });
   });
