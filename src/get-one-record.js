@@ -39,6 +39,13 @@ module.exports.getOneRecordWsHandler = async (body, redisClient) => {
     const key = keys.find(
       (k) => k === `name:${process.env.REDIS_DB}:${body.name}`
     );
+    if (!key) {
+      return {
+        success: false,
+        error: { message: "name not found" },
+      };
+    }
+
     const record = await redisHgetall(redisClient, key);
 
     return record;
