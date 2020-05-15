@@ -109,6 +109,9 @@ const storeRecordsInRedis = async (records) => {
         }
         return;
       }
+      if (i !== 0 && i % 20 === 0) {
+        log("processing name no " + i);
+      }
       const registryUri = records[k];
 
       try {

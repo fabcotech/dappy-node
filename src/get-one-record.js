@@ -1,6 +1,9 @@
+const Ajv = require("ajv");
+
 const redisHgetall = require("./utils").redisHgetall;
 const redisKeys = require("./utils").redisKeys;
-const Ajv = require("ajv");
+
+const log = require("./utils").log;
 
 const ajv = new Ajv();
 const schema = {
@@ -19,7 +22,7 @@ ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
 module.exports.getOneRecordWsHandler = async (body, redisClient) => {
-  console.log("get-one-record");
+  log("get-one-record");
   const valid = validate(body);
 
   if (!valid) {

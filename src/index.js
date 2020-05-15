@@ -6,7 +6,6 @@ const https = require("https");
 const redis = require("redis");
 const path = require("path");
 const fs = require("fs");
-const { spawn } = require("child_process");
 
 // will not override the env variables in docker-compose
 require("dotenv").config();
