@@ -9,10 +9,10 @@ const schema = {
   type: "object",
   properties: {
     term: {
-      type: "string"
-    }
+      type: "string",
+    },
   },
-  required: ["term"]
+  required: ["term"],
 };
 module.exports.schema = schema;
 
@@ -28,27 +28,26 @@ module.exports.exploreDeployWsHandler = async (body, httpUrl) => {
     return {
       success: false,
       error: {
-        message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
-      }
+        message: validate.errors.map((e) => `body${e.dataPath} ${e.message}`),
+      },
     };
   }
 
   const exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
     httpUrl,
     {
-      term: body.term
+      term: body.term,
     }
   );
-
   if (exploreDeployResponse.startsWith('"Error')) {
     return {
       success: false,
-      error: { message: exploreDeployResponse }
+      error: { message: exploreDeployResponse },
     };
   } else {
     return {
       success: true,
-      data: exploreDeployResponse
+      data: exploreDeployResponse,
     };
   }
 };

@@ -35,6 +35,9 @@ const schema = {
     signature: {
       type: "string",
     },
+    badges: {
+      type: "object",
+    },
     servers: {
       type: "array",
       items: {
@@ -153,6 +156,8 @@ const storeRecordsInRedis = async (records) => {
       for (key of Object.keys(record)) {
         redisSetValues.push(key);
         if (key === "servers") {
+          redisSetValues.push(JSON.stringify(record[key]));
+        } else if (key === "badges") {
           redisSetValues.push(JSON.stringify(record[key]));
         } else {
           redisSetValues.push(record[key]);

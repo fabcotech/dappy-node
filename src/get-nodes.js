@@ -9,10 +9,10 @@ const schema = {
   type: "object",
   properties: {
     network: {
-      type: "string"
-    }
+      type: "string",
+    },
   },
-  required: ["network"]
+  required: ["network"],
 };
 
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
@@ -28,8 +28,8 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
       reject({
         success: false,
         error: {
-          message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
-        }
+          message: validate.errors.map((e) => `body${e.dataPath} ${e.message}`),
+        },
       });
       return;
     }
@@ -38,23 +38,23 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
       reject({
         success: false,
         error: {
-          message: `This nodes runs on the ${process.env.DAPPY_NETWORK} network, could not get names for ${body.network} network`
-        }
+          message: `This nodes runs on the ${process.env.DAPPY_NETWORK} network, could not get names for ${body.network} network`,
+        },
       });
       return;
     }
 
     rchainToolkit.http
       .exploreDeploy(httpUrl, {
-        term: getRecordsTerm(process.env.DAPPY_NODES_REGISTRY_URI)
+        term: getRecordsTerm(process.env.DAPPY_NODES_REGISTRY_URI),
       })
-      .then(dataAtNameResponse => {
+      .then((dataAtNameResponse) => {
         const parsedResponse = JSON.parse(dataAtNameResponse);
 
         if (!parsedResponse.expr.length) {
           reject({
             success: false,
-            error: { message: "nodes resource not found on the blockchain" }
+            error: { message: "nodes resource not found on the blockchain" },
           });
           return;
         }
@@ -63,15 +63,15 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
 
         resolve({
           success: true,
-          data: jsObject
+          data: jsObject,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         log("error : communication error with the node (GRPC endpoint)");
         log(err);
         reject({
           success: false,
-          error: { message: err.message || err }
+          error: { message: err.message || err },
         });
       });
   });

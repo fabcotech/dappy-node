@@ -66,7 +66,6 @@ const runRecordsChildProcessJob = async () => {
 };
 
 const initJobs = () => {
-  runRecordsChildProcessJob();
   getLastFinalizedBlockNumber(httpUrlReadOnly)
     .then((a) => {
       lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
@@ -77,8 +76,17 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    runRecordsChildProcessJob();
-  }, process.env.NAMES_JOB_INTERVAL);
+    if (
+      new Date().getMinutes() % 10 ===
+      parseInt(process.env.CRON_JOBS_NAMES_MODULO)
+    ) {
+      console.log("launching records job", new Date().getMinutes());
+      runRecordsChildProcessJob();
+    } else {
+      console.log("not launching records job");
+    }
+  }, 1000 * 60);
+
   setInterval(() => {
     getLastFinalizedBlockNumber(httpUrlReadOnly)
       .then((a) => {
