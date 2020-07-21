@@ -13,7 +13,7 @@ const log = (a, level = "info") => {
 
 module.exports.log = log;
 
-module.exports.getRecordsTerm = registryUri => {
+module.exports.getRecordsTerm = (registryUri) => {
   return `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
     lookup!(\`rho:id:${registryUri}\`, *entryCh) |
     for(entry <- entryCh) {
@@ -27,13 +27,36 @@ module.exports.getRecordsTerm = registryUri => {
   }`;
 };
 
-module.exports.getRecordTerm = registryUri => {
+module.exports.getRecordTerm = (registryUri) => {
   return `new return, recordCh, readCh, lookup(\`rho:registry:lookup\`) in {
       lookup!(\`${registryUri}\`, *recordCh) |
       for(record <- recordCh) {
         return!(*record)
       }
     }`;
+};
+
+module.exports.getManyRecordsTerm = (registryUris) => {
+  return `new return, ${registryUris.map((r, i) => `r${i}`).join(", ")},
+    ${registryUris
+      .map((r, i) => `s${i}`)
+      .join(", ")}, recordCh, readCh, lookup(\`rho:registry:lookup\`) in {
+    ${registryUris
+      .map(
+        (r, i) => `
+      lookup!(\`${r}\`, *r${i}) |
+      for(record <- r${i}) {
+        s${i}!(*record)
+      }`
+      )
+      .join(" |\n")} |
+
+    for (${registryUris.map((r, i) => `@v${i} <- s${i}`).join(" ;")}) {
+      return!([
+        ${registryUris.map((r, i) => `v${i}`).join(",")}
+      ])
+    }
+  }`;
 };
 
 module.exports.redisKeys = (client, pattern) => {

@@ -80,10 +80,15 @@ const initJobs = () => {
       new Date().getMinutes() % 10 ===
       parseInt(process.env.CRON_JOBS_NAMES_MODULO)
     ) {
-      console.log("launching records job", new Date().getMinutes());
+      log(
+        "launching records job: " +
+          new Date().getMinutes() +
+          "minutes % 10 === " +
+          process.env.CRON_JOBS_NAMES_MODULO
+      );
       runRecordsChildProcessJob();
     } else {
-      console.log("not launching records job");
+      log("not launching records job");
     }
   }, 1000 * 60);
 

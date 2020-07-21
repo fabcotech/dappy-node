@@ -3,7 +3,13 @@ const Ajv = require("ajv");
 require("dotenv").config();
 const redis = require("redis");
 
-const { log, redisKeys, getRecordsTerm, getRecordTerm } = require("../utils");
+const {
+  log,
+  redisKeys,
+  getRecordsTerm,
+  getRecordTerm,
+  getManyRecordsTerm,
+} = require("../utils");
 
 let httpUrlReadOnly = `${process.env.READ_ONLY_HOST}:${process.env.READ_ONLY_HTTP_PORT}`;
 if (!process.env.READ_ONLY_HTTP_PORT) {
@@ -115,84 +121,91 @@ const storeRecordsInRedis = async (records) => {
       if (i !== 0 && i % 20 === 0) {
         log("processing name no " + i);
       }
-      const registryUri = records[k];
+
+      const recordsToProcess = [];
+      recordsToProcess.push(records[k]);
+      // ten by ten
+      [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((j) => {
+        if (keys[i + j]) {
+          recordsToProcess.push(records[keys[i + j]]);
+        }
+      });
+      const n = recordsToProcess.length;
 
       try {
         exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
           httpUrlReadOnly,
           {
-            term: getRecordTerm(registryUri),
+            term: getManyRecordsTerm(recordsToProcess),
           }
         );
       } catch (err) {
         log("Name " + k + ": could not explore-deploy " + err, "error");
-        if (i === l - 1) {
+        if (i === l - n) {
           resolve(l);
         } else {
-          i += 1;
+          i += n;
           await storeName();
         }
         return;
       }
 
-      const record = rchainToolkit.utils.rhoValToJs(
+      const recordsFromTheBlockchain = rchainToolkit.utils.rhoValToJs(
         JSON.parse(exploreDeployResponse).expr[0]
       );
 
-      const valid = validate(record);
+      const storeRecord = async (record) => {
+        const valid = validate(record);
 
-      if (!valid) {
-        log("invalid record " + k, "warning");
-        console.log(validate.errors);
-        if (i === l - 1) {
-          resolve(l);
-        } else {
-          i += 1;
-          await storeName();
+        if (!valid) {
+          log("invalid record " + k, "warning");
+          console.log(validate.errors);
+          return;
         }
-        return;
-      }
-      const redisSetValues = [];
-      for (key of Object.keys(record)) {
-        redisSetValues.push(key);
-        if (key === "servers") {
-          redisSetValues.push(JSON.stringify(record[key]));
-        } else if (key === "badges") {
-          redisSetValues.push(JSON.stringify(record[key]));
-        } else {
-          redisSetValues.push(record[key]);
+        const redisSetValues = [];
+        for (key of Object.keys(record)) {
+          redisSetValues.push(key);
+          if (key === "servers") {
+            redisSetValues.push(JSON.stringify(record[key]));
+          } else if (key === "badges") {
+            redisSetValues.push(JSON.stringify(record[key]));
+          } else {
+            redisSetValues.push(record[key]);
+          }
         }
-      }
 
-      await new Promise((res, rej) => {
-        redisClient.hmset(
-          `name:${process.env.REDIS_DB}:${record.name}`,
-          ...redisSetValues,
-          (err, resp) => {
-            if (err) {
-              return rej(err);
+        await new Promise((res, rej) => {
+          redisClient.hmset(
+            `name:${process.env.REDIS_DB}:${record.name}`,
+            ...redisSetValues,
+            (err, resp) => {
+              if (err) {
+                return rej(err);
+              }
+              res(resp);
             }
-            res(resp);
-          }
-        );
-      });
-      await new Promise((res, rej) => {
-        redisClient.sadd(
-          `publicKey:${process.env.REDIS_DB}:${record.publicKey}`,
-          record.name,
-          (err, resp) => {
-            if (err) {
-              return rej(err);
+          );
+        });
+        await new Promise((res, rej) => {
+          redisClient.sadd(
+            `publicKey:${process.env.REDIS_DB}:${record.publicKey}`,
+            record.name,
+            (err, resp) => {
+              if (err) {
+                return rej(err);
+              }
+              res(resp);
             }
-            res(resp);
-          }
-        );
-      });
+          );
+        });
+      };
 
-      if (i === l - 1) {
+      await Promise.all(recordsFromTheBlockchain.map((a) => storeRecord(a)));
+
+      if (i === l - n) {
         resolve(l);
       } else {
-        i += 1;
+        i += n;
         await storeName();
       }
     };
