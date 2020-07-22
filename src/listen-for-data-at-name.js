@@ -15,17 +15,25 @@ const schema = {
           type: "object",
           properties: {
             data: {
-              type: "string"
-            }
+              type: "string",
+            },
           },
-          require: ["data"]
-        }
+          require: ["data"],
+        },
+        UnforgDeploy: {
+          type: "object",
+          properties: {
+            data: {
+              type: "string",
+            },
+          },
+          require: ["data"],
+        },
       },
-      required: ["UnforgPrivate"]
     },
-    depth: { type: "number" }
+    depth: { type: "number" },
   },
-  required: ["name", "depth"]
+  required: ["name", "depth"],
 };
 module.exports.schema = schema;
 
