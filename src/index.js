@@ -66,7 +66,7 @@ const runRecordsChildProcessJob = async () => {
 };
 
 const initJobs = () => {
-  getLastFinalizedBlockNumber(httpUrlReadOnly)
+  getLastFinalizedBlockNumber(httpUrlReadOnly, httpUrlValidator)
     .then((a) => {
       lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
       namePrice = a.namePrice;
@@ -93,7 +93,7 @@ const initJobs = () => {
   }, 1000 * 60);
 
   setInterval(() => {
-    getLastFinalizedBlockNumber(httpUrlReadOnly)
+    getLastFinalizedBlockNumber(httpUrlReadOnly, httpUrlValidator)
       .then((a) => {
         lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
         namePrice = a.namePrice;

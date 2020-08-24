@@ -3,11 +3,14 @@ const rchainToolkit = require("rchain-toolkit");
 const log = require("../utils").log;
 const getRecordsTerm = require("../utils").getRecordsTerm;
 
-module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
+module.exports.getLastFinalizedBlockNumber = async (
+  httpUrlReadOnly,
+  httpUrlValidator
+) => {
   let validAfterBlockNumber;
   try {
     validAfterBlockNumber = JSON.parse(
-      await rchainToolkit.http.blocks(httpUrlReadOnly, {
+      await rchainToolkit.http.blocks(httpUrlValidator, {
         position: 1,
       })
     )[0].blockNumber;
