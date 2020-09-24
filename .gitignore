@@ -62,3 +62,4 @@ typings/
 
 server-crt.pem
 server-key.pem
+logs.txt

@@ -49,8 +49,8 @@ module.exports.listenForDataAtNameWsHandler = async (body, httpUrl) => {
     return {
       success: false,
       error: {
-        message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
-      }
+        message: validate.errors.map((e) => `body${e.dataPath} ${e.message}`),
+      },
     };
   }
 

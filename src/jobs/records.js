@@ -2,9 +2,17 @@ const rchainToolkit = require("rchain-toolkit");
 const Ajv = require("ajv");
 require("dotenv").config();
 const redis = require("redis");
+const fs = require("fs");
+const path = require("path");
+
+const log = (a) => {
+  console.log(new Date().toISOString(), a);
+  let txt = fs.readFileSync(path.join(__dirname, '../../logs.txt'), 'utf8');
+  txt += '\n' + new Date().toISOString() + ' ' + a;
+  fs.writeFileSync(path.join(__dirname, '../../logs.txt'), txt);
+}
 
 const {
-  log,
   redisKeys,
   getRecordsTerm,
   getRecordTerm,
@@ -132,6 +140,8 @@ const storeRecordsInRedis = async (records) => {
       });
       const n = recordsToProcess.length;
 
+      let tt = new Date().getTime();
+      log('issuing explore-deploy for i=' + i);
       try {
         exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
           httpUrlReadOnly,
@@ -149,6 +159,7 @@ const storeRecordsInRedis = async (records) => {
         }
         return;
       }
+      log('got response for i=' + i + ' in ' + Math.round((new Date().getTime() - tt) / 1000) + ' seconds');
 
       const recordsFromTheBlockchain = rchainToolkit.utils.rhoValToJs(
         JSON.parse(exploreDeployResponse).expr[0]
@@ -215,7 +226,7 @@ const storeRecordsInRedis = async (records) => {
 };
 
 module.exports.getDappyRecordsAndSaveToDb = async () => {
-  log("started names job");
+  log("==== START started names job");
 
   try {
     exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
@@ -262,7 +273,7 @@ module.exports.getDappyRecordsAndSaveToDb = async () => {
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(
-      `== successfully stored ${
+      `==== END successfully stored ${
         recordsProcessed || 0
       } records from the blockchain, it took ${s} seconds`
     );
