@@ -1,4 +1,4 @@
-## dappy-node
+### dappy-node
 
 This program exposes an API for Dappy users to query, it includes:
 
@@ -7,13 +7,20 @@ This program exposes an API for Dappy users to query, it includes:
 
 For now it is only exposed through web socket and not http.
 
-### HTTPS/HTTP exposition
+#### Quick start (dev)
 
-This program must be accessible through encrypted/SSL and also regular HTTP traffic. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port.
+```
+# With default certificate (dev only)
+node src/index --ssl
+```
+
+#### HTTPS/HTTP exposition
+
+This program must be accessible through HTTP/TLS and also regular HTTP traffic. In your nginx/apache config you must redirect TLS traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic (port 80) to the `HTTP_PORT` port.
 
 List of the methods exposed for each kind of traffic :
 
-Encrypted/SSL (only websocket) :
+**Encrypted HTTP/TLS** (only websocket) :
 
 - `info` : General node version number and information
 - `get-nodes?network=NETWORK_NAME` : Get the nodes powering this network (expressend in rholang AST format)
@@ -23,26 +30,20 @@ Encrypted/SSL (only websocket) :
 - `listen-for-data-at-name-x` : Get multiple unforgeable names value on the blockchain
 - `preview-private-names` : predict the unforgeable name (unforgeable name) id for a given public key / timestamp.
 
-Unencrypted/HTTP (regular HTTP GET requests):
+**Unencrypted HTTP** (regular HTTP GET requests):
 
 - `/info` : General node version number and information
 - `/get-nodes?network=NETWORK_NAME` : Get the nodes powering this network (expressed in rholang AST format)
 
-### Environment variables
+#### Certificate generation (development)
 
-Wether you run with or without docker, you must setup some RChain related env variables :
-
-- `RCHAIN_NAMES_UNFORGEABLE_NAME_ID` : Unforgeable name ID of the records on chain . (uploaded with [rchain-names](https://github.com/fabcotech/rchain-names) repo)
-- `RCHAIN_NAMES_REGISTRY_URI` : Registry URI of the records on chain . (uploaded with [rchain-names](https://github.com/fabcotech/rchain-names) repo)
-- `DAPPY_NODES_UNFORGEABLE_NAME_ID`: Unforgeable name ID of the Dappy nodes on chain . (uploaded with [rchain-names](https://github.com/fabcotech/rchain-names) repo)
-
-### Certificate generation (development)
+Dappy does not use certificate authorities, TLS encryption certificates are stored on the blockchain with the actual name (ex: *google*, *nytimes* etc). Therefore, it is more logical that they are self signed and not issued by a trusted third party.
 
 https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-in-ubuntu-16-04
 
-The following lines will explain how to set a self-signed certificate, so clients (Dappy browsers) will connect securely to dappy node. Dappy browser refuses non-encrypted traffic so you have to do it even if in development.
+The following lines will explain how to set a self signed certificate, so clients (Dappy browsers) will connect securely to dappy node. Dappy browser refuses non-encrypted traffic so you have to do it even if in development mode.
 
-Very simple, generate private key and certificate with the following command (replace very carefully the -subj parameters your data, and particularly the CN attribute that must match fake domain name (if dev) or real domain name).
+Generate private key and certificate with the following command (replace very carefully the -subj parameters your data, and particularly the CN attribute that must match fake domain name (if dev) or real domain name).
 
 C = country code
 ST = state
@@ -58,19 +59,23 @@ Two files should be generated, a `server-key.pem` file and a `server-crt.pem` fi
 
 !!! NEVER SHARE THE server-key.pem FILE WITH ANYONE, IT SHOULD STAY ON YOUR SERVER !!!
 
-### Run without docker (development)
+### Program execution
 
-##### Program execution
+#### Environment variables
 
-You have to have a RChain node running locally or remotely with GRPC api exposed, and a redis server running also.
+You have to have a RChain node running locally or remotely with regular API exposed, and a redis server running also.
 
 You must copy the `.env.example` file, name it `.env` so environment variables will be read from it. Of course you must also edit the `.env` variables so it fits with your rnode program and variables.
 
 **Note :** values in `.env.example` are kept up to date do dappy-node can start on a valid Dappy network connected to RChain's testnet.
 
-`DAPPY_NETWORK` is read by Dappy browser, to know what is the name of the Dappy network, currently it needs the network to be called betanetwork, could it be on mainnet or testnet.
+`DAPPY_NETWORK` is read by Dappy browser, to know what is the name of the Dappy network, currently it is probably betanetwork or deltanetwork.
 
 `RCHAIN_NETWORK` is also read by Dappy browser, it is important that user know if the Dappy network is connected to mainnet, testnet, or another local network.
+
+`RCHAIN_NAMES_REGISTRY_URI` : Registry URI of the records stored on the blockchain. (uploaded with [rchain-names](https://github.com/fabcotech/rchain-names) repo)
+
+`RCHAIN_NODES_REGISTRY_URI` : Registry URI of the nodes / network members stored on the blockchain. (uploaded with [rchain-names](https://github.com/fabcotech/rchain-names) repo)
 
 ```
 git clone https://github.com/fabcotech/dappy-node.git
@@ -84,7 +89,6 @@ pm2 start ecosystem.config.js  --node-args="--max-old-space-size=8192"
 
 **Note:** Of course set the 8192 value according to the capabilities of your server. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
 
-### run with docker (development or production)
 
 #### Production
 
@@ -98,7 +102,7 @@ Copy the `.env.example` file, name it `.env` and update the variables in it (you
 
 RChain's rnode is not part of the docker-compose, it should be running on your machine (local or remote), with ports and IP matching the one described in `docker-compose.yml` file.
 
-**Important (3)** : we advise you not to handle SSL in the docker / nodeJS application. In your nginx/apache config you must redirect SSL traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You must not use CA related certificate. But generate a self-signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
+**Important (3)** : we advise you not to handle TLS in the docker / nodeJS application. In your nginx/apache config you must redirect TLS traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You should not use CA related certificate, but rather generate a self signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
 
 **Important (4)** : Check the `--max-old-space-size` in the node start script. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
 
@@ -119,11 +123,19 @@ dappy-node is plugged to the running rnode program !
 
 #### Development
 
-If you use dappy-node for development purpose, you can let docker / nodeJS handle the SSL. Go to the `docker-compose` file and add the `--ssl` parameter to the `command` line :
+##### With node JS directly
+
+```
+node src/index --ssl
+```
+
+##### With docker
+
+If you use dappy-node for development purpose, you can let docker / node JS handle the encryption/TLS. Go to the `docker-compose` file and add the `--ssl` parameter to the `command` line :
 
 `command: sh -c 'npm i && node --max-old-space-size=8192 src/index.js --ssl'`
 
-Node JS will try to read the `server-crt.pem` (certificate) and `server-key.pem` (private key). You can run the program with the same commands as above:
+Node JS will try to read the `server-crt.pem` (certificate) and `server-key.pem` (private key). You can run the program with those commands:
 
 ```
 docker-compose build
