@@ -8,7 +8,7 @@ const path = require("path");
 const log = (a) => {
   console.log(new Date().toISOString(), a);
   let txt = fs.readFileSync(path.join(__dirname, '../../logs.txt'), 'utf8');
-  txt += '\n' + new Date().toISOString() + ' ' + a;
+  txt += new Date().toISOString() + ' ' + a + '\n';
   fs.writeFileSync(path.join(__dirname, '../../logs.txt'), txt);
 }
 
@@ -115,14 +115,14 @@ const storeRecordsInRedis = async (records) => {
     const keys = Object.keys(records);
     const l = keys.length;
     let i = 0;
-    const storeName = async () => {
+    const retrieveRecord = async () => {
       const k = keys[i];
       if (!k) {
         if (i === l - 1 || l === 0) {
           resolve(l);
         } else {
           i += 1;
-          await storeName();
+          await retrieveRecord();
         }
         return;
       }
@@ -155,7 +155,7 @@ const storeRecordsInRedis = async (records) => {
           resolve(l);
         } else {
           i += n;
-          await storeName();
+          await retrieveRecord();
         }
         return;
       }
@@ -211,17 +211,24 @@ const storeRecordsInRedis = async (records) => {
         });
       };
 
-      await Promise.all(recordsFromTheBlockchain.map((a) => storeRecord(a)));
+      for (let j = 0; j < recordsFromTheBlockchain.length; j += 1) {
+        try {
+          await storeRecord(recordsFromTheBlockchain[j]);
+        } catch (err) {
+          log("ERROR redis error")
+          log(err);
+        }
+      }
 
       if (i === l - n) {
         resolve(l);
       } else {
         i += n;
-        await storeName();
+        await retrieveRecord();
       }
     };
 
-    await storeName();
+    await retrieveRecord();
   });
 };
 
