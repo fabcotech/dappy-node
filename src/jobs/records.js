@@ -115,11 +115,12 @@ const storeRecordsInRedis = async (records) => {
     const keys = Object.keys(records);
     const l = keys.length;
     let i = 0;
+    let successes = 0;
     const retrieveRecord = async () => {
       const k = keys[i];
       if (!k) {
         if (i === l - 1 || l === 0) {
-          resolve(l);
+          resolve([successes, l]);
         } else {
           i += 1;
           await retrieveRecord();
@@ -141,7 +142,7 @@ const storeRecordsInRedis = async (records) => {
       const n = recordsToProcess.length;
 
       let tt = new Date().getTime();
-      log('issuing explore-deploy for i=' + i);
+      log('issuing explore-deploy for i = ' + i);
       try {
         exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
           httpUrlReadOnly,
@@ -152,7 +153,7 @@ const storeRecordsInRedis = async (records) => {
       } catch (err) {
         log("Name " + k + ": could not explore-deploy " + err, "error");
         if (i === l - n) {
-          resolve(l);
+          resolve([success, l]);
         } else {
           i += n;
           await retrieveRecord();
@@ -186,42 +187,71 @@ const storeRecordsInRedis = async (records) => {
         }
 
         await new Promise((res, rej) => {
+          let over = false;
+          setTimeout(
+            () => {
+              if (!over) {
+                over = true;
+                rej('redis timeout error 1')
+              }
+            }, 5000
+          );
           redisClient.hmset(
             `name:${process.env.REDIS_DB}:${record.name}`,
             ...redisSetValues,
             (err, resp) => {
-              if (err) {
-                return rej(err);
+              if (!over) {
+                over = true;
+                if (err) {
+                  return rej(err);
+                }
+                res(resp);
               }
-              res(resp);
             }
           );
         });
         await new Promise((res, rej) => {
+          let over = false;
+          setTimeout(
+            () => {
+              if (!over) {
+                over = true;
+                rej('redis timeout error 2')
+              }
+            }, 5000
+          )
           redisClient.sadd(
             `publicKey:${process.env.REDIS_DB}:${record.publicKey}`,
             record.name,
             (err, resp) => {
-              if (err) {
-                return rej(err);
+              if (!over) {
+                over = true;
+                if (err) {
+                  return rej(err);
+                }
+                res(resp);
               }
-              res(resp);
             }
           );
         });
+        successes += 1;
       };
 
+      log(recordsFromTheBlockchain.length + ' records to store');
       for (let j = 0; j < recordsFromTheBlockchain.length; j += 1) {
         try {
+          log('Will storeRecord for j = ' + j);
           await storeRecord(recordsFromTheBlockchain[j]);
+          log('Did  storeRecord for j = ' + j);
         } catch (err) {
           log("ERROR redis error")
-          log(err);
+          reject(err);
+          return;
         }
       }
 
       if (i === l - n) {
-        resolve(l);
+        resolve([successes, l]);
       } else {
         i += n;
         await retrieveRecord();
@@ -281,8 +311,8 @@ module.exports.getDappyRecordsAndSaveToDb = async () => {
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(
       `==== END successfully stored ${
-        recordsProcessed || 0
-      } records from the blockchain, it took ${s} seconds`
+        recordsProcessed[0]
+      }(valid)/${recordsProcessed[1]}(invalid) records from the blockchain, in ${s} seconds`
     );
     return;
   } catch (err) {
@@ -290,7 +320,7 @@ module.exports.getDappyRecordsAndSaveToDb = async () => {
       "Something went wrong when initialized the storing of records",
       "error"
     );
-    console.log(err);
+    log(err);
     log("KILL records job process");
     return;
   }
