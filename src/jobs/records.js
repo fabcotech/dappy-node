@@ -6,10 +6,16 @@ const fs = require("fs");
 const path = require("path");
 
 const log = (a) => {
+  const day = new Date().toISOString().slice(0, 10);
+
   console.log(new Date().toISOString(), a);
-  let txt = fs.readFileSync(path.join(__dirname, '../../logs.txt'), 'utf8');
+  let txt = '';
+  try {
+    txt = fs.readFileSync(path.join(__dirname, '../../' + day + '.txt'), 'utf8');
+  } catch (err) {
+  }
   txt += new Date().toISOString() + ' ' + a + '\n';
-  fs.writeFileSync(path.join(__dirname, '../../logs.txt'), txt);
+  fs.writeFileSync(path.join(__dirname, '../../' + day + '.txt'), txt);
 }
 
 const {
