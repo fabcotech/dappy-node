@@ -25,16 +25,6 @@ const {
   getManyRecordsTerm,
 } = require("../utils");
 
-let httpUrlReadOnly = `${process.env.READ_ONLY_HOST}:${process.env.READ_ONLY_HTTP_PORT}`;
-if (!process.env.READ_ONLY_HTTP_PORT) {
-  httpUrlReadOnly = process.env.READ_ONLY_HOST;
-}
-
-const redisClient = redis.createClient({
-  db: 1,
-  host: process.env.REDIS_HOST,
-});
-
 const ajv = new Ajv();
 const schema = {
   schemaId: "dappy-record",
@@ -87,7 +77,77 @@ module.exports.schema = schema;
 ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
 const validate = ajv.compile(schema);
 
-const storeRecordsInRedis = async (records) => {
+const storeRecord = async (record, redisClient) => {
+  const valid = validate(record);
+
+  if (!valid) {
+    log("invalid record " + k, "warning");
+    console.log(validate.errors);
+    return;
+  }
+  const redisSetValues = [];
+  for (key of Object.keys(record)) {
+    redisSetValues.push(key);
+    if (key === "servers") {
+      redisSetValues.push(JSON.stringify(record[key]));
+    } else if (key === "badges") {
+      redisSetValues.push(JSON.stringify(record[key]));
+    } else {
+      redisSetValues.push(record[key]);
+    }
+  }
+
+  await new Promise((res, rej) => {
+    let over = false;
+    setTimeout(
+      () => {
+        if (!over) {
+          over = true;
+          rej('redis timeout error 1')
+        }
+      }, 5000
+    );
+    redisClient.hmset(
+      `name:${process.env.REDIS_DB}:${record.name}`,
+      ...redisSetValues,
+      (err, resp) => {
+        if (!over) {
+          over = true;
+          if (err) {
+            return rej(err);
+          }
+          res(resp);
+        }
+      }
+    );
+  });
+  await new Promise((res, rej) => {
+    let over = false;
+    setTimeout(
+      () => {
+        if (!over) {
+          over = true;
+          rej('redis timeout error 2')
+        }
+      }, 5000
+    )
+    redisClient.sadd(
+      `publicKey:${process.env.REDIS_DB}:${record.publicKey}`,
+      record.name,
+      (err, resp) => {
+        if (!over) {
+          over = true;
+          if (err) {
+            return rej(err);
+          }
+          res(resp);
+        }
+      }
+    );
+  });
+};
+
+const storeRecordsInRedis = async (records, redisClient, httpUrlReadOnly) => {
   const nameKeys = await redisKeys(
     redisClient,
     `name:${process.env.REDIS_DB}:*`
@@ -172,82 +232,12 @@ const storeRecordsInRedis = async (records) => {
         JSON.parse(exploreDeployResponse).expr[0]
       );
 
-      const storeRecord = async (record) => {
-        const valid = validate(record);
-
-        if (!valid) {
-          log("invalid record " + k, "warning");
-          console.log(validate.errors);
-          return;
-        }
-        const redisSetValues = [];
-        for (key of Object.keys(record)) {
-          redisSetValues.push(key);
-          if (key === "servers") {
-            redisSetValues.push(JSON.stringify(record[key]));
-          } else if (key === "badges") {
-            redisSetValues.push(JSON.stringify(record[key]));
-          } else {
-            redisSetValues.push(record[key]);
-          }
-        }
-
-        await new Promise((res, rej) => {
-          let over = false;
-          setTimeout(
-            () => {
-              if (!over) {
-                over = true;
-                rej('redis timeout error 1')
-              }
-            }, 5000
-          );
-          redisClient.hmset(
-            `name:${process.env.REDIS_DB}:${record.name}`,
-            ...redisSetValues,
-            (err, resp) => {
-              if (!over) {
-                over = true;
-                if (err) {
-                  return rej(err);
-                }
-                res(resp);
-              }
-            }
-          );
-        });
-        await new Promise((res, rej) => {
-          let over = false;
-          setTimeout(
-            () => {
-              if (!over) {
-                over = true;
-                rej('redis timeout error 2')
-              }
-            }, 5000
-          )
-          redisClient.sadd(
-            `publicKey:${process.env.REDIS_DB}:${record.publicKey}`,
-            record.name,
-            (err, resp) => {
-              if (!over) {
-                over = true;
-                if (err) {
-                  return rej(err);
-                }
-                res(resp);
-              }
-            }
-          );
-        });
-        successes += 1;
-      };
-
       log(recordsFromTheBlockchain.length + ' records to store');
       for (let j = 0; j < recordsFromTheBlockchain.length; j += 1) {
         try {
           log('Will storeRecord for j = ' + j);
-          await storeRecord(recordsFromTheBlockchain[j]);
+          await storeRecord(recordsFromTheBlockchain[j], redisClient);
+          successes += 1;
           log('Did  storeRecord for j = ' + j);
         } catch (err) {
           log("ERROR redis error")
@@ -268,7 +258,7 @@ const storeRecordsInRedis = async (records) => {
   });
 };
 
-module.exports.getDappyRecordsAndSaveToDb = async () => {
+module.exports.getDappyRecordsAndSaveToDb = async (redisClient, httpUrlReadOnly) => {
   log("==== START started names job");
 
   try {
@@ -312,7 +302,7 @@ module.exports.getDappyRecordsAndSaveToDb = async () => {
 
   const a = new Date().getTime();
   try {
-    const recordsProcessed = await storeRecordsInRedis(data);
+    const recordsProcessed = await storeRecordsInRedis(data, redisClient, httpUrlReadOnly);
 
     const s = Math.round((100 * (new Date().getTime() - a)) / 1000) / 100;
     log(

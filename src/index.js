@@ -61,7 +61,11 @@ const runRecordsChildProcessJob = async () => {
     return;
   }
   recordsJobRunning = true;
-  await getDappyRecordsAndSaveToDb();
+  const t = setTimeout(() => {
+    recordsJobRunning = false;
+  }, 1000 * 120);
+  await getDappyRecordsAndSaveToDb(redisClient, httpUrlReadOnly);
+  clearTimeout(t);
   recordsJobRunning = false;
 };
 
