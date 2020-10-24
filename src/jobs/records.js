@@ -1,22 +1,7 @@
 const rchainToolkit = require("rchain-toolkit");
 const Ajv = require("ajv");
 require("dotenv").config();
-const redis = require("redis");
-const fs = require("fs");
-const path = require("path");
-
-const log = (a) => {
-  const day = new Date().toISOString().slice(0, 10);
-
-  console.log(new Date().toISOString(), a);
-  let txt = '';
-  try {
-    txt = fs.readFileSync(path.join(__dirname, '../../' + day + '.txt'), 'utf8');
-  } catch (err) {
-  }
-  txt += new Date().toISOString() + ' ' + a + '\n';
-  fs.writeFileSync(path.join(__dirname, '../../' + day + '.txt'), txt);
-}
+const { log } = require('../utils');
 
 const {
   redisKeys,
@@ -208,7 +193,6 @@ const storeRecordsInRedis = async (records, redisClient, httpUrlReadOnly) => {
       const n = recordsToProcess.length;
 
       let tt = new Date().getTime();
-      log('issuing explore-deploy for i = ' + i);
       try {
         exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
           httpUrlReadOnly,
@@ -226,19 +210,15 @@ const storeRecordsInRedis = async (records, redisClient, httpUrlReadOnly) => {
         }
         return;
       }
-      log('got response for i=' + i + ' in ' + Math.round((new Date().getTime() - tt) / 1000) + ' seconds');
 
       const recordsFromTheBlockchain = rchainToolkit.utils.rhoValToJs(
         JSON.parse(exploreDeployResponse).expr[0]
       );
 
-      log(recordsFromTheBlockchain.length + ' records to store');
       for (let j = 0; j < recordsFromTheBlockchain.length; j += 1) {
         try {
-          log('Will storeRecord for j = ' + j);
           await storeRecord(recordsFromTheBlockchain[j], redisClient);
           successes += 1;
-          log('Did  storeRecord for j = ' + j);
         } catch (err) {
           log("ERROR redis error")
           reject(err);
@@ -308,7 +288,7 @@ module.exports.getDappyRecordsAndSaveToDb = async (redisClient, httpUrlReadOnly)
     log(
       `==== END successfully stored ${
         recordsProcessed[0]
-      }(valid)/${recordsProcessed[1]}(invalid) records from the blockchain, in ${s} seconds`
+      }(valid)/${recordsProcessed[1]}(total) records from the blockchain, in ${s} seconds`
     );
     return;
   } catch (err) {

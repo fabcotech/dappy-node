@@ -60,6 +60,6 @@ module.exports.listenForDataAtNameWsHandler = async (body, httpUrl) => {
 
   return {
     success: true,
-    data: parsedResponse.exprs[parsedResponse.exprs.length - 1]
+    data: parsedResponse.exprs[parsedResponse.exprs.length - 1],
   };
 };
