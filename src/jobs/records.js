@@ -164,11 +164,13 @@ const storeRecordsInRedis = async (records, redisClient, httpUrlReadOnly) => {
 
   return new Promise(async (resolve, reject) => {
     const keys = Object.keys(records);
-    const l = keys.length;
+    const validKeys = keys.filter(name => /^[a-z][a-z0-9]*$/.test(name))
+
+    const l = validKeys.length;
     let i = 0;
     let successes = 0;
     const retrieveRecord = async () => {
-      const k = keys[i];
+      const k = validKeys[i];
       if (!k) {
         if (i === l - 1 || l === 0) {
           resolve([successes, l]);
@@ -186,8 +188,8 @@ const storeRecordsInRedis = async (records, redisClient, httpUrlReadOnly) => {
       recordsToProcess.push(records[k]);
       // ten by ten
       [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((j) => {
-        if (keys[i + j]) {
-          recordsToProcess.push(records[keys[i + j]]);
+        if (validKeys[i + j]) {
+          recordsToProcess.push(records[validKeys[i + j]]);
         }
       });
       const n = recordsToProcess.length;
@@ -227,7 +229,7 @@ const storeRecordsInRedis = async (records, redisClient, httpUrlReadOnly) => {
       }
 
       if (i === l - n) {
-        resolve([successes, l]);
+        resolve([successes, keys.length]);
       } else {
         i += n;
         await retrieveRecord();
@@ -288,7 +290,7 @@ module.exports.getDappyRecordsAndSaveToDb = async (redisClient, httpUrlReadOnly)
     log(
       `==== END successfully stored ${
         recordsProcessed[0]
-      }(valid)/${recordsProcessed[1]}(total) records from the blockchain, in ${s} seconds`
+      } (valid) / ${recordsProcessed[1]} (total) records from the blockchain, in ${s} seconds`
     );
     return;
   } catch (err) {
