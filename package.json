@@ -15,7 +15,7 @@
     "ajv": "^6.10.0",
     "dotenv": "6.2.0",
     "rchain-toolkit": "0.2.7",
-    "rchain-token-files": "fabcotech/rchain-token#e504a0037eba0643ea614b8d33429727d98c6e7b",
+    "rchain-token-files": "fabcotech/rchain-token#aaf8df2b9715608f307647989f5f8f3e24565bae",
     "redis": "2.8.0",
     "ws": "7.2.1"
   }

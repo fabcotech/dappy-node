@@ -12,7 +12,6 @@ require('dotenv').config();
 
 const rchainToolkit = require('rchain-toolkit');
 
-const { getNodesWsHandler } = require('./get-nodes');
 const { previewPrivateNamesWsHandler } = require('./preview-private-names');
 const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
 const {
@@ -40,6 +39,14 @@ const DAPPY_NODE_VERSION = '0.2.8';
 let rnodeVersion = undefined;
 let lastFinalizedBlockNumber = undefined;
 let namePrice = undefined;
+let nodes = undefined;
+try {
+  nodes = JSON.parse(
+    fs.readFileSync(path.join('./', process.env.NODES_FILE)).toString('utf8')
+  );
+} catch (err) {
+  log('could not parse nodes file : ' + process.env.NODES_FILE, 'error');
+}
 
 let protobufsLoaded = false;
 let appReady = false;
@@ -253,7 +260,7 @@ const serverHttp = http.createServer((req, res) => {
     );
     res.end();
   } else if (req.method === 'GET' && req.url.startsWith('/get-nodes')) {
-    const io = req.url.indexOf('?network=');
+    /*     const io = req.url.indexOf('?network=');
 
     if (io === -1) {
       res.statusCode = 400;
@@ -261,27 +268,17 @@ const serverHttp = http.createServer((req, res) => {
       res.end('Bad Request please provide "network" url parameter');
       return;
     }
-    const network = req.url.substr(io + 9, 1000);
+    const network = req.url.substr(io + 9, 1000); */
 
-    getNodesWsHandler({ network: network }, httpUrlReadOnly)
-      .then((resp) => {
-        if (resp.success) {
-          res.setHeader('Content-Type', 'application/json');
-          res.write(JSON.stringify(resp));
-          res.end();
-        } else {
-          res.statusCode = 404;
-          res.setHeader('Content-Type', 'text/plain');
-          res.end(resp.error.message);
-          return;
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        res.statusCode = 404;
-        res.setHeader('Content-Type', 'text/plain');
-        res.end(err);
-      });
+    if (nodes) {
+      res.setHeader('Content-Type', 'application/json');
+      res.write(JSON.stringify(nodes));
+      res.end();
+    } else {
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end('unknown nodes resource');
+    }
   }
 });
 
@@ -601,26 +598,21 @@ const initWs = () => {
             });
           // ======== GET NODES ========
         } else if (json.type === 'get-nodes') {
-          getNodesWsHandler(json.body, httpUrlReadOnly)
-            .then((data) => {
-              client.send(
-                JSON.stringify({
-                  ...data,
-                  requestId: json.requestId,
-                })
-              );
-            })
-            .catch((err) => {
-              log('error : get-nodes ws handler', 'error');
-              console.log(err);
-              err.requestId = json.requestId;
-              client.send(
-                JSON.stringify({
-                  ...err,
-                  requestId: json.requestId,
-                })
-              );
+          console.log('get-nodes');
+          console.log(nodes);
+          if (nodes) {
+            JSON.stringify({
+              success: true,
+              data: nodes,
+              requestId: json.requestId,
             });
+          } else {
+            JSON.stringify({
+              success: false,
+              error: { message: 'Unknown resource nodes ' },
+              requestId: json.requestId,
+            });
+          }
         } else {
           client.send(
             JSON.stringify({
