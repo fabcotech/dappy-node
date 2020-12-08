@@ -1,25 +1,25 @@
-const Ajv = require("ajv");
-const rchainToolkit = require("rchain-toolkit");
+const Ajv = require('ajv');
+const rchainToolkit = require('rchain-toolkit');
 
-const { log, getRecordsTerm } = require("./utils");
+const { log } = require('./utils');
 
 const ajv = new Ajv();
 const schema = {
-  schemaId: "get-nodes",
-  type: "object",
+  schemaId: 'get-nodes',
+  type: 'object',
   properties: {
     network: {
-      type: "string",
+      type: 'string',
     },
   },
-  required: ["network"],
+  required: ['network'],
 };
 
-ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
+ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
 const validate = ajv.compile(schema);
 
 module.exports.getNodesWsHandler = (body, httpUrl) => {
-  log("get-nodes");
+  log('get-nodes');
 
   return new Promise((resolve, reject) => {
     const valid = validate(body);
@@ -46,7 +46,7 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
 
     rchainToolkit.http
       .exploreDeploy(httpUrl, {
-        term: getRecordsTerm(process.env.DAPPY_NODES_REGISTRY_URI),
+        term: 'new a in {}',
       })
       .then((dataAtNameResponse) => {
         const parsedResponse = JSON.parse(dataAtNameResponse);
@@ -54,7 +54,7 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
         if (!parsedResponse.expr.length) {
           reject({
             success: false,
-            error: { message: "nodes resource not found on the blockchain" },
+            error: { message: 'nodes resource not found on the blockchain' },
           });
           return;
         }
@@ -67,7 +67,7 @@ module.exports.getNodesWsHandler = (body, httpUrl) => {
         });
       })
       .catch((err) => {
-        log("error : communication error with the node (GRPC endpoint)");
+        log('error : communication error with the node (GRPC endpoint)');
         log(err);
         reject({
           success: false,

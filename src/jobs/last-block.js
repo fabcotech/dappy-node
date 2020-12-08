@@ -1,5 +1,6 @@
 const rchainToolkit = require("rchain-toolkit");
 
+const { readBagsTerm } = require("rchain-token-files");
 const log = require("../utils").log;
 const getRecordsTerm = require("../utils").getRecordsTerm;
 
@@ -26,7 +27,7 @@ module.exports.getLastFinalizedBlockNumber = async (
     exploreDeployResult = await rchainToolkit.http.exploreDeploy(
       httpUrlReadOnly,
       {
-        term: getRecordsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI),
+        term: readBagsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI),
       }
     );
   } catch (err) {
@@ -34,17 +35,18 @@ module.exports.getLastFinalizedBlockNumber = async (
     throw new Error(err);
   }
 
+  let namePrice = 3;
   try {
     namePrice = rchainToolkit.utils.rhoValToJs(
       JSON.parse(exploreDeployResult).expr[0]
-    ).price;
+    )["0"].price;
   } catch (err) {
     log(
       "Unable to parse explore-deploy result as JSON for name price",
       "error"
     );
     console.log(exploreDeployResult);
-    throw new Error(err);
+    //throw new Error(err);
   }
 
   log(

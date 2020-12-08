@@ -1,6 +1,6 @@
 {
   "name": "dappy-node",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Dappy main node program, stores the name records and provides a simple HTTP interface to interact with rnode",
   "author": "FABCO",
   "repository": "https://github.com/fabcotech/dappy-node.git",
@@ -14,7 +14,8 @@
     "@grpc/proto-loader": "^0.5.1",
     "ajv": "^6.10.0",
     "dotenv": "6.2.0",
-    "rchain-toolkit": "0.2.3",
+    "rchain-toolkit": "0.2.7",
+    "rchain-token-files": "fabcotech/rchain-token#e504a0037eba0643ea614b8d33429727d98c6e7b",
     "redis": "2.8.0",
     "ws": "7.2.1"
   }

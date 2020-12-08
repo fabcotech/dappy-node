@@ -1,26 +1,26 @@
-const rchainToolkit = require("rchain-toolkit");
-const Ajv = require("ajv");
+const rchainToolkit = require('rchain-toolkit');
+const Ajv = require('ajv');
 
-const log = require("./utils").log;
+const log = require('./utils').log;
 
 const ajv = new Ajv();
 const schema = {
-  schemaId: "deploy",
-  type: "object",
+  schemaId: 'deploy',
+  type: 'object',
   properties: {
     term: {
-      type: "string",
+      type: 'string',
     },
   },
-  required: ["term"],
+  required: ['term'],
 };
 module.exports.schema = schema;
 
-ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
+ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
 const validate = ajv.compile(schema);
 
 module.exports.exploreDeployWsHandler = async (body, httpUrl) => {
-  log("explore-deploy");
+  log('explore-deploy');
 
   const valid = validate(body);
 

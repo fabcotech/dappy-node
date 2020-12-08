@@ -13,30 +13,24 @@ const log = (a, level = "info") => {
 
 module.exports.log = log;
 
-module.exports.getRecordsTerm = (registryUri) => {
+module.exports.getManyBagsDataTerm = (registryUri, ids) => {
+
   return `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
     lookup!(\`rho:id:${registryUri}\`, *entryCh) |
     for(entry <- entryCh) {
       new x in {
-        entry!(({ "type": "READ" }, *x)) |
+        entry!({ "type": "READ_BAGS_DATA" }, *x) |
         for (y <- x) {
-          return!(*y)
+          return!([
+            ${ids.map(b => {
+              return `*y.get("${b}")`
+            }).join(',\n')}
+          ])
         }
       }
     }
   }`;
-};
 
-module.exports.getRecordTerm = (registryUri) => {
-  return `new return, recordCh, readCh, lookup(\`rho:registry:lookup\`) in {
-      lookup!(\`${registryUri}\`, *recordCh) |
-      for(record <- recordCh) {
-        return!(*record)
-      }
-    }`;
-};
-
-module.exports.getManyRecordsTerm = (registryUris) => {
   return `new return, ${registryUris.map((r, i) => `r${i}`).join(", ")},
     ${registryUris
       .map((r, i) => `s${i}`)

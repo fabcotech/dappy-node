@@ -1,41 +1,41 @@
-const WebSocket = require("ws");
-const grpc = require("@grpc/grpc-js");
-const protoLoader = require("@grpc/proto-loader");
-const http = require("http");
-const https = require("https");
-const redis = require("redis");
-const path = require("path");
-const fs = require("fs");
+const WebSocket = require('ws');
+const grpc = require('@grpc/grpc-js');
+const protoLoader = require('@grpc/proto-loader');
+const http = require('http');
+const https = require('https');
+const redis = require('redis');
+const path = require('path');
+const fs = require('fs');
 
 // will not override the env variables in docker-compose
-require("dotenv").config();
+require('dotenv').config();
 
-const rchainToolkit = require("rchain-toolkit");
+const rchainToolkit = require('rchain-toolkit');
 
-const { getNodesWsHandler } = require("./get-nodes");
-const { previewPrivateNamesWsHandler } = require("./preview-private-names");
-const { listenForDataAtNameWsHandler } = require("./listen-for-data-at-name");
+const { getNodesWsHandler } = require('./get-nodes');
+const { previewPrivateNamesWsHandler } = require('./preview-private-names');
+const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
 const {
   listenForDataAtNameXWsHandler,
-} = require("./listen-for-data-at-name-x");
-const { deployWsHandler } = require("./deploy");
-const { exploreDeployWsHandler } = require("./explore-deploy");
-const { exploreDeployXWsHandler } = require("./explore-deploy-x");
-const { prepareDeployWsHandler } = require("./prepare-deploy");
-const { getAllRecordsWsHandler } = require("./get-all-records");
-const { getOneRecordWsHandler } = require("./get-one-record");
-const { getDappyRecordsAndSaveToDb } = require("./jobs/records");
-const { getLastFinalizedBlockNumber } = require("./jobs/last-block");
+} = require('./listen-for-data-at-name-x');
+const { deployWsHandler } = require('./deploy');
+const { exploreDeployWsHandler } = require('./explore-deploy');
+const { exploreDeployXWsHandler } = require('./explore-deploy-x');
+const { prepareDeployWsHandler } = require('./prepare-deploy');
+const { getAllRecordsWsHandler } = require('./get-all-records');
+const { getOneRecordWsHandler } = require('./get-one-record');
+const { getDappyRecordsAndSaveToDb } = require('./jobs/records');
+const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 
-const log = require("./utils").log;
-const redisHgetall = require("./utils").redisHgetall;
-const redisKeys = require("./utils").redisKeys;
+const log = require('./utils').log;
+const redisHgetall = require('./utils').redisHgetall;
+const redisKeys = require('./utils').redisKeys;
 
-if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
-  require("dotenv").config();
+if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+  require('dotenv').config();
 }
 
-const DAPPY_NODE_VERSION = "0.2.1";
+const DAPPY_NODE_VERSION = '0.2.8';
 
 let rnodeVersion = undefined;
 let lastFinalizedBlockNumber = undefined;
@@ -45,14 +45,15 @@ let protobufsLoaded = false;
 let appReady = false;
 let rnodeProposeClient = undefined;
 let deploysAwaiting = false;
+let special;
 
 const redisClient = redis.createClient({
   db: 1,
   host: process.env.REDIS_HOST,
 });
 
-redisClient.on("error", (err) => {
-  log("error : redis error " + err);
+redisClient.on('error', (err) => {
+  log('error : redis error ' + err);
 });
 
 let recordsJobRunning = false;
@@ -64,7 +65,18 @@ const runRecordsChildProcessJob = async () => {
   const t = setTimeout(() => {
     recordsJobRunning = false;
   }, 1000 * 120);
-  await getDappyRecordsAndSaveToDb(redisClient, httpUrlReadOnly);
+  const result = await getDappyRecordsAndSaveToDb(
+    redisClient,
+    httpUrlReadOnly,
+    special
+  );
+
+  if (special) {
+    special = {
+      ...special,
+      current: result[2],
+    };
+  }
   clearTimeout(t);
   recordsJobRunning = false;
 };
@@ -76,25 +88,23 @@ const initJobs = () => {
       namePrice = a.namePrice;
     })
     .catch((err) => {
-      log("failed to get last finalized block height");
+      log('failed to get last finalized block height');
       console.log(err);
     });
   setInterval(() => {
-    if (
-      new Date().getMinutes() % 10 ===
-      parseInt(process.env.CRON_JOBS_NAMES_MODULO)
-    ) {
+    if (true) {
       log(
-        "launching records job: " +
+        'launching records job: ' +
           new Date().getMinutes() +
-          "minutes % 10 === " +
+          'minutes % 10 === ' +
           process.env.CRON_JOBS_NAMES_MODULO
       );
       runRecordsChildProcessJob();
     } else {
-      log("not launching records job");
+      log('not launching records job');
     }
   }, 1000 * 60);
+  runRecordsChildProcessJob();
 
   setInterval(() => {
     getLastFinalizedBlockNumber(httpUrlReadOnly, httpUrlValidator)
@@ -103,7 +113,7 @@ const initJobs = () => {
         namePrice = a.namePrice;
       })
       .catch((err) => {
-        log("failed to get last finalized block height");
+        log('failed to get last finalized block height');
         console.log(err);
       });
   }, process.env.LAST_BLOCK_JOB_INTERVAL);
@@ -114,15 +124,35 @@ const initJobs = () => {
         if (deploysAwaiting) {
           await rchainToolkit.grpc.propose({}, rnodeProposeClient);
           deploysAwaiting = false;
-          log("Successfully created a block");
+          log('Successfully created a block');
         }
       } catch (err) {
-        log("error : Error when proposing : " + err);
+        log('error : Error when proposing : ' + err);
       }
     }, process.env.JOBS_INTERVAL);
   }
 };
 
+if (process.env.SPECIAL) {
+  try {
+    const split = process.env.SPECIAL.split(',');
+    if (
+      typeof split[0] === 'string' &&
+      typeof parseInt(split[1], 10) === 'number'
+    ) {
+      log(
+        'SPECIAL OPERATION ACTIVATED, name: ' + split[0] + ', max: ' + split[1]
+      );
+      special = {
+        name: split[0],
+        current: -1, // -1 so it is invalid until first runRecordsChildProcessJob() execution
+        max: parseInt(split[1], 10),
+      };
+    }
+  } catch (e) {
+    console.log(e);
+  }
+}
 /* app.get("/get-records-for-publickey", async (req, res) => {
   if (!req.query.publickey) {
     res.status(400).send("Missing query attribute publickey");
@@ -155,25 +185,25 @@ app.get("/get-record", async (req, res) => {
  */
 
 if (
-  !process.env.READ_ONLY_HOST.startsWith("https://") &&
-  !process.env.READ_ONLY_HOST.startsWith("http://")
+  !process.env.READ_ONLY_HOST.startsWith('https://') &&
+  !process.env.READ_ONLY_HOST.startsWith('http://')
 ) {
-  log("READ_ONLY_HOST must start with http:// or https://", "error");
+  log('READ_ONLY_HOST must start with http:// or https://', 'error');
   process.exit();
 }
 if (
-  !process.env.VALIDATOR_HOST.startsWith("https://") &&
-  !process.env.VALIDATOR_HOST.startsWith("http://")
+  !process.env.VALIDATOR_HOST.startsWith('https://') &&
+  !process.env.VALIDATOR_HOST.startsWith('http://')
 ) {
-  log("VALIDATOR_HOST must start with http:// or https://", "error");
+  log('VALIDATOR_HOST must start with http:// or https://', 'error');
   process.exit();
 }
-log("host (read-only):                   " + process.env.READ_ONLY_HOST);
-log("host (read-only) HTTP port:         " + process.env.READ_ONLY_HTTP_PORT);
-log("host (validator):                   " + process.env.VALIDATOR_HOST);
-log("host (validator) HTTP port:         " + process.env.VALIDATOR_HTTP_PORT);
+log('host (read-only):                   ' + process.env.READ_ONLY_HOST);
+log('host (read-only) HTTP port:         ' + process.env.READ_ONLY_HTTP_PORT);
+log('host (validator):                   ' + process.env.VALIDATOR_HOST);
+log('host (validator) HTTP port:         ' + process.env.VALIDATOR_HTTP_PORT);
 log(
-  "host (validator) GRPC propose port: " +
+  'host (validator) GRPC propose port: ' +
     process.env.VALIDATOR_GRPC_PROPOSE_PORT
 );
 
@@ -209,8 +239,8 @@ log(
 );
 
 const serverHttp = http.createServer((req, res) => {
-  if (req.method === "GET" && req.url === "/info") {
-    res.setHeader("Content-Type", "application/json");
+  if (req.method === 'GET' && req.url === '/info') {
+    res.setHeader('Content-Type', 'application/json');
     res.write(
       JSON.stringify({
         dappyNodeVersion: DAPPY_NODE_VERSION,
@@ -222,12 +252,12 @@ const serverHttp = http.createServer((req, res) => {
       })
     );
     res.end();
-  } else if (req.method === "GET" && req.url.startsWith("/get-nodes")) {
-    const io = req.url.indexOf("?network=");
+  } else if (req.method === 'GET' && req.url.startsWith('/get-nodes')) {
+    const io = req.url.indexOf('?network=');
 
     if (io === -1) {
       res.statusCode = 400;
-      res.setHeader("Content-Type", "text/plain");
+      res.setHeader('Content-Type', 'text/plain');
       res.end('Bad Request please provide "network" url parameter');
       return;
     }
@@ -236,12 +266,12 @@ const serverHttp = http.createServer((req, res) => {
     getNodesWsHandler({ network: network }, httpUrlReadOnly)
       .then((resp) => {
         if (resp.success) {
-          res.setHeader("Content-Type", "application/json");
+          res.setHeader('Content-Type', 'application/json');
           res.write(JSON.stringify(resp));
           res.end();
         } else {
           res.statusCode = 404;
-          res.setHeader("Content-Type", "text/plain");
+          res.setHeader('Content-Type', 'text/plain');
           res.end(resp.error.message);
           return;
         }
@@ -249,7 +279,7 @@ const serverHttp = http.createServer((req, res) => {
       .catch((err) => {
         console.log(err);
         res.statusCode = 404;
-        res.setHeader("Content-Type", "text/plain");
+        res.setHeader('Content-Type', 'text/plain');
         res.end(err);
       });
   }
@@ -261,13 +291,13 @@ serverHttp.listen(process.env.HTTP_PORT);
 
 let serverHttps;
 
-if (process.argv.includes("--ssl")) {
+if (process.argv.includes('--ssl')) {
   log(
     `Listening for SSL/websocket on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (SSL handled by nodeJS)`
   );
   const options = {
-    key: fs.readFileSync(path.join(__dirname, "../server-key.pem")),
-    cert: fs.readFileSync(path.join(__dirname, "../server-crt.pem")),
+    key: fs.readFileSync(path.join(__dirname, '../server-key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, '../server-crt.pem')),
   };
   serverHttps = https.createServer(options);
 } else {
@@ -285,35 +315,35 @@ const ws = new WebSocket.Server({
 
 serverHttps.listen(process.env.HTTPS_PORT);
 
-ws.on("close", (err) => {
-  log("critical error : websocket connection closed");
+ws.on('close', (err) => {
+  log('critical error : websocket connection closed');
   log(err);
 });
 
-ws.on("error", (err) => {
-  log("critical error : websocket connection error");
+ws.on('error', (err) => {
+  log('critical error : websocket connection error');
   log(err);
 });
-console.log("");
+console.log('');
 
-(httpUrlReadOnly.startsWith("https://") ? https : http).get(
+(httpUrlReadOnly.startsWith('https://') ? https : http).get(
   `${httpUrlReadOnly}/version`,
   (resp) => {
     log(`RChain node responding at ${httpUrlReadOnly}/version`);
 
     if (resp.statusCode !== 200) {
-      log("Status code different from 200", "error");
+      log('Status code different from 200', 'error');
       console.log(resp.statusCode);
       process.exit();
     }
 
-    resp.setEncoding("utf8");
-    let rawData = "";
-    resp.on("data", (chunk) => {
+    resp.setEncoding('utf8');
+    let rawData = '';
+    resp.on('data', (chunk) => {
       rawData += chunk;
     });
 
-    resp.on("end", () => {
+    resp.on('end', () => {
       log(`${rawData}\n`);
       rnodeVersion = rawData;
       appReady = true;
@@ -324,16 +354,16 @@ console.log("");
       return;
     });
 
-    resp.on("error", (err) => {
-      log("error: " + err);
+    resp.on('error', (err) => {
+      log('error: ' + err);
       process.exit();
     });
   }
 );
 
 const initWs = () => {
-  ws.on("connection", (client) => {
-    client.on("message", async (a, b) => {
+  ws.on('connection', (client) => {
+    client.on('message', async (a, b) => {
       try {
         const json = JSON.parse(a);
         //
@@ -342,33 +372,42 @@ const initWs = () => {
         // =====================================
         //
         // ======== INFO ========
-        if (json.type === "info") {
+        if (json.type === 'info') {
+          const data = {
+            dappyNodeVersion: DAPPY_NODE_VERSION,
+            lastFinalizedBlockNumber: lastFinalizedBlockNumber,
+            rnodeVersion: rnodeVersion,
+            rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
+            rchainNetwork: process.env.RCHAIN_NETWORK,
+            namePrice: namePrice,
+          };
+          if (
+            special &&
+            typeof special.current === 'number' &&
+            special.current > -1 &&
+            special.current !== special.max
+          ) {
+            data.special = special;
+          }
           client.send(
             JSON.stringify({
               success: true,
               requestId: json.requestId,
-              data: {
-                dappyNodeVersion: DAPPY_NODE_VERSION,
-                lastFinalizedBlockNumber: lastFinalizedBlockNumber,
-                rnodeVersion: rnodeVersion,
-                rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
-                rchainNetwork: process.env.RCHAIN_NETWORK,
-                namePrice: namePrice,
-              },
+              data: data,
             })
           );
           // ======== PING/PONG ========
-        } else if (json.type === "ping") {
+        } else if (json.type === 'ping') {
           client.send(
             JSON.stringify({
               success: true,
               requestId: json.requestId,
-              data: "pong",
+              data: 'pong',
             })
           );
           // ======== DEPLOY ========
-        } else if (json.type === "last-finalized-block-number") {
-          log("last-finalized-block-number");
+        } else if (json.type === 'last-finalized-block-number') {
+          log('last-finalized-block-number');
           client.send(
             JSON.stringify({
               success: true,
@@ -376,7 +415,7 @@ const initWs = () => {
               requestId: json.requestId,
             })
           );
-        } else if (json.type === "deploy") {
+        } else if (json.type === 'deploy') {
           try {
             const data = await deployWsHandler(json.body, httpUrlValidator);
             client.send(
@@ -386,7 +425,7 @@ const initWs = () => {
               })
             );
           } catch (err) {
-            log("Communication error with the node (GRPC endpoint)", "error");
+            log('Communication error with the node (GRPC endpoint)', 'error');
             console.log(err);
             client.send(
               JSON.stringify({
@@ -398,7 +437,7 @@ const initWs = () => {
           }
 
           // ======== PREPARE DEPLOY ========
-        } else if (json.type === "prepare-deploy") {
+        } else if (json.type === 'prepare-deploy') {
           try {
             const data = await prepareDeployWsHandler(
               json.body,
@@ -412,7 +451,7 @@ const initWs = () => {
               })
             );
           } catch (err) {
-            log("error : prepare deploy ws handler", "error");
+            log('error : prepare deploy ws handler', 'error');
             console.log(err);
             client.send(
               JSON.stringify({
@@ -423,7 +462,7 @@ const initWs = () => {
             );
           }
           // ======== EXPLORE DEPLOY ========
-        } else if (json.type === "explore-deploy") {
+        } else if (json.type === 'explore-deploy') {
           try {
             const data = await exploreDeployWsHandler(
               json.body,
@@ -436,7 +475,7 @@ const initWs = () => {
               })
             );
           } catch (err) {
-            log("error : explore deploy ws handler", "error");
+            log('error : explore deploy ws handler', 'error');
             console.log(err);
             client.send(
               JSON.stringify({
@@ -447,7 +486,7 @@ const initWs = () => {
             );
           }
           // ======== EXPLORE DEPLOY X ========
-        } else if (json.type === "explore-deploy-x") {
+        } else if (json.type === 'explore-deploy-x') {
           try {
             const data = await exploreDeployXWsHandler(
               json.body,
@@ -460,7 +499,7 @@ const initWs = () => {
               })
             );
           } catch (err) {
-            log("error : explore deploy x ws handler", "error");
+            log('error : explore deploy x ws handler', 'error');
             console.log(err);
             client.send(
               JSON.stringify({
@@ -471,7 +510,7 @@ const initWs = () => {
             );
           }
           // ======== LISTEN FOR DATA AT NAME ========
-        } else if (json.type === "listen-for-data-at-name") {
+        } else if (json.type === 'listen-for-data-at-name') {
           try {
             const data = await listenForDataAtNameWsHandler(
               json.body,
@@ -485,7 +524,7 @@ const initWs = () => {
               })
             );
           } catch (err) {
-            log("error : listen-for-data-at-name ws handler", "error");
+            log('error : listen-for-data-at-name ws handler', 'error');
             console.log(err);
             client.send(
               JSON.stringify({
@@ -495,7 +534,7 @@ const initWs = () => {
               })
             );
           }
-        } else if (json.type === "listen-for-data-at-name-x") {
+        } else if (json.type === 'listen-for-data-at-name-x') {
           listenForDataAtNameXWsHandler(json.body, httpUrlReadOnly)
             .then((data) => {
               client.send(
@@ -506,7 +545,7 @@ const initWs = () => {
               );
             })
             .catch((err) => {
-              log("error : listen-for-data-at-name-x ws handler", "error");
+              log('error : listen-for-data-at-name-x ws handler', 'error');
               console.log(err);
               client.send(
                 JSON.stringify({
@@ -517,7 +556,7 @@ const initWs = () => {
               );
             });
           // ======== GET ALL RECORDS ========
-        } else if (json.type === "get-all-records") {
+        } else if (json.type === 'get-all-records') {
           getAllRecordsWsHandler(redisClient)
             .then((data) => {
               client.send(
@@ -529,7 +568,7 @@ const initWs = () => {
               );
             })
             .catch((err) => {
-              log("error : get-all-records ws handler", "error");
+              log('error : get-all-records ws handler', 'error');
               console.log(err);
               client.send(
                 JSON.stringify({
@@ -539,7 +578,7 @@ const initWs = () => {
               );
             });
           // ======== GET ONE RECORD ========
-        } else if (json.type === "get-one-record") {
+        } else if (json.type === 'get-one-record') {
           getOneRecordWsHandler(json.body, redisClient)
             .then((data) => {
               client.send(
@@ -551,7 +590,7 @@ const initWs = () => {
               );
             })
             .catch((err) => {
-              log("error : get-one-record ws handler", "error");
+              log('error : get-one-record ws handler', 'error');
               console.log(err);
               client.send(
                 JSON.stringify({
@@ -561,7 +600,7 @@ const initWs = () => {
               );
             });
           // ======== GET NODES ========
-        } else if (json.type === "get-nodes") {
+        } else if (json.type === 'get-nodes') {
           getNodesWsHandler(json.body, httpUrlReadOnly)
             .then((data) => {
               client.send(
@@ -572,7 +611,7 @@ const initWs = () => {
               );
             })
             .catch((err) => {
-              log("error : get-nodes ws handler", "error");
+              log('error : get-nodes ws handler', 'error');
               console.log(err);
               err.requestId = json.requestId;
               client.send(
@@ -587,7 +626,7 @@ const initWs = () => {
             JSON.stringify({
               success: false,
               requestId: json.requestId,
-              error: { message: "Unknown request" },
+              error: { message: 'Unknown request' },
             })
           );
         }
@@ -596,20 +635,20 @@ const initWs = () => {
         client.send(
           JSON.stringify({
             success: false,
-            error: { message: "Unable to parse request" },
+            error: { message: 'Unable to parse request' },
           })
         );
       }
     });
 
-    client.on("close", (a, b) => {
+    client.on('close', (a, b) => {
       client.terminate();
     });
 
-    client.on("error", (err) => {
+    client.on('error', (err) => {
       console.log(err);
       client.send({
-        type: "websocket-error",
+        type: 'websocket-error',
         error: err,
       });
     });
