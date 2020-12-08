@@ -78,7 +78,7 @@ const runRecordsChildProcessJob = async () => {
     special
   );
 
-  if (special) {
+  if (result && special) {
     special = {
       ...special,
       current: result[2],
@@ -99,7 +99,7 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    if (true) {
+    if (new Date().getMinutes() % process.env.CRON_JOBS_NAMES_MODULO === 0) {
       log(
         'launching records job: ' +
           new Date().getMinutes() +

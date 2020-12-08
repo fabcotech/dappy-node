@@ -1,8 +1,8 @@
-const rchainToolkit = require("rchain-toolkit");
+const rchainToolkit = require('rchain-toolkit');
 
-const { readBagsTerm } = require("rchain-token-files");
-const log = require("../utils").log;
-const getRecordsTerm = require("../utils").getRecordsTerm;
+const { readBagsTerm } = require('rchain-token-files');
+const log = require('../utils').log;
+const getRecordsTerm = require('../utils').getRecordsTerm;
 
 module.exports.getLastFinalizedBlockNumber = async (
   httpUrlReadOnly,
@@ -16,7 +16,7 @@ module.exports.getLastFinalizedBlockNumber = async (
       })
     )[0].blockNumber;
   } catch (err) {
-    log("Unable to get last finalized block", "error");
+    log('Unable to get last finalized block', 'error');
     throw new Error(err);
   }
 
@@ -27,26 +27,38 @@ module.exports.getLastFinalizedBlockNumber = async (
     exploreDeployResult = await rchainToolkit.http.exploreDeploy(
       httpUrlReadOnly,
       {
-        term: readBagsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI),
+        term: `new return, entryCh, lookup(\`rho:registry:lookup\`) in {
+          lookup!(\`rho:id:${process.env.RCHAIN_NAMES_REGISTRY_URI}\`, *entryCh) |
+          for(entry <- entryCh) {
+            new x in {
+              entry!({ "type": "READ_BAGS" }, *x) |
+              for (y <- x) {
+                return!(*y.get("0"))
+              }
+            }
+          }
+        }`,
       }
     );
   } catch (err) {
-    log("Unable to explore-deploy for name price", "error");
+    log('Unable to explore-deploy for name price', 'error');
     throw new Error(err);
   }
 
-  let namePrice = 3;
+  let namePrice = undefined;
   try {
     namePrice = rchainToolkit.utils.rhoValToJs(
       JSON.parse(exploreDeployResult).expr[0]
-    )["0"].price;
+    ).price;
+    if (typeof namePrice !== 'number') {
+      throw new Error('Not a number');
+    }
   } catch (err) {
     log(
-      "Unable to parse explore-deploy result as JSON for name price",
-      "error"
+      'Unable to parse explore-deploy result as JSON for name price',
+      'error'
     );
-    console.log(exploreDeployResult);
-    //throw new Error(err);
+    throw new Error(err);
   }
 
   log(
