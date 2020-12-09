@@ -598,8 +598,6 @@ const initWs = () => {
             });
           // ======== GET NODES ========
         } else if (json.type === 'get-nodes') {
-          console.log('get-nodes');
-          console.log(nodes);
           if (nodes) {
             JSON.stringify({
               success: true,
