@@ -99,7 +99,7 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    if (new Date().getMinutes() % process.env.CRON_JOBS_NAMES_MODULO === 0) {
+    if (new Date().getMinutes() % 10 === process.env.CRON_JOBS_NAMES_MODULO) {
       log(
         'launching records job: ' +
           new Date().getMinutes() +
