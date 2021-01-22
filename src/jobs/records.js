@@ -54,9 +54,8 @@ const validate = ajv.compile(schema);
 
 const storeRecord = async (id, record, redisClient) => {
   const valid = validate(record);
-
   if (!valid) {
-    log('invalid record ' + id, 'warning');
+    log('invalid record ' + id);
     console.log(validate.errors);
     return;
   }

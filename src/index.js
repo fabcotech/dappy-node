@@ -1,4 +1,3 @@
-const WebSocket = require('ws');
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const http = require('http');
@@ -6,13 +5,14 @@ const https = require('https');
 const redis = require('redis');
 const path = require('path');
 const fs = require('fs');
+const bodyParser = require('body-parser');
+const express = require('express');
 
 // will not override the env variables in docker-compose
 require('dotenv').config();
 
 const rchainToolkit = require('rchain-toolkit');
 
-const { previewPrivateNamesWsHandler } = require('./preview-private-names');
 const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
 const {
   listenForDataAtNameXWsHandler,
@@ -23,6 +23,7 @@ const { exploreDeployXWsHandler } = require('./explore-deploy-x');
 const { prepareDeployWsHandler } = require('./prepare-deploy');
 const { getAllRecordsWsHandler } = require('./get-all-records');
 const { getOneRecordWsHandler } = require('./get-one-record');
+const { getXRecordsWsHandler } = require('./get-x-records');
 const { getDappyRecordsAndSaveToDb } = require('./jobs/records');
 const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 
@@ -50,8 +51,6 @@ try {
 
 let protobufsLoaded = false;
 let appReady = false;
-let rnodeProposeClient = undefined;
-let deploysAwaiting = false;
 let special;
 
 const redisClient = redis.createClient({
@@ -99,7 +98,10 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    if (new Date().getMinutes() % 10 === parseInt(process.env.CRON_JOBS_NAMES_MODULO, 10)) {
+    if (
+      new Date().getMinutes() % 10 ===
+      parseInt(process.env.CRON_JOBS_NAMES_MODULO, 10)
+    ) {
       log(
         'launching records job: ' +
           new Date().getMinutes() +
@@ -107,8 +109,6 @@ const initJobs = () => {
           process.env.CRON_JOBS_NAMES_MODULO
       );
       runRecordsChildProcessJob();
-    } else {
-      log('not launching records job');
     }
   }, 1000 * 60);
   runRecordsChildProcessJob();
@@ -120,24 +120,10 @@ const initJobs = () => {
         namePrice = a.namePrice;
       })
       .catch((err) => {
-        log('failed to get last finalized block height');
+        log('failed to get last finalized block height', 'error');
         console.log(err);
       });
   }, process.env.LAST_BLOCK_JOB_INTERVAL);
-
-  if (process.env.RNODE_HOST === process.env.RNODE_DEPLOY_HOST) {
-    setInterval(async () => {
-      try {
-        if (deploysAwaiting) {
-          await rchainToolkit.grpc.propose({}, rnodeProposeClient);
-          deploysAwaiting = false;
-          log('Successfully created a block');
-        }
-      } catch (err) {
-        log('error : Error when proposing : ' + err);
-      }
-    }, process.env.JOBS_INTERVAL);
-  }
 };
 
 if (process.env.SPECIAL) {
@@ -234,7 +220,6 @@ const loadClient = async () => {
   protobufsLoaded = true;
   if (appReady) {
     initJobs();
-    initWs();
   }
 };
 loadClient();
@@ -288,6 +273,155 @@ serverHttp.listen(process.env.HTTP_PORT);
 
 let serverHttps;
 
+const app = express();
+app.use(bodyParser.json());
+
+app.post('/ping', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.write(JSON.stringify({ data: 'pong' }));
+  res.end();
+});
+app.post('/info', (req, res) => {
+  const data = {
+    dappyNodeVersion: DAPPY_NODE_VERSION,
+    lastFinalizedBlockNumber: lastFinalizedBlockNumber,
+    rnodeVersion: rnodeVersion,
+    rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
+    rchainNetwork: process.env.RCHAIN_NETWORK,
+    namePrice: namePrice,
+  };
+  if (
+    special &&
+    typeof special.current === 'number' &&
+    special.current > -1 &&
+    special.current !== special.max
+  ) {
+    data.special = special;
+  }
+  res.setHeader('Content-Type', 'application/json');
+  res.write(
+    JSON.stringify({
+      data: data,
+    })
+  );
+  res.end();
+});
+app.post('/last-finalized-block-number', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.write(
+    JSON.stringify({
+      data: lastFinalizedBlockNumber,
+    })
+  );
+  res.end();
+});
+app.post('/api/deploy', async (req, res) => {
+  const data = await deployWsHandler(req.body, httpUrlValidator);
+  res.write(JSON.stringify(data));
+  res.end();
+});
+app.post('/api/prepare-deploy', async (req, res) => {
+  const data = await prepareDeployWsHandler(req.body, httpUrlReadOnly);
+  if (data.success) {
+    res.write(JSON.stringify(data));
+    res.end();
+  } else {
+    res.write(JSON.stringify(data));
+    res.status(400);
+    res.end();
+  }
+});
+app.post('/api/explore-deploy', async (req, res) => {
+  const data = await exploreDeployWsHandler(req.body, httpUrlReadOnly);
+  if (data.success) {
+    res.write(JSON.stringify(data));
+    res.end();
+  } else {
+    res.write(JSON.stringify(data));
+    res.status(400);
+    res.end();
+  }
+});
+app.post('/explore-deploy-x', async (req, res) => {
+  const data = await exploreDeployXWsHandler(req.body, httpUrlReadOnly);
+  if (data.success) {
+    res.write(JSON.stringify(data));
+    res.end();
+  } else {
+    res.write(JSON.stringify(data));
+    res.status(400);
+    res.end();
+  }
+});
+app.post('/api/listen-for-data-at-name', async (req, res) => {
+  const data = await listenForDataAtNameWsHandler(req.body, httpUrlReadOnly);
+  if (data.success) {
+    res.write(JSON.stringify(data));
+    res.end();
+  } else {
+    res.write(JSON.stringify(data));
+    res.status(400);
+    res.end();
+  }
+});
+app.post('/listen-for-data-at-name-x', async (req, res) => {
+  const data = await listenForDataAtNameXWsHandler(req.body, httpUrlReadOnly);
+  if (data.success) {
+    res.write(JSON.stringify(data));
+    res.end();
+  } else {
+    res.write(JSON.stringify(data));
+    res.status(400);
+    res.end();
+  }
+});
+app.post('/get-all-records', async (req, res) => {
+  const data = await getAllRecordsWsHandler(redisClient);
+  if (data.success) {
+    res.write(JSON.stringify(data));
+    res.end();
+  } else {
+    res.write(JSON.stringify(data));
+    res.status(400);
+    res.end();
+  }
+});
+app.post('/get-one-record', async (req, res) => {
+  const data = await getOneRecordWsHandler(req.body, redisClient);
+  if (data.success) {
+    res.write(JSON.stringify(data));
+    res.end();
+  } else {
+    res.write(JSON.stringify(data));
+    res.status(400);
+    res.end();
+  }
+});
+app.post('/get-x-records', async (req, res) => {
+  const data = await getXRecordsWsHandler(req.body, redisClient);
+  if (data.success) {
+    res.write(JSON.stringify(data));
+    res.end();
+  } else {
+    res.write(JSON.stringify(data));
+    res.status(400);
+    res.end();
+  }
+});
+
+app.post('/get-nodes', (req, res) => {
+  if (nodes) {
+    res.write(
+      JSON.stringify({
+        data: nodes,
+      })
+    );
+    res.end();
+  } else {
+    res.status(404).end();
+  }
+});
+
 if (process.argv.includes('--ssl')) {
   log(
     `Listening for SSL/websocket on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (SSL handled by nodeJS)`
@@ -296,32 +430,13 @@ if (process.argv.includes('--ssl')) {
     key: fs.readFileSync(path.join(__dirname, '../server-key.pem')),
     cert: fs.readFileSync(path.join(__dirname, '../server-crt.pem')),
   };
-  serverHttps = https.createServer(options);
+  serverHttps = https.createServer(options, app);
 } else {
   log(
     `Listening for websocket on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (SSL not handled by nodeJS)`
   );
-  serverHttps = http.createServer();
+  serverHttps = http.createServer(app);
 }
-
-const ws = new WebSocket.Server({
-  server: serverHttps,
-  backlog: 1000,
-  maxPayload: 256100,
-});
-
-serverHttps.listen(process.env.HTTPS_PORT);
-
-ws.on('close', (err) => {
-  log('critical error : websocket connection closed');
-  log(err);
-});
-
-ws.on('error', (err) => {
-  log('critical error : websocket connection error');
-  log(err);
-});
-console.log('');
 
 (httpUrlReadOnly.startsWith('https://') ? https : http).get(
   `${httpUrlReadOnly}/version`,
@@ -346,7 +461,6 @@ console.log('');
       appReady = true;
       if (protobufsLoaded) {
         initJobs();
-        initWs();
       }
       return;
     });
@@ -357,290 +471,3 @@ console.log('');
     });
   }
 );
-
-const initWs = () => {
-  ws.on('connection', (client) => {
-    client.on('message', async (a, b) => {
-      try {
-        const json = JSON.parse(a);
-        //
-        // =====================================
-        // ======== WEBSOCKET ENDPOINTS ========
-        // =====================================
-        //
-        // ======== INFO ========
-        if (json.type === 'info') {
-          const data = {
-            dappyNodeVersion: DAPPY_NODE_VERSION,
-            lastFinalizedBlockNumber: lastFinalizedBlockNumber,
-            rnodeVersion: rnodeVersion,
-            rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
-            rchainNetwork: process.env.RCHAIN_NETWORK,
-            namePrice: namePrice,
-          };
-          if (
-            special &&
-            typeof special.current === 'number' &&
-            special.current > -1 &&
-            special.current !== special.max
-          ) {
-            data.special = special;
-          }
-          client.send(
-            JSON.stringify({
-              success: true,
-              requestId: json.requestId,
-              data: data,
-            })
-          );
-          // ======== PING/PONG ========
-        } else if (json.type === 'ping') {
-          client.send(
-            JSON.stringify({
-              success: true,
-              requestId: json.requestId,
-              data: 'pong',
-            })
-          );
-          // ======== DEPLOY ========
-        } else if (json.type === 'last-finalized-block-number') {
-          log('last-finalized-block-number');
-          client.send(
-            JSON.stringify({
-              success: true,
-              data: lastFinalizedBlockNumber,
-              requestId: json.requestId,
-            })
-          );
-        } else if (json.type === 'deploy') {
-          try {
-            const data = await deployWsHandler(json.body, httpUrlValidator);
-            client.send(
-              JSON.stringify({
-                ...data,
-                requestId: json.requestId,
-              })
-            );
-          } catch (err) {
-            log('Communication error with the node (GRPC endpoint)', 'error');
-            console.log(err);
-            client.send(
-              JSON.stringify({
-                success: false,
-                requestId: json.requestId,
-                error: { message: err.message || err },
-              })
-            );
-          }
-
-          // ======== PREPARE DEPLOY ========
-        } else if (json.type === 'prepare-deploy') {
-          try {
-            const data = await prepareDeployWsHandler(
-              json.body,
-              httpUrlReadOnly
-            );
-
-            client.send(
-              JSON.stringify({
-                ...data,
-                requestId: json.requestId,
-              })
-            );
-          } catch (err) {
-            log('error : prepare deploy ws handler', 'error');
-            console.log(err);
-            client.send(
-              JSON.stringify({
-                success: false,
-                requestId: json.requestId,
-                error: { message: err.message },
-              })
-            );
-          }
-          // ======== EXPLORE DEPLOY ========
-        } else if (json.type === 'explore-deploy') {
-          try {
-            const data = await exploreDeployWsHandler(
-              json.body,
-              httpUrlReadOnly
-            );
-            client.send(
-              JSON.stringify({
-                ...data,
-                requestId: json.requestId,
-              })
-            );
-          } catch (err) {
-            log('error : explore deploy ws handler', 'error');
-            console.log(err);
-            client.send(
-              JSON.stringify({
-                success: false,
-                requestId: json.requestId,
-                error: { message: err.message },
-              })
-            );
-          }
-          // ======== EXPLORE DEPLOY X ========
-        } else if (json.type === 'explore-deploy-x') {
-          try {
-            const data = await exploreDeployXWsHandler(
-              json.body,
-              httpUrlReadOnly
-            );
-            client.send(
-              JSON.stringify({
-                ...data,
-                requestId: json.requestId,
-              })
-            );
-          } catch (err) {
-            log('error : explore deploy x ws handler', 'error');
-            console.log(err);
-            client.send(
-              JSON.stringify({
-                success: false,
-                requestId: json.requestId,
-                error: { message: err.message },
-              })
-            );
-          }
-          // ======== LISTEN FOR DATA AT NAME ========
-        } else if (json.type === 'listen-for-data-at-name') {
-          try {
-            const data = await listenForDataAtNameWsHandler(
-              json.body,
-              httpUrlReadOnly
-            );
-
-            client.send(
-              JSON.stringify({
-                ...data,
-                requestId: json.requestId,
-              })
-            );
-          } catch (err) {
-            log('error : listen-for-data-at-name ws handler', 'error');
-            console.log(err);
-            client.send(
-              JSON.stringify({
-                success: false,
-                requestId: json.requestId,
-                error: { message: err.message },
-              })
-            );
-          }
-        } else if (json.type === 'listen-for-data-at-name-x') {
-          listenForDataAtNameXWsHandler(json.body, httpUrlReadOnly)
-            .then((data) => {
-              client.send(
-                JSON.stringify({
-                  ...data,
-                  requestId: json.requestId,
-                })
-              );
-            })
-            .catch((err) => {
-              log('error : listen-for-data-at-name-x ws handler', 'error');
-              console.log(err);
-              client.send(
-                JSON.stringify({
-                  success: false,
-                  requestId: json.requestId,
-                  error: { message: err.message },
-                })
-              );
-            });
-          // ======== GET ALL RECORDS ========
-        } else if (json.type === 'get-all-records') {
-          getAllRecordsWsHandler(redisClient)
-            .then((data) => {
-              client.send(
-                JSON.stringify({
-                  success: true,
-                  requestId: json.requestId,
-                  data: JSON.stringify(data),
-                })
-              );
-            })
-            .catch((err) => {
-              log('error : get-all-records ws handler', 'error');
-              console.log(err);
-              client.send(
-                JSON.stringify({
-                  ...err,
-                  requestId: json.requestId,
-                })
-              );
-            });
-          // ======== GET ONE RECORD ========
-        } else if (json.type === 'get-one-record') {
-          getOneRecordWsHandler(json.body, redisClient)
-            .then((data) => {
-              client.send(
-                JSON.stringify({
-                  success: true,
-                  requestId: json.requestId,
-                  data: JSON.stringify(data),
-                })
-              );
-            })
-            .catch((err) => {
-              log('error : get-one-record ws handler', 'error');
-              console.log(err);
-              client.send(
-                JSON.stringify({
-                  ...err,
-                  requestId: json.requestId,
-                })
-              );
-            });
-          // ======== GET NODES ========
-        } else if (json.type === 'get-nodes') {
-          if (nodes) {
-            JSON.stringify({
-              success: true,
-              data: nodes,
-              requestId: json.requestId,
-            });
-          } else {
-            JSON.stringify({
-              success: false,
-              error: { message: 'Unknown resource nodes ' },
-              requestId: json.requestId,
-            });
-          }
-        } else {
-          client.send(
-            JSON.stringify({
-              success: false,
-              requestId: json.requestId,
-              error: { message: 'Unknown request' },
-            })
-          );
-        }
-      } catch (err) {
-        console.log(err);
-        client.send(
-          JSON.stringify({
-            success: false,
-            error: { message: 'Unable to parse request' },
-          })
-        );
-      }
-    });
-
-    client.on('close', (a, b) => {
-      client.terminate();
-    });
-
-    client.on('error', (err) => {
-      console.log(err);
-      client.send({
-        type: 'websocket-error',
-        error: err,
-      });
-    });
-  });
-};
