@@ -269,7 +269,7 @@ const serverHttp = http.createServer((req, res) => {
 
 serverHttp.listen(process.env.HTTP_PORT);
 
-// SSL endpoint
+// TLS endpoint
 
 let serverHttps;
 
@@ -424,7 +424,7 @@ app.post('/get-nodes', (req, res) => {
 
 if (process.argv.includes('--ssl')) {
   log(
-    `Listening for SSL/websocket on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (SSL handled by nodeJS)`
+    `Listening for HTTP+TLS on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`
   );
   const options = {
     key: fs.readFileSync(path.join(__dirname, '../server-key.pem')),
@@ -433,10 +433,12 @@ if (process.argv.includes('--ssl')) {
   serverHttps = https.createServer(options, app);
 } else {
   log(
-    `Listening for websocket on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (SSL not handled by nodeJS)`
+    `Listening for HTTP on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (TLS not handled by nodeJS)`
   );
   serverHttps = http.createServer(app);
 }
+
+serverHttps.listen(process.env.HTTPS_PORT);
 
 (httpUrlReadOnly.startsWith('https://') ? https : http).get(
   `${httpUrlReadOnly}/version`,
