@@ -1,59 +1,59 @@
-const rchainToolkit = require("rchain-toolkit");
-const Ajv = require("ajv");
+const rchainToolkit = require('rchain-toolkit');
+const Ajv = require('ajv');
 
-const log = require("./utils").log;
+const log = require('./utils').log;
 
 const ajv = new Ajv();
 const schema = {
-  schemaId: "deploy",
-  type: "object",
+  schemaId: 'deploy',
+  type: 'object',
   properties: {
     data: {
-      type: "object",
+      type: 'object',
       properties: {
         timestamp: {
-          type: "number"
+          type: 'number',
         },
         phloPrice: {
-          type: "number"
+          type: 'number',
         },
         phloLimit: {
-          type: "number"
+          type: 'number',
         },
         validAfterBlockNumber: {
-          type: "number"
+          type: 'number',
         },
         term: {
-          type: "string"
-        }
+          type: 'string',
+        },
       },
       required: [
-        "timestamp",
-        "phloPrice",
-        "phloLimit",
-        "validAfterBlockNumber",
-        "term"
-      ]
+        'timestamp',
+        'phloPrice',
+        'phloLimit',
+        'validAfterBlockNumber',
+        'term',
+      ],
     },
     deployer: {
-      type: "string"
+      type: 'string',
     },
     signature: {
-      type: "string"
+      type: 'string',
     },
     sigAlgorithm: {
-      type: "string",
-      const: "secp256k1"
-    }
+      type: 'string',
+      const: 'secp256k1',
+    },
   },
-  required: ["deployer", "signature", "sigAlgorithm"]
+  required: ['deployer', 'signature', 'sigAlgorithm'],
 };
 
-ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
+ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
 const validate = ajv.compile(schema);
 
 module.exports.deployWsHandler = async (body, httpUrl) => {
-  log("deploy");
+  log('deploy');
 
   const valid = validate(body);
 
@@ -61,8 +61,8 @@ module.exports.deployWsHandler = async (body, httpUrl) => {
     return {
       success: false,
       error: {
-        message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
-      }
+        message: validate.errors.map((e) => `body${e.dataPath} ${e.message}`),
+      },
     };
   }
 
@@ -70,12 +70,12 @@ module.exports.deployWsHandler = async (body, httpUrl) => {
   if (!deployResponse.startsWith('"Success')) {
     return {
       success: false,
-      error: { message: deployResponse }
+      error: { message: deployResponse },
     };
   } else {
     return {
       success: true,
-      data: deployResponse
+      data: deployResponse,
     };
   }
 };

@@ -302,6 +302,7 @@ app.post('/info', (req, res) => {
   res.write(
     JSON.stringify({
       data: data,
+      success: true,
     })
   );
   res.end();
@@ -311,6 +312,7 @@ app.post('/last-finalized-block-number', (req, res) => {
   res.write(
     JSON.stringify({
       data: lastFinalizedBlockNumber,
+      success: true,
     })
   );
   res.end();

@@ -4,14 +4,11 @@ const { readBagsTerm } = require('rchain-token-files');
 const log = require('../utils').log;
 const getRecordsTerm = require('../utils').getRecordsTerm;
 
-module.exports.getLastFinalizedBlockNumber = async (
-  httpUrlReadOnly,
-  httpUrlValidator
-) => {
+module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
   let validAfterBlockNumber;
   try {
     validAfterBlockNumber = JSON.parse(
-      await rchainToolkit.http.blocks(httpUrlValidator, {
+      await rchainToolkit.http.blocks(httpUrlReadOnly, {
         position: 1,
       })
     )[0].blockNumber;
