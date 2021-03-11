@@ -1,6 +1,6 @@
 const rchainToolkit = require('rchain-toolkit');
 
-const { readBagsTerm } = require('rchain-token-files');
+const { readPursesTerm } = require('rchain-token');
 const log = require('../utils').log;
 const getRecordsTerm = require('../utils').getRecordsTerm;
 
@@ -24,17 +24,9 @@ module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
     exploreDeployResult = await rchainToolkit.http.exploreDeploy(
       httpUrlReadOnly,
       {
-        term: `new return, entryCh, lookup(\`rho:registry:lookup\`) in {
-          lookup!(\`rho:id:${process.env.RCHAIN_NAMES_REGISTRY_URI}\`, *entryCh) |
-          for(entry <- entryCh) {
-            new x in {
-              entry!({ "type": "READ_BAGS" }, *x) |
-              for (y <- x) {
-                return!(*y.get("0"))
-              }
-            }
-          }
-        }`,
+        term: readPursesTerm(process.env.RCHAIN_NAMES_REGISTRY_URI, {
+          pursesIds: ['0'],
+        }),
       }
     );
   } catch (err) {
@@ -46,7 +38,7 @@ module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
   try {
     namePrice = rchainToolkit.utils.rhoValToJs(
       JSON.parse(exploreDeployResult).expr[0]
-    ).price;
+    )['0'].price;
     if (typeof namePrice !== 'number') {
       throw new Error('Not a number');
     }

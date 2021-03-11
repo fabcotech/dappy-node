@@ -2,7 +2,11 @@ const rchainToolkit = require('rchain-toolkit');
 const Ajv = require('ajv');
 require('dotenv').config();
 const { log } = require('../utils');
-const { readBagsTerm } = require('rchain-token-files');
+const {
+  readPursesIdsTerm,
+  readPursesDataTerm,
+  readPursesTerm,
+} = require('rchain-token');
 
 const { redisKeys, getManyBagsDataTerm } = require('../utils');
 
@@ -11,13 +15,10 @@ const schema = {
   schemaId: 'dappy-record',
   type: 'object',
   properties: {
-    publicKey: {
-      type: 'string',
-    },
     address: {
       type: 'string',
     },
-    nonce: {
+    publicKey: {
       type: 'string',
     },
     badges: {
@@ -45,7 +46,7 @@ const schema = {
       },
     },
   },
-  required: ['name', 'publicKey', 'servers', 'nonce'],
+  required: ['name', 'publicKey', 'servers'],
 };
 module.exports.schema = schema;
 
@@ -118,7 +119,7 @@ const storeRecord = async (id, record, redisClient) => {
 };
 
 const storeRecordsInRedis = async (
-  bags,
+  pursesIds,
   redisClient,
   httpUrlReadOnly,
   special
@@ -153,13 +154,12 @@ const storeRecordsInRedis = async (
   }
 
   return new Promise(async (resolve, reject) => {
-    const keys = Object.keys(bags);
-    const validKeys = keys.filter((name) => /^[a-z][a-z0-9]*$/.test(name));
+    const validKeys = pursesIds.filter((name) => /^[a-z][a-z0-9]*$/.test(name));
 
     let specialNames = 0;
     // a special name is special1,name1,name2,name3 for example
     if (special) {
-      specialNames = keys.filter((name) => {
+      specialNames = pursesIds.filter((name) => {
         return name.startsWith(special.name) && /^[a-z][a-z0-9,]*$/.test(name);
       }).length;
     }
@@ -170,7 +170,7 @@ const storeRecordsInRedis = async (
     const retrieveRecord = async () => {
       const k = validKeys[i];
       if (!k) {
-        if (i === l - 1 || l === 0) {
+        if (i === l - 1 || l === 0 || i >= l) {
           resolve([successes, l, specialNames]);
         } else {
           i += 1;
@@ -178,29 +178,40 @@ const storeRecordsInRedis = async (
         }
         return;
       }
-      if (i !== 0 && i % 20 === 0) {
+      if (i !== 0) {
         log('processing name no ' + i);
       }
 
       const recordsToProcess = [];
       recordsToProcess.push(k);
-      // ten by ten
-      [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((j) => {
+
+      // 99 by 99
+      for (let j = 0; j < 98; j += 1) {
         if (validKeys[i + j]) {
           recordsToProcess.push(validKeys[i + j]);
         }
-      });
+      }
+
       const n = recordsToProcess.length;
       let tt = new Date().getTime();
 
+      let exploreDeployResponse;
+      let exploreDeployResponseData;
       try {
         exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
           httpUrlReadOnly,
           {
-            term: getManyBagsDataTerm(
-              process.env.RCHAIN_NAMES_REGISTRY_URI,
-              recordsToProcess
-            ),
+            term: readPursesTerm(process.env.RCHAIN_NAMES_REGISTRY_URI, {
+              pursesIds: recordsToProcess,
+            }),
+          }
+        );
+        exploreDeployResponseData = await rchainToolkit.http.exploreDeploy(
+          httpUrlReadOnly,
+          {
+            term: readPursesDataTerm(process.env.RCHAIN_NAMES_REGISTRY_URI, {
+              pursesIds: recordsToProcess,
+            }),
           }
         );
       } catch (err) {
@@ -214,23 +225,38 @@ const storeRecordsInRedis = async (
         return;
       }
 
-      const bagsData = rchainToolkit.utils.rhoValToJs(
+      const pursesData = rchainToolkit.utils.rhoValToJs(
+        JSON.parse(exploreDeployResponseData).expr[0]
+      );
+      const purses = rchainToolkit.utils.rhoValToJs(
         JSON.parse(exploreDeployResponse).expr[0]
       );
 
-      for (let j = 0; j < bagsData.length; j += 1) {
+      const dataKeys = Object.keys(pursesData);
+
+      if (dataKeys.length === 0) {
+        if (i === l - n) {
+          resolve([successes, pursesIds.length, specialNames]);
+        } else {
+          i += n;
+          await retrieveRecord();
+        }
+        return;
+      }
+      for (let j = 0; j < dataKeys.length; j += 1) {
         let record = undefined;
         try {
-          record = JSON.parse(Buffer.from(bagsData[j], 'hex').toString('utf8'));
+          record = JSON.parse(
+            Buffer.from(pursesData[dataKeys[j]], 'hex').toString('utf8')
+          );
           const completeRecord = {
             ...record,
-            publicKey: bags[validKeys[i + j]].publicKey,
-            nonce: bags[validKeys[i + j]].nonce,
             name: validKeys[i + j],
+            publicKey: purses[validKeys[i + j]].publicKey,
           };
           // redis cannot store undefined as value
-          if (typeof bags[validKeys[i + j]].price === 'number') {
-            completeRecord.price = bags[validKeys[i + j]].price;
+          if (typeof purses[validKeys[i + j]].price === 'number') {
+            completeRecord.price = purses[validKeys[i + j]].price;
           }
           if (!completeRecord.address) {
             delete completeRecord.address;
@@ -251,7 +277,7 @@ const storeRecordsInRedis = async (
       }
 
       if (i === l - n) {
-        resolve([successes, keys.length, specialNames]);
+        resolve([successes, purses.length, specialNames]);
       } else {
         i += n;
         await retrieveRecord();
@@ -273,7 +299,7 @@ module.exports.getDappyRecordsAndSaveToDb = async (
     exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
       httpUrlReadOnly,
       {
-        term: readBagsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI),
+        term: readPursesIdsTerm(process.env.RCHAIN_NAMES_REGISTRY_URI),
       }
     );
   } catch (err) {
@@ -299,20 +325,20 @@ module.exports.getDappyRecordsAndSaveToDb = async (
     return;
   }
 
-  let bags;
+  let pursesIds;
   try {
-    bags = rchainToolkit.utils.rhoValToJs(parsedResponse.expr[0]);
+    pursesIds = rchainToolkit.utils.rhoValToJs(parsedResponse.expr[0]);
   } catch (err) {
     log('Something went wrong when querying the node, value:', 'error');
     console.log(err);
     return;
   }
-  delete bags['0'];
+  pursesIds = pursesIds.filter((a) => a !== '0');
 
   const a = new Date().getTime();
   try {
     const recordsProcessed = await storeRecordsInRedis(
-      bags,
+      pursesIds,
       redisClient,
       httpUrlReadOnly,
       special
