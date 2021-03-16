@@ -178,19 +178,20 @@ const storeRecordsInRedis = async (
         }
         return;
       }
-      if (i !== 0) {
-        log('processing name no ' + i);
-      }
 
       const recordsToProcess = [];
-      recordsToProcess.push(k);
-
-      // 99 by 99
-      for (let j = 0; j < 98; j += 1) {
+      // 100 by 100
+      for (let j = 0; j < 100; j += 1) {
         if (validKeys[i + j]) {
           recordsToProcess.push(validKeys[i + j]);
         }
       }
+      log(
+        'indexing from rank ' +
+          i +
+          ' to rank ' +
+          (i + recordsToProcess.length - 1)
+      );
 
       const n = recordsToProcess.length;
       let tt = new Date().getTime();
@@ -217,7 +218,7 @@ const storeRecordsInRedis = async (
       } catch (err) {
         log('Name ' + k + ': could not explore-deploy ' + err, 'error');
         if (i === l - n) {
-          resolve([success, l, specialNames]);
+          resolve([successes, l, specialNames]);
         } else {
           i += n;
           await retrieveRecord();
@@ -236,7 +237,7 @@ const storeRecordsInRedis = async (
 
       if (dataKeys.length === 0) {
         if (i === l - n) {
-          resolve([successes, pursesIds.length, specialNames]);
+          resolve([successes, l, specialNames]);
         } else {
           i += n;
           await retrieveRecord();
@@ -251,19 +252,19 @@ const storeRecordsInRedis = async (
           );
           const completeRecord = {
             ...record,
-            name: validKeys[i + j],
-            publicKey: purses[validKeys[i + j]].publicKey,
+            name: dataKeys[j],
+            publicKey: purses[dataKeys[j]].publicKey,
           };
           // redis cannot store undefined as value
-          if (typeof purses[validKeys[i + j]].price === 'number') {
-            completeRecord.price = purses[validKeys[i + j]].price;
+          if (typeof purses[dataKeys[j]].price === 'number') {
+            completeRecord.price = purses[dataKeys[j]].price;
           }
           if (!completeRecord.address) {
             delete completeRecord.address;
           }
 
           try {
-            await storeRecord(validKeys[i + j], completeRecord, redisClient);
+            await storeRecord(dataKeys[j], completeRecord, redisClient);
             successes += 1;
           } catch (err) {
             log('redis error', 'error');
@@ -277,7 +278,7 @@ const storeRecordsInRedis = async (
       }
 
       if (i === l - n) {
-        resolve([successes, purses.length, specialNames]);
+        resolve([successes, l, specialNames]);
       } else {
         i += n;
         await retrieveRecord();
