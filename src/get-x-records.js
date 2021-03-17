@@ -54,9 +54,15 @@ module.exports.getXRecordsWsHandler = async (body, redisClient) => {
             redisKeys(redisClient, `name:${process.env.REDIS_DB}:${n}`)
               .then((keys) => {
                 const key = keys.find(
-                  (k) => k === `name:${process.env.REDIS_DB}:${body.name}`
+                  (k) => k === `name:${process.env.REDIS_DB}:${n}`
                 );
-                res(typeof key === 'string' ? key : null);
+                if (typeof key === 'string') {
+                  redisHgetall(redisClient, key).then((record) => {
+                    res(record);
+                  });
+                } else {
+                  res(null);
+                }
               })
               .catch((err) => {
                 log('redis error get keys for ' + n, 'error');

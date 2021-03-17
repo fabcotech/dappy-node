@@ -276,12 +276,29 @@ let serverHttps;
 const app = express();
 app.use(bodyParser.json());
 
+const requests = {
+  '/total': 0,
+  '/ping': 0,
+  '/info': 0,
+  ['/last-finalized-block-number']: 0,
+  ['/api/deploy']: 0,
+  ['/api/prepare-deploy']: 0,
+  ['/api/explore-deploy']: 0,
+  ['/explore-deploy-x']: 0,
+  '/api/listen-for-data-at-name': 0,
+  '/listen-for-data-at-name-x': 0,
+};
+
 app.post('/ping', (req, res) => {
+  requests.total += 1;
+  requests['/ping'] += 1;
   res.setHeader('Content-Type', 'application/json');
   res.write(JSON.stringify({ data: 'pong' }));
   res.end();
 });
 app.post('/info', (req, res) => {
+  requests.total += 1;
+  requests['/info'] += 1;
   const data = {
     dappyNodeVersion: DAPPY_NODE_VERSION,
     lastFinalizedBlockNumber: lastFinalizedBlockNumber,
@@ -308,6 +325,8 @@ app.post('/info', (req, res) => {
   res.end();
 });
 app.post('/last-finalized-block-number', (req, res) => {
+  requests.total += 1;
+  requests['/last-finalized-block-number'] += 1;
   res.setHeader('Content-Type', 'application/json');
   res.write(
     JSON.stringify({
@@ -318,11 +337,15 @@ app.post('/last-finalized-block-number', (req, res) => {
   res.end();
 });
 app.post('/api/deploy', async (req, res) => {
+  requests.total += 1;
+  requests['/api/deploy'] += 1;
   const data = await deployWsHandler(req.body, httpUrlValidator);
   res.write(JSON.stringify(data));
   res.end();
 });
 app.post('/api/prepare-deploy', async (req, res) => {
+  requests.total += 1;
+  requests['/api/prepare-deploy'] += 1;
   const data = await prepareDeployWsHandler(req.body, httpUrlReadOnly);
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -334,6 +357,8 @@ app.post('/api/prepare-deploy', async (req, res) => {
   }
 });
 app.post('/api/explore-deploy', async (req, res) => {
+  requests.total += 1;
+  requests['/api/explore-deploy'] += 1;
   const data = await exploreDeployWsHandler(req.body, httpUrlReadOnly);
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -345,6 +370,8 @@ app.post('/api/explore-deploy', async (req, res) => {
   }
 });
 app.post('/explore-deploy-x', async (req, res) => {
+  requests.total += 1;
+  requests['/explore-deploy-x'] += 1;
   const data = await exploreDeployXWsHandler(req.body, httpUrlReadOnly);
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -356,6 +383,8 @@ app.post('/explore-deploy-x', async (req, res) => {
   }
 });
 app.post('/api/listen-for-data-at-name', async (req, res) => {
+  requests.total += 1;
+  requests['/api/listen-for-data-at-name'] += 1;
   const data = await listenForDataAtNameWsHandler(req.body, httpUrlReadOnly);
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -367,6 +396,8 @@ app.post('/api/listen-for-data-at-name', async (req, res) => {
   }
 });
 app.post('/listen-for-data-at-name-x', async (req, res) => {
+  requests.total += 1;
+  requests['/listen-for-data-at-name-x'] += 1;
   const data = await listenForDataAtNameXWsHandler(req.body, httpUrlReadOnly);
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -389,6 +420,8 @@ app.post('/get-all-records', async (req, res) => {
   }
 });
 app.post('/get-one-record', async (req, res) => {
+  requests.total += 1;
+  requests['/get-one-record'] += 1;
   const data = await getOneRecordWsHandler(req.body, redisClient);
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -400,6 +433,8 @@ app.post('/get-one-record', async (req, res) => {
   }
 });
 app.post('/get-x-records', async (req, res) => {
+  requests.total += 1;
+  requests['/get-x-records'] += 1;
   const data = await getXRecordsWsHandler(req.body, redisClient);
   if (data.success) {
     res.write(JSON.stringify(data));

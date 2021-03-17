@@ -37,7 +37,7 @@ List of the methods exposed for each kind of traffic :
 
 #### Certificate generation (development)
 
-Dappy does not use certificate authorities, TLS encryption certificates are stored on the blockchain with the actual name (ex: *google*, *nytimes* etc). Therefore, it is more logical that they are self signed and not issued by a trusted third party.
+Dappy does not use certificate authorities, TLS encryption certificates are stored on the blockchain with the actual name (ex: _google_, _nytimes_ etc). Therefore, it is more logical that they are self signed and not issued by a trusted third party.
 
 https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-in-ubuntu-16-04
 
@@ -88,7 +88,6 @@ pm2 start ecosystem.config.js  --node-args="--max-old-space-size=8192"
 ```
 
 **Note:** Of course set the 8192 value according to the capabilities of your server. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
-
 
 #### Production
 
