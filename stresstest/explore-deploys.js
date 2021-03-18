@@ -8,6 +8,9 @@ const dappyNodeIp = '51.158.73.100';
 const dappyNodePort = '443';
 const dappyNodeHost = 'd1.dappy.tech';
 
+// n is the number of  blockchain read operations you want to do each time
+// 1 read operation = 2 explore-deploys
+// if n = 4 it does 8 explore-deploys each time
 const n = 2;
 
 const doRequest = (term) => {
