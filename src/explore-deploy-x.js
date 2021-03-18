@@ -1,5 +1,6 @@
 const Ajv = require('ajv');
 const rchainToolkit = require('rchain-toolkit');
+const { blake2b } = require('blakejs');
 
 const exploreDeployBodySchema = require('./explore-deploy').schema;
 

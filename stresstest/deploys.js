@@ -9,11 +9,15 @@ const {
 const PRIVATE_KEY =
   'a2803d16030f83757a5043e5c0e28573685f6d8bf4e358bf1385d82bffa8e698';
 const PUBLIC_KEY = rchainToolkit.utils.publicKeyFromPrivateKey(PRIVATE_KEY);
-const validators = ['https://node2.testnet.rchain-dev.tk'];
+const validators = [
+  'https://node0.testnet.rchain-dev.tk',
+  'https://node1.testnet.rchain-dev.tk',
+  'https://node2.testnet.rchain-dev.tk',
+];
 const readOnly = 'https://observer.testnet.rchain.coop';
 
 // n is the number of deploys you want to do each time
-const n = 20;
+const n = 6;
 
 const pickRandomValidator = () => {
   return validators[Math.floor(Math.random() * validators.length)];
@@ -23,6 +27,7 @@ let s = 0;
 
 const deployAndWaitForValue = async (timestamp) => {
   const validator = pickRandomValidator();
+  console.log('will deploy to', validator);
   const vab = await validAfterBlockNumber(readOnly);
   const pd = await prepareDeploy(readOnly, PUBLIC_KEY, timestamp);
 
@@ -46,6 +51,7 @@ const deployAndWaitForValue = async (timestamp) => {
       throw new Error('deploy error 01');
     }
   } catch (err) {
+    console.log(validator);
     console.log(err);
     throw new Error('deploy error 02');
   }
@@ -72,6 +78,7 @@ const deployAndWaitForValue = async (timestamp) => {
 };
 
 const main = async () => {
+  let round = 1;
   const performNRequests = async () => {
     let d = new Date().getTime();
     let a = [];
@@ -85,15 +92,18 @@ const main = async () => {
     );
 
     console.log(
-      'It took ' +
+      '== round ' +
+        round +
+        ': it took ' +
         Math.round((new Date().getTime() - d) / 1000) +
         ' seconds to deploy ' +
         n +
         ' times (and wait for value onchain) ' +
         'among ' +
         validators.length +
-        ' validator nodes'
+        ' validator nodes\n'
     );
+    round += 1;
     await performNRequests();
   };
   await performNRequests();

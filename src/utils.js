@@ -83,6 +83,35 @@ module.exports.getManyBagsDataTerm = (registryUri, ids) => {
   }`;
 };
 
+const redisGet = (client, pattern) => {
+  return new Promise((resolve, reject) => {
+    client.get(pattern, (err, res) => {
+      if (err) {
+        log('error : ' + err);
+      }
+      resolve(res);
+    });
+  });
+};
+module.exports.redisGet = redisGet;
+
+module.exports.getValueFromCache = (client, cacheId) => {
+  return new Promise((res, rej) => {
+    redisGet(client, cacheId)
+      .then((data) => {
+        if (data === null) {
+          rej(null);
+        } else {
+          res(data);
+        }
+      })
+      .catch((err) => {
+        rej(err);
+        console.log(err);
+        log('redis error get keys for ' + n, 'error');
+      });
+  });
+};
 module.exports.redisKeys = (client, pattern) => {
   return new Promise((resolve, reject) => {
     client.keys(pattern, (err, res) => {

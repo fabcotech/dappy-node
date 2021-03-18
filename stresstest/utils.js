@@ -40,44 +40,44 @@ module.exports.validAfterBlockNumber = async (httpUrlReadOnly) => {
 };
 
 module.exports.waitForUnforgeable = (validator, name) => {
-  try {
-    return new Promise((resolve, reject) => {
-      const interval = setInterval(() => {
-        try {
-          rchainToolkit.http
-            .dataAtName(validator, {
-              name: {
-                UnforgPrivate: { data: name },
-              },
-              depth: 3,
-            })
-            .then((dataAtNameResponse) => {
-              if (
-                dataAtNameResponse &&
-                JSON.parse(dataAtNameResponse) &&
-                JSON.parse(dataAtNameResponse).exprs &&
-                JSON.parse(dataAtNameResponse).exprs.length
-              ) {
-                resolve(
-                  rchainToolkit.utils.rhoValToJs(
-                    JSON.parse(dataAtNameResponse).exprs[0].expr
-                  )
-                );
-                clearInterval(interval);
-              }
-            })
-            .catch((err) => {
-              console.log(err);
-              throw new Error('wait for unforgeable name');
-            });
-        } catch (err) {
-          console.log(err);
-          throw new Error('wait for unforgeable name');
-        }
-      }, 4000);
-    });
-  } catch (err) {
-    console.log(err);
-    throw new Error('wait for unforgeable name');
-  }
+  return new Promise((resolve, reject) => {
+    let dataAtNameResponse;
+    const interval = setInterval(() => {
+      try {
+        rchainToolkit.http
+          .dataAtName(validator, {
+            name: {
+              UnforgPrivate: { data: name },
+            },
+            depth: 3,
+          })
+          .then((dan) => {
+            dataAtNameResponse = dan;
+            if (
+              dataAtNameResponse &&
+              JSON.parse(dataAtNameResponse) &&
+              JSON.parse(dataAtNameResponse).exprs &&
+              JSON.parse(dataAtNameResponse).exprs.length
+            ) {
+              resolve(
+                rchainToolkit.utils.rhoValToJs(
+                  JSON.parse(dataAtNameResponse).exprs[0].expr
+                )
+              );
+              clearInterval(interval);
+            }
+          })
+          .catch((err) => {
+            console.log(1);
+            console.log(dataAtNameResponse);
+            console.log(err);
+            //throw new Error('wait for unforgeable name');
+          });
+      } catch (err) {
+        console.log(2);
+        console.log(err);
+        //throw new Error('wait for unforgeable name');
+      }
+    }, 4000);
+  });
 };

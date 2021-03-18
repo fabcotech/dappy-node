@@ -277,7 +277,10 @@ const app = express();
 app.use(bodyParser.json());
 
 const requests = {
-  '/total': 0,
+  total: 0,
+  '/get-all-records': 0,
+  '/get-x-records': 0,
+  '/get-one-record': 0,
   '/ping': 0,
   '/info': 0,
   ['/last-finalized-block-number']: 0,
@@ -288,7 +291,41 @@ const requests = {
   '/api/listen-for-data-at-name': 0,
   '/listen-for-data-at-name-x': 0,
 };
+let requestsJson = JSON.stringify(requests, null, 2);
+const start = new Date().getTime();
+setInterval(() => {
+  const perSecond = {};
+  const secondsElapsed = (new Date().getTime() - start) / 1000;
+  Object.keys(requests).forEach((r) => {
+    perSecond[r] = Math.round((100 * requests[r]) / secondsElapsed) / 100;
+  });
+  requestsJson = JSON.stringify(perSecond, null, 2);
+}, 10000);
 
+/*
+ Clean cached results from exlore-deploy and explore-deploy-x
+ every 30 seconds
+*/
+const caching = parseInt(process.env.CACHING);
+const useCache = caching && caching !== 0 && typeof caching === 'number';
+
+if (useCache) {
+  setInterval(async () => {
+    const cacheEpoch = Math.round(new Date().getTime() / (1000 * caching));
+    const edKeys = await redisKeys(redisClient, `cache:ed:*`);
+    const edxKeys = await redisKeys(redisClient, `cache:edx:*`);
+    const old = edKeys.concat(edxKeys).filter((k) => {
+      return parseInt(k.split(':')[3]) < cacheEpoch;
+    });
+    if (old.length) {
+      redisClient.del(...old, (err, resp) => {
+        if (err) {
+          log(err, 'error');
+        }
+      });
+    }
+  }, 30000);
+}
 app.post('/ping', (req, res) => {
   requests.total += 1;
   requests['/ping'] += 1;
@@ -359,7 +396,13 @@ app.post('/api/prepare-deploy', async (req, res) => {
 app.post('/api/explore-deploy', async (req, res) => {
   requests.total += 1;
   requests['/api/explore-deploy'] += 1;
-  const data = await exploreDeployWsHandler(req.body, httpUrlReadOnly);
+  const data = await exploreDeployWsHandler(
+    req.body,
+    httpUrlReadOnly,
+    redisClient,
+    useCache,
+    caching
+  );
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();

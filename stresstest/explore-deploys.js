@@ -4,8 +4,8 @@ const https = require('https');
 const { readTerm, readPursesTerm, readPursesIdsTerm } = require('rchain-token');
 
 const registryUri = 'cmydk6iwjnsm3tcq9a47edbsaquxgtuexo8bk1da7dau4ehnxjhdow';
-const dappyNodeIp = '51.158.73.100';
-const dappyNodePort = '443';
+const dappyNodeIp = '127.0.0.1';
+const dappyNodePort = '3004';
 const dappyNodeHost = 'd1.dappy.tech';
 
 // n is the number of  blockchain read operations you want to do each time
