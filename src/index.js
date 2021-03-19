@@ -1,5 +1,3 @@
-const grpc = require('@grpc/grpc-js');
-const protoLoader = require('@grpc/proto-loader');
 const http = require('http');
 const https = require('https');
 const redis = require('redis');
