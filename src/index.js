@@ -49,8 +49,6 @@ try {
   log('could not parse nodes file : ' + process.env.NODES_FILE, 'error');
 }
 
-let protobufsLoaded = false;
-let appReady = false;
 let special;
 
 const redisClient = redis.createClient({
@@ -88,7 +86,7 @@ const runRecordsChildProcessJob = async () => {
 };
 
 const initJobs = () => {
-  getLastFinalizedBlockNumber(httpUrlReadOnly, httpUrlValidator)
+  getLastFinalizedBlockNumber(httpUrlReadOnly, pickRandomValidator())
     .then((a) => {
       lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
       namePrice = a.namePrice;
@@ -114,7 +112,7 @@ const initJobs = () => {
   runRecordsChildProcessJob();
 
   setInterval(() => {
-    getLastFinalizedBlockNumber(httpUrlReadOnly, httpUrlValidator)
+    getLastFinalizedBlockNumber(httpUrlReadOnly, pickRandomValidator())
       .then((a) => {
         lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
         namePrice = a.namePrice;
@@ -178,53 +176,30 @@ app.get("/get-record", async (req, res) => {
  */
 
 if (
-  !process.env.READ_ONLY_HOST.startsWith('https://') &&
-  !process.env.READ_ONLY_HOST.startsWith('http://')
+  !process.env.READ_ONLY.startsWith('https://') &&
+  !process.env.READ_ONLY.startsWith('http://')
 ) {
-  log('READ_ONLY_HOST must start with http:// or https://', 'error');
+  log('READ_ONLY must start with http:// or https://', 'error');
   process.exit();
 }
 if (
-  !process.env.VALIDATOR_HOST.startsWith('https://') &&
-  !process.env.VALIDATOR_HOST.startsWith('http://')
+  !process.env.VALIDATOR.startsWith('https://') &&
+  !process.env.VALIDATOR.startsWith('http://')
 ) {
-  log('VALIDATOR_HOST must start with http:// or https://', 'error');
+  log('VALIDATOR must start with http:// or https://', 'error');
   process.exit();
 }
-log('host (read-only):                   ' + process.env.READ_ONLY_HOST);
-log('host (read-only) HTTP port:         ' + process.env.READ_ONLY_HTTP_PORT);
-log('host (validator):                   ' + process.env.VALIDATOR_HOST);
-log('host (validator) HTTP port:         ' + process.env.VALIDATOR_HTTP_PORT);
-log(
-  'host (validator) GRPC propose port: ' +
-    process.env.VALIDATOR_GRPC_PROPOSE_PORT
-);
+log('host (read-only):                   ' + process.env.READ_ONLY);
+log('host (validator):                   ' + process.env.VALIDATOR);
 
-let httpUrlReadOnly = `${process.env.READ_ONLY_HOST}:${process.env.READ_ONLY_HTTP_PORT}`;
-if (!process.env.READ_ONLY_HTTP_PORT) {
-  httpUrlReadOnly = process.env.READ_ONLY_HOST;
-}
-let httpUrlValidator = `${process.env.VALIDATOR_HOST}:${process.env.VALIDATOR_HTTP_PORT}`;
-if (!process.env.VALIDATOR_HTTP_PORT) {
-  httpUrlValidator = process.env.VALIDATOR_HOST;
-}
-const grpcUrlValidator = `${process.env.VALIDATOR_HOST}:${process.env.VALIDATOR_GRPC_PROPOSE_PORT}`;
+let httpUrlReadOnly = process.env.READ_ONLY;
+let httpUrlValidator = process.env.VALIDATOR.includes(',')
+  ? process.env.VALIDATOR.split(',')
+  : [process.env.VALIDATOR];
 
-const loadClient = async () => {
-  rnodeProposeClient = await rchainToolkit.grpc.getGrpcProposeClient(
-    grpcUrlValidator,
-    grpc,
-    protoLoader
-  );
-
-  protobufsLoaded = true;
-  if (appReady) {
-    initJobs();
-  }
+const pickRandomValidator = () => {
+  return httpUrlValidator[Math.floor(Math.random() * httpUrlValidator.length)];
 };
-loadClient();
-
-// HTTP endpoint
 
 log(
   `Listening for HTTP traffic on address ${process.env.HTTP_HOST}:${process.env.HTTP_PORT} !`
@@ -378,7 +353,7 @@ app.post('/last-finalized-block-number', (req, res) => {
 app.post('/api/deploy', async (req, res) => {
   requests.total += 1;
   requests['/api/deploy'] += 1;
-  const data = await deployWsHandler(req.body, httpUrlValidator);
+  const data = await deployWsHandler(req.body, pickRandomValidator());
   res.write(JSON.stringify(data));
   res.end();
 });
@@ -565,10 +540,7 @@ serverHttps.listen(process.env.HTTPS_PORT);
     resp.on('end', () => {
       log(`${rawData}\n`);
       rnodeVersion = rawData;
-      appReady = true;
-      if (protobufsLoaded) {
-        initJobs();
-      }
+      initJobs();
       return;
     });
 
