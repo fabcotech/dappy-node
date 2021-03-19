@@ -27,7 +27,6 @@ let s = 0;
 
 const deployAndWaitForValue = async (timestamp) => {
   const validator = pickRandomValidator();
-  console.log('will deploy to', validator);
   const vab = await validAfterBlockNumber(readOnly);
   const pd = await prepareDeploy(readOnly, PUBLIC_KEY, timestamp);
 

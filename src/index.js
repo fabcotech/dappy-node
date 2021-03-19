@@ -287,7 +287,9 @@ const requests = {
   ['/api/deploy']: 0,
   ['/api/prepare-deploy']: 0,
   ['/api/explore-deploy']: 0,
+  ['/api/explore-deploy-from-cache']: 0,
   ['/explore-deploy-x']: 0,
+  ['/explore-deploy-x-from-cache']: 0,
   '/api/listen-for-data-at-name': 0,
   '/listen-for-data-at-name-x': 0,
 };
@@ -393,6 +395,10 @@ app.post('/api/prepare-deploy', async (req, res) => {
     res.end();
   }
 });
+
+const edFromCachePlusOne = () => {
+  requests['/explore-deploy-from-cache'] += 1;
+};
 app.post('/api/explore-deploy', async (req, res) => {
   requests.total += 1;
   requests['/api/explore-deploy'] += 1;
@@ -401,7 +407,8 @@ app.post('/api/explore-deploy', async (req, res) => {
     httpUrlReadOnly,
     redisClient,
     useCache,
-    caching
+    caching,
+    edFromCachePlusOne
   );
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -412,10 +419,21 @@ app.post('/api/explore-deploy', async (req, res) => {
     res.end();
   }
 });
+
+const edxFromCachePlusOne = () => {
+  requests['/explore-deploy-x-from-cache'] += 1;
+};
 app.post('/explore-deploy-x', async (req, res) => {
   requests.total += 1;
   requests['/explore-deploy-x'] += 1;
-  const data = await exploreDeployXWsHandler(req.body, httpUrlReadOnly);
+  const data = await exploreDeployXWsHandler(
+    req.body,
+    httpUrlReadOnly,
+    redisClient,
+    useCache,
+    caching,
+    edxFromCachePlusOne
+  );
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -489,7 +507,14 @@ app.post('/get-x-records', async (req, res) => {
   }
 });
 
+app.post('/status', (req, res) => {
+  res.write(requestsJson);
+  res.end();
+});
+
 app.post('/get-nodes', (req, res) => {
+  requests.total += 1;
+  requests['/get-nodes'] += 1;
   if (nodes) {
     res.write(
       JSON.stringify({

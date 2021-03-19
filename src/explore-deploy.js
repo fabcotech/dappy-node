@@ -26,26 +26,10 @@ module.exports.exploreDeployWsHandler = async (
   httpUrl,
   redisClient,
   useCache,
-  caching
+  caching,
+  edFromCachePlusOne
 ) => {
   log('explore-deploy');
-  let cacheId;
-  let foundInCache;
-  if (useCache) {
-    const uInt8Array = new Uint8Array(JSON.stringify(body));
-    const blake2bHash = blake2b(uInt8Array, 0, 32);
-
-    const cacheEpoch = Math.round(new Date().getTime() / (1000 * caching));
-    cacheId = `cache:ed:${Buffer.from(blake2bHash).toString(
-      'hex'
-    )}:${cacheEpoch}`;
-    try {
-      const cached = await getValueFromCache(redisClient, cacheId);
-      foundInCache = cached;
-    } catch (err) {
-      // not found in cache
-    }
-  }
 
   const valid = validate(body);
 
@@ -56,6 +40,28 @@ module.exports.exploreDeployWsHandler = async (
         message: validate.errors.map((e) => `body${e.dataPath} ${e.message}`),
       },
     };
+  }
+
+  let cacheId;
+  let foundInCache;
+  if (useCache) {
+    const uInt8Array = new Uint8Array(Buffer.from(body.term));
+    const blake2bHash = blake2b(uInt8Array, 0, 32);
+
+    const cacheEpoch = Math.round(new Date().getTime() / (1000 * caching));
+    cacheId = `cache:ed:${Buffer.from(blake2bHash).toString(
+      'hex'
+    )}:${cacheEpoch}`;
+    try {
+      const cached = await getValueFromCache(redisClient, cacheId);
+      foundInCache = cached;
+      if (foundInCache) {
+        console.log('found in cache ed');
+        edFromCachePlusOne();
+      }
+    } catch (err) {
+      // not found in cache
+    }
   }
 
   const exploreDeployResponse = !!foundInCache
