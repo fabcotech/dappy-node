@@ -56,7 +56,6 @@ module.exports.exploreDeployXWsHandler = async (
       const cached = await getValueFromCache(redisClient, cacheId);
       foundInCache = cached;
       if (foundInCache) {
-        console.log('found in cache edx');
         edxFromCachePlusOne();
       }
     } catch (err) {

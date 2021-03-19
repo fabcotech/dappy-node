@@ -56,7 +56,6 @@ module.exports.exploreDeployWsHandler = async (
       const cached = await getValueFromCache(redisClient, cacheId);
       foundInCache = cached;
       if (foundInCache) {
-        console.log('found in cache ed');
         edFromCachePlusOne();
       }
     } catch (err) {

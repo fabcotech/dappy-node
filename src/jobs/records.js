@@ -226,12 +226,29 @@ const storeRecordsInRedis = async (
         return;
       }
 
-      const pursesData = rchainToolkit.utils.rhoValToJs(
-        JSON.parse(exploreDeployResponseData).expr[0]
-      );
-      const purses = rchainToolkit.utils.rhoValToJs(
-        JSON.parse(exploreDeployResponse).expr[0]
-      );
+      let pursesData;
+      try {
+        pursesData = rchainToolkit.utils.rhoValToJs(
+          JSON.parse(exploreDeployResponseData).expr[0]
+        );
+      } catch (err) {
+        console.log(err);
+        console.log(exploreDeployResponseData);
+        reject(err);
+        return;
+      }
+
+      let purses;
+      try {
+        purses = rchainToolkit.utils.rhoValToJs(
+          JSON.parse(exploreDeployResponse).expr[0]
+        );
+      } catch (err) {
+        console.log(err);
+        console.log(exploreDeployResponse);
+        reject(err);
+        return;
+      }
 
       const dataKeys = Object.keys(pursesData);
 
