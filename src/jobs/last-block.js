@@ -43,6 +43,8 @@ module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
       throw new Error('Not a number');
     }
   } catch (err) {
+    console.log(exploreDeployResult);
+    console.log(err);
     log(
       'Unable to parse explore-deploy result as JSON for name price',
       'error'

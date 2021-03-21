@@ -5,6 +5,8 @@ const path = require('path');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const express = require('express');
+const Sentry = require('@sentry/node');
+const Tracing = require('@sentry/tracing');
 
 // will not override the env variables in docker-compose
 require('dotenv').config();
@@ -247,6 +249,27 @@ serverHttp.listen(process.env.HTTP_PORT);
 let serverHttps;
 
 const app = express();
+if (process.env.SENTRY) {
+  console.log(process.env.SENTRY);
+  Sentry.init({
+    dsn: process.env.SENTRY,
+    integrations: [
+      // enable HTTP calls tracing
+      new Sentry.Integrations.Http({ tracing: true }),
+      // enable Express.js middleware tracing
+      new Tracing.Integrations.Express({ app }),
+    ],
+
+    // Set tracesSampleRate to 1.0 to capture 100%
+    // of transactions for performance monitoring.
+    // We recommend adjusting this value in production
+    tracesSampleRate: 1.0,
+  });
+  app.use(Sentry.Handlers.requestHandler());
+  app.use(Sentry.Handlers.tracingHandler());
+  app.use(Sentry.Handlers.errorHandler());
+}
+
 app.use(bodyParser.json());
 
 const requests = {
