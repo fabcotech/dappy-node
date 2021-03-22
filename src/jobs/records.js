@@ -10,6 +10,8 @@ const {
 
 const { redisKeys, getManyBagsDataTerm } = require('../utils');
 
+const DATA_REQUESTS_BATCH_SIZE = 20;
+
 const ajv = new Ajv();
 const schema = {
   schemaId: 'dappy-record',
@@ -180,8 +182,8 @@ const storeRecordsInRedis = async (
       }
 
       const recordsToProcess = [];
-      // 100 by 100
-      for (let j = 0; j < 100; j += 1) {
+      // DATA_REQUESTS_BATCH_SIZE by DATA_REQUESTS_BATCH_SIZE
+      for (let j = 0; j < DATA_REQUESTS_BATCH_SIZE; j += 1) {
         if (validKeys[i + j]) {
           recordsToProcess.push(validKeys[i + j]);
         }
