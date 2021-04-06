@@ -157,6 +157,16 @@ module.exports.redisHgetall = (client, pattern) => {
     });
   });
 };
+module.exports.redisSMembers = (client, pattern) => {
+  return new Promise((resolve, reject) => {
+    client.smembers(pattern, (err, res) => {
+      if (err) {
+        log('error : ' + err);
+      }
+      resolve(res);
+    });
+  });
+};
 
 // Careful, it is different than the function that build
 // the unforgeable query for dappy-node

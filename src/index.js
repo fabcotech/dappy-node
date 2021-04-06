@@ -24,6 +24,9 @@ const { prepareDeployWsHandler } = require('./prepare-deploy');
 const { getAllRecordsWsHandler } = require('./get-all-records');
 const { getOneRecordWsHandler } = require('./get-one-record');
 const { getXRecordsWsHandler } = require('./get-x-records');
+const {
+  getXRecordsByPublicKeyWsHandler,
+} = require('./get-x-records-by-public-key');
 const { getDappyRecordsAndSaveToDb } = require('./jobs/records');
 const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 
@@ -276,6 +279,7 @@ const requests = {
   total: 0,
   '/get-all-records': 0,
   '/get-x-records': 0,
+  '/get-x-records-by-public-key': 0,
   '/get-one-record': 0,
   '/ping': 0,
   '/info': 0,
@@ -493,6 +497,19 @@ app.post('/get-x-records', async (req, res) => {
   requests.total += 1;
   requests['/get-x-records'] += 1;
   const data = await getXRecordsWsHandler(req.body, redisClient);
+  if (data.success) {
+    res.write(JSON.stringify(data));
+    res.end();
+  } else {
+    res.write(JSON.stringify(data));
+    res.status(400);
+    res.end();
+  }
+});
+app.post('/get-x-records-by-public-key', async (req, res) => {
+  requests.total += 1;
+  requests['/get-x-records-by-public-key'] += 1;
+  const data = await getXRecordsByPublicKeyWsHandler(req.body, redisClient);
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
