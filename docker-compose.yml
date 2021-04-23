@@ -5,29 +5,22 @@ services:
     container_name: redis
     expose:
       - 6379
-  dappy-node:
-    container_name: dappy-node
-    build: ./
-    volumes:
-      - ./:/var/www/app
+  nodejs:
+    image: fabcotech/dappy-node:0.1
+    container_name: nodejs
     ports:
-      - 3001:3001 # HTTP_PORT
-      - 3002:3002 # HTTPS_PORT
-    env_file:
-      - .env
+      - 3001:3001 # env HTTP_PORT
+      - 3002:3002 # env HTTPS_PORT
     environment:
-      - NODE_ENV=production
-      - REDIS_HOST=redis
-      - HTTP_HOST=0.0.0.0
       - HTTP_PORT=3001
       - HTTPS_PORT=3002
-      - CACHING=30
+      - REDIS_HOST=redis
+      - REDIS_DB=1
       - READ_ONLY=https://observer.testnet.rchain.coop
-      - VALIDATOR=https://node0.testnet.rchain-dev.tk,https://node1.testnet.rchain-dev.tk,https://node4.testnet.rchain-dev.tk
-
-    expose:
-      - 3000
-      - 80
-    command: sh -c 'npm i && node --max-old-space-size=8192 src/index.js --ssl'
-    depends_on:
-      - redis
+      - VALIDATOR=https://node0.testnet.rchain-dev.tk,https://node1.testnet.rchain-dev.tk,https://node2.testnet.rchain-dev.tk,https://node4.testnet.rchain-dev.tk
+      - LAST_BLOCK_JOB_INTERVAL=40000
+      - CACHING=30
+      - RCHAIN_NAMES_REGISTRY_URI=1rjuqxchdg85n38x3i9syez6ingq8nbreex5ajz1tf9i53rji9iksz
+      - DAPPY_NETWORK=deltanetwork
+      - RCHAIN_NETWORK=testnet
+    command: sh -c 'node --max-old-space-size=8192 src/index.js'

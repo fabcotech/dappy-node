@@ -22,11 +22,12 @@ const { exploreDeployWsHandler } = require('./explore-deploy');
 const { exploreDeployXWsHandler } = require('./explore-deploy-x');
 const { prepareDeployWsHandler } = require('./prepare-deploy');
 const { getAllRecordsWsHandler } = require('./get-all-records');
-const { getOneRecordWsHandler } = require('./get-one-record');
 const { getXRecordsWsHandler } = require('./get-x-records');
 const {
   getXRecordsByPublicKeyWsHandler,
 } = require('./get-x-records-by-public-key');
+const { health } = require('./jobs/health');
+const { generateMonitor } = require('./jobs/generateMonitor');
 const { getDappyRecordsAndSaveToDb } = require('./jobs/records');
 const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 
@@ -64,32 +65,26 @@ redisClient.on('error', (err) => {
 });
 
 let recordsJobRunning = false;
-const runRecordsChildProcessJob = async () => {
+const runRecordsChildProcessJob = async (quarter) => {
   if (recordsJobRunning) {
     return;
   }
   recordsJobRunning = true;
-  const t = setTimeout(() => {
-    recordsJobRunning = false;
-  }, 1000 * 120);
-  const result = await getDappyRecordsAndSaveToDb(
-    redisClient,
-    httpUrlReadOnly,
-    special
-  );
+  // remove 1/4 of the names every 15 minutes
+  const result = await getDappyRecordsAndSaveToDb(redisClient, quarter);
 
-  if (result && special) {
+  /* if (result && special) {
     special = {
       ...special,
       current: result[2],
     };
-  }
-  clearTimeout(t);
+  } */
+  //clearTimeout(t);
   recordsJobRunning = false;
 };
 
 const initJobs = () => {
-  getLastFinalizedBlockNumber(httpUrlReadOnly, pickRandomValidator())
+  getLastFinalizedBlockNumber(pickRandomReadOnly(), pickRandomValidator())
     .then((a) => {
       lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
       namePrice = a.namePrice;
@@ -99,23 +94,23 @@ const initJobs = () => {
       console.log(err);
     });
   setInterval(() => {
-    if (
-      new Date().getMinutes() % 10 ===
-      parseInt(process.env.CRON_JOBS_NAMES_MODULO, 10)
-    ) {
+    if (new Date().getMinutes() % 15 === 0) {
       log(
         'launching records job: ' +
           new Date().getMinutes() +
-          'minutes % 10 === ' +
-          process.env.CRON_JOBS_NAMES_MODULO
+          'minutes % 15 === 0'
       );
-      runRecordsChildProcessJob();
+      runRecordsChildProcessJob(new Date().getMinutes() / 15);
     }
   }, 1000 * 60);
-  runRecordsChildProcessJob();
 
   setInterval(() => {
-    getLastFinalizedBlockNumber(httpUrlReadOnly, pickRandomValidator())
+    health(httpUrlReadOnly);
+    generateMonitor();
+  }, 30000);
+
+  setInterval(() => {
+    getLastFinalizedBlockNumber(pickRandomReadOnly(), pickRandomValidator())
       .then((a) => {
         lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
         namePrice = a.namePrice;
@@ -147,36 +142,6 @@ if (process.env.SPECIAL) {
     console.log(e);
   }
 }
-/* app.get("/get-records-for-publickey", async (req, res) => {
-  if (!req.query.publickey) {
-    res.status(400).send("Missing query attribute publickey");
-  }
-  const keys = await redisSmembers(
-    redisClient,
-    `publicKey:${req.query.publickey}`
-  );
-  const records = await Promise.all(
-    keys.map(k => redisHgetall(redisClient, `name:${k}`))
-  );
-  res.send(records);
-}); */
-
-/* app.get("/get-all-records", async (req, res) => {
-  const keys = await redisKeys(redisClient, `name:*`);
-  const records = await Promise.all(
-    keys.map(k => redisHgetall(redisClient, k))
-  );
-  res.send(records);
-});
-
-app.get("/get-record", async (req, res) => {
-  if (!req.query.name) {
-    res.status(400).send("Missing query attribute name");
-  }
-  const record = await redisHgetall(redisClient, `name:${req.query.name}`);
-  res.send(record);
-});
- */
 
 if (
   !process.env.READ_ONLY.startsWith('https://') &&
@@ -195,20 +160,36 @@ if (
 log('host (read-only):                   ' + process.env.READ_ONLY);
 log('host (validator):                   ' + process.env.VALIDATOR);
 
-let httpUrlReadOnly = process.env.READ_ONLY;
+let httpUrlReadOnly = process.env.READ_ONLY.includes(',')
+  ? process.env.READ_ONLY.split(',')
+  : [process.env.READ_ONLY];
 let httpUrlValidator = process.env.VALIDATOR.includes(',')
   ? process.env.VALIDATOR.split(',')
   : [process.env.VALIDATOR];
 
+const pickRandomReadOnly = () => {
+  return httpUrlReadOnly[Math.floor(Math.random() * httpUrlReadOnly.length)];
+};
 const pickRandomValidator = () => {
   return httpUrlValidator[Math.floor(Math.random() * httpUrlValidator.length)];
 };
 
 log(
-  `Listening for HTTP traffic on address ${process.env.HTTP_HOST}:${process.env.HTTP_PORT} !`
+  `Listening for HTTP traffic on address 127.0.0.1(or 0.0.0.0 with docker):${process.env.HTTP_PORT} !`
 );
 
 const serverHttp = http.createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/monitor') {
+    try {
+      const html = fs.readFileSync('./www/monitor.html', 'utf8');
+      res.setHeader('Content-Type', 'text/html');
+      res.end(html);
+    } catch (err) {
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end('not found');
+    }
+  }
   if (req.method === 'GET' && req.url === '/info') {
     res.setHeader('Content-Type', 'application/json');
     res.write(
@@ -253,7 +234,6 @@ let serverHttps;
 
 const app = express();
 if (process.env.SENTRY) {
-  console.log(process.env.SENTRY);
   Sentry.init({
     dsn: process.env.SENTRY,
     integrations: [
@@ -275,12 +255,11 @@ if (process.env.SENTRY) {
 
 app.use(bodyParser.json());
 
-const requests = {
+const requestsDefault = {
   total: 0,
   '/get-all-records': 0,
   '/get-x-records': 0,
   '/get-x-records-by-public-key': 0,
-  '/get-one-record': 0,
   '/ping': 0,
   '/info': 0,
   ['/last-finalized-block-number']: 0,
@@ -293,16 +272,22 @@ const requests = {
   '/api/listen-for-data-at-name': 0,
   '/listen-for-data-at-name-x': 0,
 };
-let requestsJson = JSON.stringify(requests, null, 2);
-const start = new Date().getTime();
+let requests = { ...requestsDefault };
 setInterval(() => {
-  const perSecond = {};
-  const secondsElapsed = (new Date().getTime() - start) / 1000;
-  Object.keys(requests).forEach((r) => {
-    perSecond[r] = Math.round((100 * requests[r]) / secondsElapsed) / 100;
-  });
-  requestsJson = JSON.stringify(perSecond, null, 2);
-}, 10000);
+  let day = new Date().toISOString().slice(0, 10);
+  let logs = {};
+  try {
+    logs = JSON.parse(fs.readFileSync(`./logs/dappy-node-${day}.json`, 'utf8'));
+  } catch (err) {}
+  logs[new Date().toISOString().slice(11, 19)] = Object.values(requests);
+  fs.writeFileSync(
+    `./logs/dappy-node-${day}.json`,
+    JSON.stringify(logs),
+    'utf8'
+  );
+
+  requests = { ...requestsDefault };
+}, 30000);
 
 /*
  Clean cached results from exlore-deploy and explore-deploy-x
@@ -385,7 +370,7 @@ app.post('/api/deploy', async (req, res) => {
 app.post('/api/prepare-deploy', async (req, res) => {
   requests.total += 1;
   requests['/api/prepare-deploy'] += 1;
-  const data = await prepareDeployWsHandler(req.body, httpUrlReadOnly);
+  const data = await prepareDeployWsHandler(req.body, pickRandomReadOnly());
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -404,7 +389,7 @@ app.post('/api/explore-deploy', async (req, res) => {
   requests['/api/explore-deploy'] += 1;
   const data = await exploreDeployWsHandler(
     req.body,
-    httpUrlReadOnly,
+    pickRandomReadOnly(),
     redisClient,
     useCache,
     caching,
@@ -428,7 +413,7 @@ app.post('/explore-deploy-x', async (req, res) => {
   requests['/explore-deploy-x'] += 1;
   const data = await exploreDeployXWsHandler(
     req.body,
-    httpUrlReadOnly,
+    pickRandomReadOnly(),
     redisClient,
     useCache,
     caching,
@@ -446,7 +431,10 @@ app.post('/explore-deploy-x', async (req, res) => {
 app.post('/api/listen-for-data-at-name', async (req, res) => {
   requests.total += 1;
   requests['/api/listen-for-data-at-name'] += 1;
-  const data = await listenForDataAtNameWsHandler(req.body, httpUrlReadOnly);
+  const data = await listenForDataAtNameWsHandler(
+    req.body,
+    pickRandomReadOnly()
+  );
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -459,7 +447,10 @@ app.post('/api/listen-for-data-at-name', async (req, res) => {
 app.post('/listen-for-data-at-name-x', async (req, res) => {
   requests.total += 1;
   requests['/listen-for-data-at-name-x'] += 1;
-  const data = await listenForDataAtNameXWsHandler(req.body, httpUrlReadOnly);
+  const data = await listenForDataAtNameXWsHandler(
+    req.body,
+    pickRandomReadOnly()
+  );
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -480,23 +471,15 @@ app.post('/get-all-records', async (req, res) => {
     res.end();
   }
 });
-app.post('/get-one-record', async (req, res) => {
-  requests.total += 1;
-  requests['/get-one-record'] += 1;
-  const data = await getOneRecordWsHandler(req.body, redisClient);
-  if (data.success) {
-    res.write(JSON.stringify(data));
-    res.end();
-  } else {
-    res.write(JSON.stringify(data));
-    res.status(400);
-    res.end();
-  }
-});
+
 app.post('/get-x-records', async (req, res) => {
   requests.total += 1;
   requests['/get-x-records'] += 1;
-  const data = await getXRecordsWsHandler(req.body, redisClient);
+  const data = await getXRecordsWsHandler(
+    req.body,
+    redisClient,
+    pickRandomReadOnly()
+  );
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -542,7 +525,7 @@ app.post('/get-nodes', (req, res) => {
 
 if (process.argv.includes('--ssl')) {
   log(
-    `Listening for HTTP+TLS on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`
+    `Listening for HTTP+TLS on address 127.0.0.1(or 0.0.0.0 with docker):${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`
   );
   const options = {
     key: fs.readFileSync(path.join(__dirname, '../server-key.pem')),
@@ -551,17 +534,17 @@ if (process.argv.includes('--ssl')) {
   serverHttps = https.createServer(options, app);
 } else {
   log(
-    `Listening for HTTP on address ${process.env.HTTP_HOST}:${process.env.HTTPS_PORT} ! (TLS not handled by nodeJS)`
+    `Listening for HTTP on address 127.0.0.1(or 0.0.0.0 with docker):${process.env.HTTPS_PORT} ! (TLS not handled by nodeJS)`
   );
   serverHttps = http.createServer(app);
 }
 
 serverHttps.listen(process.env.HTTPS_PORT);
 
-(httpUrlReadOnly.startsWith('https://') ? https : http).get(
-  `${httpUrlReadOnly}/version`,
+(httpUrlReadOnly[0].startsWith('https://') ? https : http).get(
+  `${httpUrlReadOnly[0]}/version`,
   (resp) => {
-    log(`RChain node responding at ${httpUrlReadOnly}/version`);
+    log(`RChain node responding at ${pickRandomReadOnly()}/version`);
 
     if (resp.statusCode !== 200) {
       log('Status code different from 200', 'error');

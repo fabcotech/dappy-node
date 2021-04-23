@@ -1,0 +1,12 @@
+FROM nginx:1.20.0-alpine
+
+RUN apk add --update nodejs npm
+
+WORKDIR /home/node/app
+
+RUN mkdir /etc/nginx/sites-enabled
+
+COPY setupnginx.js ./
+COPY startnginx.sh ./
+
+CMD ["sh", "startnginx.sh"]

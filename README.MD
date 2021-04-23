@@ -109,7 +109,10 @@ RChain's rnode is not part of the docker-compose, it should be running on your m
 git clone https://github.com/fabcotech/dappy-node.git
 cd dapppy-node
 
-# Update .env and docker-compose.yml variables
+# Check `env_file` in docker-compose.yml
+
+# Build image
+docker build . -t dappy-node
 
 # Build the image
 docker-compose build
@@ -119,6 +122,18 @@ docker-compose up --abort-on-container-exit
 ```
 
 dappy-node is plugged to the running rnode program !
+
+#### Build and push to docker hub
+
+```
+# dappy-node image
+docker build . -t fabcotech/dappy-node:0.1
+docker push fabcotech/dappy-node:0.1
+
+# dappy-nginx image
+docker build . -f DockerfileNginx -t fabcotech/dappy-nginx:0.1
+docker push fabcotech/dappy-nginx:0.1
+```
 
 #### Development
 
@@ -142,3 +157,31 @@ docker-compose up --abort-on-container-exit
 ```
 
 If you encounter any bug, please create an issue, or report it on the chat group. https://discord.gg/8Cu5UFV
+
+https://anthonynsimon.com/blog/one-man-saas-architecture/
+
+#### Kuber
+
+Installer `kubectl`
+
+Certificates and private key. A given cluster deployment will use one .crt and one .key file, they are only used by nginx and must be set as secretes with kubernetes. Let's say you have `nginx.crt` file and `nginx.key` file.
+
+```
+base64 -w 0 nginx.crt
+# outputs aabcbdbabbc...
+
+base64 -w 0 nginx.key
+# outputs cba56fdeadaed...
+
+# cp sslsecret.example.yml sslsecret.yml
+# replace the values in sslsecret.yml with the base64
+
+# Create the secret in kubernetes
+kubectl apply -f sslsecret.yml
+
+```
+
+```
+minikube start
+kubectl apply -f nodejs-deployment.yaml
+```
