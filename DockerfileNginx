@@ -4,7 +4,13 @@ RUN apk add --update nodejs npm
 
 WORKDIR /home/node/app
 
-RUN mkdir /etc/nginx/sites-enabled
+RUN rm /etc/nginx/conf.d/default.conf
+
+RUN mkdir /etc/nginx/snippets
+
+COPY sslparams.conf /etc/nginx/snippets/
+
+COPY setupnginx.js ./
 
 COPY setupnginx.js ./
 COPY startnginx.sh ./

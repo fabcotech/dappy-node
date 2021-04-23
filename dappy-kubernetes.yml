@@ -1,0 +1,170 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nodejs
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: nodejs
+    spec:
+      containers:
+        - image: fabcotech/dappy-node:0.8
+          name: nodejs
+          args:
+            - sh
+            - -c
+            - node --max-old-space-size=8192 src/index.js
+          env:
+            - name: CACHING
+              value: '30'
+            - name: CRON_JOBS_NAMES_MODULO
+              value: '0'
+            - name: DAPPY_NETWORK
+              value: deltanetwork
+            - name: LAST_BLOCK_JOB_INTERVAL
+              value: '40000'
+            - name: RCHAIN_NAMES_REGISTRY_URI
+              value: 1rjuqxchdg85n38x3i9syez6ingq8nbreex5ajz1tf9i53rji9iksz
+            - name: RCHAIN_NETWORK
+              value: testnet
+            - name: READ_ONLY
+              value: https://observer.testnet.rchain.coop
+            - name: REDIS_DB
+              value: '1'
+            - name: VALIDATOR
+              value: https://node0.testnet.rchain-dev.tk,https://node1.testnet.rchain-dev.tk,https://node2.testnet.rchain-dev.tk,https://node4.testnet.rchain-dev.tk
+          ports:
+            - containerPort: 3001
+            - containerPort: 3002
+          resources:
+            limits:
+              memory: '128Mi'
+              cpu: '500m'
+      restartPolicy: Always
+      dnsPolicy: 'None'
+      dnsConfig:
+        nameservers:
+          - 8.8.8.8
+status: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - image: redis
+          name: redis
+          resources:
+            limits:
+              memory: '128Mi'
+              cpu: '500m'
+          ports:
+            - containerPort: 6379
+      restartPolicy: Always
+status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - image: fabcotech/dappy-nginx:1.0
+          env:
+            - name: NGINX_SERVER_NAME
+              value: t1.dappy.tech
+          name: nginx
+          volumeMounts:
+            - mountPath: '/etc/nginx/ssl'
+              name: nginx-ssl
+              readOnly: true
+          resources:
+            limits:
+              memory: '128Mi'
+              cpu: '500m'
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+      volumes:
+        - name: nginx-ssl
+          secret:
+            secretName: nginx-ssl
+      restartPolicy: Always
+      dnsPolicy: 'None'
+      dnsConfig:
+        nameservers:
+          - 8.8.8.8
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodejs
+spec:
+  type: NodePort
+  selector:
+    app: nodejs
+  ports:
+    - port: 3001
+      name: '3001'
+      targetPort: 3001
+    - port: 3002
+      name: '3002'
+      targetPort: 3002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  type: NodePort
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      name: 'redis'
+      targetPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  type: NodePort
+  selector:
+    app: nginx
+  ports:
+    - port: 80
+      name: 'http'
+      targetPort: 80
+    - port: 443
+      name: 'https'
+      targetPort: 443

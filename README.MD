@@ -1,22 +1,21 @@
 ### dappy-node
 
-This program exposes an API for Dappy users to query, it includes:
-
-- Gateways from websocket to grpc for listen-data-at-name, deploy and preview-private-names GRPC calls
-- Redis database that maintains a dictionnary of all the names (domain names), with associated public keys and blockchain addresses
-
-For now it is only exposed through web socket and not http.
+dappy-node is a Node JS + Redis proxy + caching program, it sits between dappy browser and a RChain node, or a cluster of RChain nodes.
 
 #### Quick start (dev)
+
+In development you are supposed to work with a already running RChain's rnode software, one read-only and one validator node. See various `.env.x` files.
 
 ```
 # With default certificate (dev only)
 node src/index --ssl
 ```
 
+####
+
 #### HTTPS/HTTP exposition
 
-This program must be accessible through HTTP/TLS and also regular HTTP traffic. In your nginx/apache config you must redirect TLS traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic (port 80) to the `HTTP_PORT` port.
+This program must be accessible through HTTP/TLS and also regular HTTP traffic.
 
 List of the methods exposed for each kind of traffic :
 
@@ -65,7 +64,7 @@ Two files should be generated, a `server-key.pem` file and a `server-crt.pem` fi
 
 You have to have a RChain node running locally or remotely with regular API exposed, and a redis server running also.
 
-You must copy the `.env.example` file, name it `.env` so environment variables will be read from it. Of course you must also edit the `.env` variables so it fits with your rnode program and variables.
+You must copy the `.env.testnet` file, rename it to `.env` so environment variables will be read from it. Of course you must also edit the `.env` variables so it fits with your rnode program and variables.
 
 **Note :** values in `.env.example` are kept up to date do dappy-node can start on a valid Dappy network connected to RChain's testnet.
 
@@ -73,9 +72,7 @@ You must copy the `.env.example` file, name it `.env` so environment variables w
 
 `RCHAIN_NETWORK` is also read by Dappy browser, it is important that user know if the Dappy network is connected to mainnet, testnet, or another local network.
 
-`RCHAIN_NAMES_REGISTRY_URI` : Registry URI of the records stored on the blockchain. (uploaded with [rchain-names](https://github.com/fabcotech/rchain-names) repo)
-
-`RCHAIN_NODES_REGISTRY_URI` : Registry URI of the nodes / network members stored on the blockchain. (uploaded with [rchain-names](https://github.com/fabcotech/rchain-names) repo)
+`RCHAIN_NAMES_REGISTRY_URI` : Registry URI of the records stored on the blockchain. It is the address of a NFT contract deployed with [rchain-token](https://github.com/fabcotech/rchain-token) repo.
 
 ```
 git clone https://github.com/fabcotech/dappy-node.git
@@ -83,88 +80,38 @@ cd dapppy-node
 npm install
 
 node src/index.js node --max-old-space-size=8192 src/index.js --ssl
-# or with pm2 (fine for production)
-pm2 start ecosystem.config.js  --node-args="--max-old-space-size=8192"
 ```
 
 **Note:** Of course set the 8192 value according to the capabilities of your server. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
 
 #### Production
 
-The environment variables are read primarly from `docker-compose.yml`, and then from `.env` file. We advise you to set the ports/IP/network related variables must be set in the `docker-compose.yml`, and the RChain related variables in `.env` file.
-
-Copy the `.env.example` file, name it `.env` and update the variables in it (you can remove the ones that are already in `docker-compose.yml` for clarity).
-
-**important (1)** : Check that the IP address of the gateway between the Docker host and the bridge network is 172.17.0.1. If not, change it in `docker-compose.yml`. Check this page https://docs.docker.com/network/network-tutorial-standalone/.
-
-**important (2)** : if you node can create block (has stake participation) you will reference only one node in the VALIDATOR\_\* and READ_ONLY\_\*, if your node is read only you must reference a node (validator) to which the deploys will be sent.
-
-RChain's rnode is not part of the docker-compose, it should be running on your machine (local or remote), with ports and IP matching the one described in `docker-compose.yml` file.
-
-**Important (3)** : we advise you not to handle TLS in the docker / nodeJS application. In your nginx/apache config you must redirect TLS traffic (port 443) to the `HTTPS_PORT` port, and regular HTTP traffic to the `HTTP_PORT` port. You should not use CA related certificate, but rather generate a self signed certificate. Then it must be uploaded to the blockchain. See [rchain-names](https://github.com/fabcotech/rchain-names) .
-
-**Important (4)** : Check the `--max-old-space-size` in the node start script. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
-
-```
-git clone https://github.com/fabcotech/dappy-node.git
-cd dapppy-node
-
-# Check `env_file` in docker-compose.yml
-
-# Build image
-docker build . -t dappy-node
-
-# Build the image
-docker-compose build
-
-# Run the containers (redis and node JS script)
-docker-compose up --abort-on-container-exit
-```
-
-dappy-node is plugged to the running rnode program !
+In production, dappy-node is ran with kubernetes, see `dappy-kubernetes.yml` . The kubernetes application uses two custom docker images:` dappy-nginx` (`DockerFileNginx`) and `dappy-node` (`DockerFile`). All the `.env` files are ignored and not part of the docker images, everything is in `dappy-kubernetes.yml` file.
 
 #### Build and push to docker hub
+
+If your working on the dappy-node code, `src/`, or dappy-nginx image, follow the following to build and update image on dockeer hub.
 
 ```
 # dappy-node image
 docker build . -t fabcotech/dappy-node:0.1
 docker push fabcotech/dappy-node:0.1
 
-# dappy-nginx image
 docker build . -f DockerfileNginx -t fabcotech/dappy-nginx:0.1
 docker push fabcotech/dappy-nginx:0.1
 ```
 
-#### Development
+#### Kubernetes
 
-##### With node JS directly
+Have `kubectl` installed
 
-```
-node src/index --ssl
-```
+**dappy-node only uses self-signed certificates**
 
-##### With docker
-
-If you use dappy-node for development purpose, you can let docker / node JS handle the encryption/TLS. Go to the `docker-compose` file and add the `--ssl` parameter to the `command` line :
-
-`command: sh -c 'npm i && node --max-old-space-size=8192 src/index.js --ssl'`
-
-Node JS will try to read the `server-crt.pem` (certificate) and `server-key.pem` (private key). You can run the program with those commands:
-
-```
-docker-compose build
-docker-compose up --abort-on-container-exit
-```
-
-If you encounter any bug, please create an issue, or report it on the chat group. https://discord.gg/8Cu5UFV
-
-https://anthonynsimon.com/blog/one-man-saas-architecture/
-
-#### Kuber
-
-Installer `kubectl`
+TLS/SSL security files `dhparams.pem` and `sslparams.conf` are generated following this link https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
 
 Certificates and private key. A given cluster deployment will use one .crt and one .key file, they are only used by nginx and must be set as secretes with kubernetes. Let's say you have `nginx.crt` file and `nginx.key` file.
+
+##### Set the secrets
 
 ```
 base64 -w 0 nginx.crt
@@ -173,15 +120,32 @@ base64 -w 0 nginx.crt
 base64 -w 0 nginx.key
 # outputs cba56fdeadaed...
 
+# generate dhparams.pem
+openssl dhparam -out dhparams.pem 4096
+
+base64 -w 0 dhparams.pem
+# outputs abb56fdeadaed...
+
 # cp sslsecret.example.yml sslsecret.yml
-# replace the values in sslsecret.yml with the base64
+# replace the 3 values in sslsecret.yml with the base64 generated
 
 # Create the secret in kubernetes
 kubectl apply -f sslsecret.yml
-
 ```
+
+##### Run kubernetes
+
+##### dev
 
 ```
 minikube start
-kubectl apply -f nodejs-deployment.yaml
+
+# start or update config
+kubectl apply -f dappy-kubernetes.yml
+
+# stop
+kubectl delete -f dappy-kubernetes.yml
+
+kubectl get pods
+kubectl logs [pod name]
 ```

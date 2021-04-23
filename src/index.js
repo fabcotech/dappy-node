@@ -57,7 +57,7 @@ let special;
 
 const redisClient = redis.createClient({
   db: 1,
-  host: process.env.REDIS_HOST,
+  host: process.env.REDIS_SERVICE_HOST,
 });
 
 redisClient.on('error', (err) => {
@@ -175,7 +175,7 @@ const pickRandomValidator = () => {
 };
 
 log(
-  `Listening for HTTP traffic on address 127.0.0.1(or 0.0.0.0 with docker):${process.env.HTTP_PORT} !`
+  `Listening for HTTP on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3001} !`
 );
 
 const serverHttp = http.createServer((req, res) => {
@@ -226,7 +226,7 @@ const serverHttp = http.createServer((req, res) => {
   }
 });
 
-serverHttp.listen(process.env.HTTP_PORT);
+serverHttp.listen(process.env.NODEJS_SERVICE_PORT_3001);
 
 // TLS endpoint
 
@@ -525,7 +525,7 @@ app.post('/get-nodes', (req, res) => {
 
 if (process.argv.includes('--ssl')) {
   log(
-    `Listening for HTTP+TLS on address 127.0.0.1(or 0.0.0.0 with docker):${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`
+    `Listening for HTTP+TLS on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS handled by nodeJS)`
   );
   const options = {
     key: fs.readFileSync(path.join(__dirname, '../server-key.pem')),
@@ -534,12 +534,12 @@ if (process.argv.includes('--ssl')) {
   serverHttps = https.createServer(options, app);
 } else {
   log(
-    `Listening for HTTP on address 127.0.0.1(or 0.0.0.0 with docker):${process.env.HTTPS_PORT} ! (TLS not handled by nodeJS)`
+    `Listening for HTTP on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS not handled by nodeJS)`
   );
   serverHttps = http.createServer(app);
 }
 
-serverHttps.listen(process.env.HTTPS_PORT);
+serverHttps.listen(process.env.NODEJS_SERVICE_PORT_3002);
 
 (httpUrlReadOnly[0].startsWith('https://') ? https : http).get(
   `${httpUrlReadOnly[0]}/version`,

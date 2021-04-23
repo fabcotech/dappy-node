@@ -61,3 +61,7 @@ typings/
 
 logs.txt
 www/monitor.html
+
+nginx-*
+sslsecret.yml
+dhparams.pem
