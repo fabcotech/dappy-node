@@ -16,8 +16,8 @@
     "body-parser": "^1.19.0",
     "dotenv": "6.2.0",
     "express": "^4.17.1",
-    "rchain-token": "fabcotech/rchain-token#0888e71eb9ee12dfbb1bcaf8bccf4b25882aed24",
-    "rchain-toolkit": "0.2.9",
+    "rchain-token": "fabcotech/rchain-token#d2b20135de2f609311c9de6d9e2e62f6f7e5fab6",
+    "rchain-toolkit": "0.3.2",
     "redis": "2.8.0"
   }
 }

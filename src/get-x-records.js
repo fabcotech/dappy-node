@@ -1,10 +1,6 @@
 const Ajv = require('ajv');
 const rchainToolkit = require('rchain-toolkit');
-const {
-  readAllPursesTerm,
-  readPursesDataTerm,
-  readPursesTerm,
-} = require('rchain-token');
+const { readPursesDataTerm, readPursesTerm } = require('rchain-token');
 
 const redisHgetall = require('./utils').redisHgetall;
 const redisKeys = require('./utils').redisKeys;
@@ -31,6 +27,9 @@ const recordSchema = {
   schemaId: 'dappy-record',
   type: 'object',
   properties: {
+    name: {
+      type: 'string'
+    },
     address: {
       type: 'string',
     },
@@ -65,7 +64,7 @@ const recordSchema = {
       },
     },
   },
-  required: ['name', 'publicKey', 'servers'],
+  required: ['name', 'publicKey', 'box', 'servers'],
 };
 module.exports.schema = schema;
 
@@ -75,11 +74,16 @@ const validateRecord = ajv.compile(recordSchema);
 
 const validate = ajv.compile(schema);
 
-const storeRecord = async (id, record, redisClient) => {
+const storeRecord = async (record, redisClient) => {
   const valid = validateRecord(record);
-  if (!valid) {
-    log('invalid record ' + id);
+  if (valid === false) {
+    log('invalid record ' + record.name);
     console.log(validate.errors);
+    throw new Error('');
+  }
+  const match = record.name.match(/[a-z]([A-Za-z0-9]*)*/g);
+  if (!match || match.length !== 1 && match[0].length !== record.name.length) {
+    log('invalid record (regexp) ' + record.name);
     throw new Error('');
   }
   const redisSetValues = [];
@@ -278,16 +282,17 @@ module.exports.getXRecordsWsHandler = async (
                 box: purses[k].box,
               };
               // redis cannot store undefined as value
-              if (typeof purses[k].price === 'number') {
+              // price will be stored in redis, and sent back to client as string
+              if (typeof purses[k].price === 'number' && !isNaN(purses[k].price)) {
                 completeRecord.price = purses[k].price;
               }
               if (!completeRecord.address) {
                 delete completeRecord.address;
               }
 
-              storeRecord(k, completeRecord, redisClient)
+              storeRecord(completeRecord, redisClient)
                 .then((result) => resolve(result))
-                .catch(() => resolve(null));
+                .catch((err) => resolve(null));
             } catch (err) {
               log('failed to parse record ' + k, 'warning');
               resolve(null);

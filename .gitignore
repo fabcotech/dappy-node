@@ -60,6 +60,7 @@ typings/
 .next
 
 logs.txt
+logs/dappy-*
 www/monitor.html
 
 nginx-*

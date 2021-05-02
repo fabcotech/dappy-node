@@ -126,10 +126,11 @@ openssl dhparam -out dhparams.pem 4096
 base64 -w 0 dhparams.pem
 # outputs abb56fdeadaed...
 
-# cp sslsecret.example.yml sslsecret.yml
-# replace the 3 values in sslsecret.yml with the base64 generated
+cp sslsecret.example.yml sslsecret.yml
 
-# Create the secret in kubernetes
+# Now replace the 3 values in sslsecret.yml with the base64 generated
+
+# Create or update the secret in kubernetes
 kubectl apply -f sslsecret.yml
 ```
 
@@ -148,4 +149,9 @@ kubectl delete -f dappy-kubernetes.yml
 
 kubectl get pods
 kubectl logs [pod name]
+
+# update values in file stresstest/ping-pong.js
+# and check ping/pong on http(3001) and https(3002)
+node stresstest/ping-pong.js
+
 ```

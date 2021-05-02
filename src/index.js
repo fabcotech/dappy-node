@@ -11,8 +11,6 @@ const Tracing = require('@sentry/tracing');
 // will not override the env variables in docker-compose
 require('dotenv').config();
 
-const rchainToolkit = require('rchain-toolkit');
-
 const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
 const {
   listenForDataAtNameXWsHandler,
@@ -46,9 +44,13 @@ let lastFinalizedBlockNumber = undefined;
 let namePrice = undefined;
 let nodes = undefined;
 try {
-  nodes = JSON.parse(
-    fs.readFileSync(path.join('./', process.env.NODES_FILE)).toString('utf8')
-  );
+  if (process.env.NODES_FILE) {
+    nodes = JSON.parse(
+      fs.readFileSync(path.join('./', process.env.NODES_FILE)).toString('utf8')
+    );
+  } else {
+    log('ignoring NODES_FILE', 'warning');
+  }
 } catch (err) {
   log('could not parse nodes file : ' + process.env.NODES_FILE, 'error');
 }
@@ -96,9 +98,9 @@ const initJobs = () => {
   setInterval(() => {
     if (new Date().getMinutes() % 15 === 0) {
       log(
-        'launching records job: ' +
+        'will clean records/names cache: ' +
           new Date().getMinutes() +
-          'minutes % 15 === 0'
+          ' minutes % 15 === 0'
       );
       runRecordsChildProcessJob(new Date().getMinutes() / 15);
     }
@@ -177,60 +179,6 @@ const pickRandomValidator = () => {
 log(
   `Listening for HTTP on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3001} !`
 );
-
-const serverHttp = http.createServer((req, res) => {
-  if (req.method === 'GET' && req.url === '/monitor') {
-    try {
-      const html = fs.readFileSync('./www/monitor.html', 'utf8');
-      res.setHeader('Content-Type', 'text/html');
-      res.end(html);
-    } catch (err) {
-      res.statusCode = 404;
-      res.setHeader('Content-Type', 'text/plain');
-      res.end('not found');
-    }
-  }
-  if (req.method === 'GET' && req.url === '/info') {
-    res.setHeader('Content-Type', 'application/json');
-    res.write(
-      JSON.stringify({
-        dappyNodeVersion: DAPPY_NODE_VERSION,
-        lastFinalizedBlockNumber: lastFinalizedBlockNumber,
-        rnodeVersion: rnodeVersion,
-        rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
-        rchainNetwork: process.env.RCHAIN_NETWORK,
-        namePrice: namePrice,
-      })
-    );
-    res.end();
-  } else if (req.method === 'GET' && req.url.startsWith('/get-nodes')) {
-    /*     const io = req.url.indexOf('?network=');
-
-    if (io === -1) {
-      res.statusCode = 400;
-      res.setHeader('Content-Type', 'text/plain');
-      res.end('Bad Request please provide "network" url parameter');
-      return;
-    }
-    const network = req.url.substr(io + 9, 1000); */
-
-    if (nodes) {
-      res.setHeader('Content-Type', 'application/json');
-      res.write(JSON.stringify(nodes));
-      res.end();
-    } else {
-      res.statusCode = 404;
-      res.setHeader('Content-Type', 'text/plain');
-      res.end('unknown nodes resource');
-    }
-  }
-});
-
-serverHttp.listen(process.env.NODEJS_SERVICE_PORT_3001);
-
-// TLS endpoint
-
-let serverHttps;
 
 const app = express();
 if (process.env.SENTRY) {
@@ -319,6 +267,17 @@ app.post('/ping', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.write(JSON.stringify({ data: 'pong' }));
   res.end();
+});
+app.get('/monitor', (req, res) => {
+  try {
+    const html = fs.readFileSync('./www/monitor.html', 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.end(html);
+  } catch (err) {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'text/plain');
+    res.end('not found');
+  }
 });
 app.post('/info', (req, res) => {
   requests.total += 1;
@@ -503,11 +462,6 @@ app.post('/get-x-records-by-public-key', async (req, res) => {
   }
 });
 
-app.post('/status', (req, res) => {
-  res.write(requestsJson);
-  res.end();
-});
-
 app.post('/get-nodes', (req, res) => {
   requests.total += 1;
   requests['/get-nodes'] += 1;
@@ -523,6 +477,12 @@ app.post('/get-nodes', (req, res) => {
   }
 });
 
+// Unencrypted HTTP endpoint (3001)
+serverHttp = http.createServer(app);
+serverHttp.listen(process.env.NODEJS_SERVICE_PORT_3001);
+
+// Encrypted SSL/TLS endpoint (3002), is regular http in PROD (nginx handles TLS), and https in DEV
+let serverHttps;
 if (process.argv.includes('--ssl')) {
   log(
     `Listening for HTTP+TLS on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS handled by nodeJS)`
