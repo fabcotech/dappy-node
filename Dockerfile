@@ -3,7 +3,7 @@
 FROM node:10.24.1-alpine3.10
 
 # needed for the package.json dependencies (rchain-token) that are on github and not on npm
-RUN apk --no-cache add git=2.22.5 less openssh && \
+RUN apk --no-cache add git=2.22.5-r0 less openssh && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app

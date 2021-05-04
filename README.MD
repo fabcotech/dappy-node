@@ -97,8 +97,13 @@ If your working on the dappy-node code, `src/`, or dappy-nginx image, follow the
 docker build . -t fabcotech/dappy-node:0.1
 docker push fabcotech/dappy-node:0.1
 
+# dappy-nginx
 docker build . -f DockerfileNginx -t fabcotech/dappy-nginx:0.1
 docker push fabcotech/dappy-nginx:0.1
+
+# rnode-donkey
+docker build . -f DockerfileRnodeDonkey -t fabcotech/rnode-donkey:0.1
+docker push fabcotech/rnode-donkey:0.1
 ```
 
 #### Kubernetes
@@ -134,9 +139,7 @@ cp sslsecret.example.yml sslsecret.yml
 kubectl apply -f sslsecret.yml
 ```
 
-##### Run kubernetes
-
-##### dev
+##### Run kubernetes (dev)
 
 ```
 minikube start
@@ -154,4 +157,27 @@ kubectl logs [pod name]
 # and check ping/pong on http(3001) and https(3002)
 node stresstest/ping-pong.js
 
+```
+
+##### Run kubernetes (dev)
+
+Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
+
+
+**(1)** You need to have one static IP, and reference it in `nginx service .loadBalancerIP`, `rnode service` can have a new IP address when it is redeployed, but you can also attach a static IP to `rnode service` if you want. This is very important because dappy browser is shiped with the IP address of nginx service hard-written into it, it MUST NOT CHANGE OVER TIME.
+
+On scaleway:
+https://www.scaleway.com/en/docs/using-a-load-balancer-to-expose-your-kubernetes-kapsule-ingress-controller-service/
+
+**(2)** Set the `RNODE_SERVICE_EXTERNAL_IP` in `dappy-kubernetes.yml`, it must be the public/external IP address of the `rnode service` in the kubernetes cluster. Maybe you'll need to deploy a first time with a wrong value, get this IP with `kubectl get services`, redeploy with `apply -f`, and delete the `rnode pod` pod so another is relaunched with the right environment variable.
+
+```
+# start or update config
+kubectl apply -f dappy-kubernetes.yml
+
+# stop
+kubectl delete -f dappy-kubernetes.yml
+
+kubectl get pods
+kubectl logs [pod name]
 ```

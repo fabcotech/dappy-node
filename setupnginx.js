@@ -25,7 +25,7 @@ if (
   throw new Error('Missing env NODEJS_SERVICE_HOST');
 }
 
-const nginxConfigFile = `
+const nginxConfigFileHttp = `
 limit_req_zone $binary_remote_addr zone=req_limit_per_ip:10m rate=2r/s;
 limit_conn_zone $binary_remote_addr zone=conn_limit_per_ip:10m;
 
@@ -58,6 +58,6 @@ server {
 }
 `;
 
-fs.writeFileSync('/etc/nginx/conf.d/dappy.conf', nginxConfigFile, 'utf8');
+fs.writeFileSync('/etc/nginx/conf.d/dappy.conf', nginxConfigFileHttp, 'utf8');
 
 console.log('/etc/nginx/conf.d/dappy.conf nginx config file created !');

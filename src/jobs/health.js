@@ -19,23 +19,21 @@ module.exports.health = async (httpUrlReadOnly) => {
     }
   };
 
-  httpUrlReadOnly.forEach(async (url) => {
-    const s = new Date().getTime();
-    try {
-      lastblock = JSON.parse(
-        await rchainToolkit.http.blocks(url, {
-          position: 1,
-        })
-      )[0].blockNumber;
-      results[url] = {
-        status: 'success',
-        block: lastblock,
-        time: new Date().getTime() - s,
-      };
-      writeToLogs();
-    } catch (err) {
-      results[url] = { status: 'fail', time: new Date().getTime() - s };
-      writeToLogs();
-    }
-  });
+  const s = new Date().getTime();
+  try {
+    lastblock = JSON.parse(
+      await rchainToolkit.http.blocks(httpUrlReadOnly, {
+        position: 1,
+      })
+    )[0].blockNumber;
+    results[httpUrlReadOnly] = {
+      status: 'success',
+      block: lastblock,
+      time: new Date().getTime() - s,
+    };
+    writeToLogs();
+  } catch (err) {
+    results[httpUrlReadOnly] = { status: 'fail', time: new Date().getTime() - s };
+    writeToLogs();
+  }
 };

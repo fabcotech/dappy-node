@@ -86,7 +86,7 @@ const runRecordsChildProcessJob = async (quarter) => {
 };
 
 const initJobs = () => {
-  getLastFinalizedBlockNumber(pickRandomReadOnly(), pickRandomValidator())
+  getLastFinalizedBlockNumber(httpUrlReadOnly, pickRandomValidator())
     .then((a) => {
       lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
       namePrice = a.namePrice;
@@ -112,7 +112,7 @@ const initJobs = () => {
   }, 30000);
 
   setInterval(() => {
-    getLastFinalizedBlockNumber(pickRandomReadOnly(), pickRandomValidator())
+    getLastFinalizedBlockNumber(httpUrlReadOnly, pickRandomValidator())
       .then((a) => {
         lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
         namePrice = a.namePrice;
@@ -146,39 +146,28 @@ if (process.env.SPECIAL) {
 }
 
 if (
-  !process.env.READ_ONLY.startsWith('https://') &&
-  !process.env.READ_ONLY.startsWith('http://')
-) {
-  log('READ_ONLY must start with http:// or https://', 'error');
-  process.exit();
-}
-if (
   !process.env.VALIDATOR.startsWith('https://') &&
   !process.env.VALIDATOR.startsWith('http://')
 ) {
   log('VALIDATOR must start with http:// or https://', 'error');
   process.exit();
 }
-log('host (read-only):                   ' + process.env.READ_ONLY);
-log('host (validator):                   ' + process.env.VALIDATOR);
 
-let httpUrlReadOnly = process.env.READ_ONLY.includes(',')
-  ? process.env.READ_ONLY.split(',')
-  : [process.env.READ_ONLY];
 let httpUrlValidator = process.env.VALIDATOR.includes(',')
   ? process.env.VALIDATOR.split(',')
   : [process.env.VALIDATOR];
 
-const pickRandomReadOnly = () => {
-  return httpUrlReadOnly[Math.floor(Math.random() * httpUrlReadOnly.length)];
-};
+let httpUrlReadOnly = `${process.env.RNODE_SERVICE_EXTERNAL_IP}:${process.env.RNODE_SERVICE_PORT_40403}`;
+if (!httpUrlReadOnly.startsWith('http')) {
+  httpUrlReadOnly = `http://${httpUrlReadOnly}`
+}
+
+log(`host (read-only):                   ${httpUrlReadOnly}`);
+log('host (validator):                   ' + process.env.VALIDATOR);
+
 const pickRandomValidator = () => {
   return httpUrlValidator[Math.floor(Math.random() * httpUrlValidator.length)];
 };
-
-log(
-  `Listening for HTTP on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3001} !`
-);
 
 const app = express();
 if (process.env.SENTRY) {
@@ -329,7 +318,7 @@ app.post('/api/deploy', async (req, res) => {
 app.post('/api/prepare-deploy', async (req, res) => {
   requests.total += 1;
   requests['/api/prepare-deploy'] += 1;
-  const data = await prepareDeployWsHandler(req.body, pickRandomReadOnly());
+  const data = await prepareDeployWsHandler(req.body, httpUrlReadOnly);
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -348,7 +337,7 @@ app.post('/api/explore-deploy', async (req, res) => {
   requests['/api/explore-deploy'] += 1;
   const data = await exploreDeployWsHandler(
     req.body,
-    pickRandomReadOnly(),
+    httpUrlReadOnly,
     redisClient,
     useCache,
     caching,
@@ -372,7 +361,7 @@ app.post('/explore-deploy-x', async (req, res) => {
   requests['/explore-deploy-x'] += 1;
   const data = await exploreDeployXWsHandler(
     req.body,
-    pickRandomReadOnly(),
+    httpUrlReadOnly,
     redisClient,
     useCache,
     caching,
@@ -392,7 +381,7 @@ app.post('/api/listen-for-data-at-name', async (req, res) => {
   requests['/api/listen-for-data-at-name'] += 1;
   const data = await listenForDataAtNameWsHandler(
     req.body,
-    pickRandomReadOnly()
+    httpUrlReadOnly
   );
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -408,7 +397,7 @@ app.post('/listen-for-data-at-name-x', async (req, res) => {
   requests['/listen-for-data-at-name-x'] += 1;
   const data = await listenForDataAtNameXWsHandler(
     req.body,
-    pickRandomReadOnly()
+    httpUrlReadOnly
   );
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -437,7 +426,7 @@ app.post('/get-x-records', async (req, res) => {
   const data = await getXRecordsWsHandler(
     req.body,
     redisClient,
-    pickRandomReadOnly()
+    httpUrlReadOnly
   );
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -477,57 +466,64 @@ app.post('/get-nodes', (req, res) => {
   }
 });
 
-// Unencrypted HTTP endpoint (3001)
-serverHttp = http.createServer(app);
-serverHttp.listen(process.env.NODEJS_SERVICE_PORT_3001);
+const initServers = () => {
+  log(
+    `Listening for HTTP on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3001} !`
+  );
+  // Unencrypted HTTP endpoint (3001)
+  serverHttp = http.createServer(app);
+  serverHttp.listen(process.env.NODEJS_SERVICE_PORT_3001);
 
-// Encrypted SSL/TLS endpoint (3002), is regular http in PROD (nginx handles TLS), and https in DEV
-let serverHttps;
-if (process.argv.includes('--ssl')) {
-  log(
-    `Listening for HTTP+TLS on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS handled by nodeJS)`
-  );
-  const options = {
-    key: fs.readFileSync(path.join(__dirname, '../server-key.pem')),
-    cert: fs.readFileSync(path.join(__dirname, '../server-crt.pem')),
-  };
-  serverHttps = https.createServer(options, app);
-} else {
-  log(
-    `Listening for HTTP on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS not handled by nodeJS)`
-  );
-  serverHttps = http.createServer(app);
+  // Encrypted SSL/TLS endpoint (3002), is regular http in PROD (nginx handles TLS), and https in DEV
+  let serverHttps;
+  if (process.argv.includes('--ssl')) {
+    log(
+      `Listening for HTTP+TLS on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS handled by nodeJS)`
+    );
+    const options = {
+      key: fs.readFileSync(path.join(__dirname, '../server-key.pem')),
+      cert: fs.readFileSync(path.join(__dirname, '../server-crt.pem')),
+    };
+    serverHttps = https.createServer(options, app);
+  } else {
+    log(
+      `Listening for HTTP on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS not handled by nodeJS)`
+    );
+    serverHttps = http.createServer(app);
+  }
+
+  serverHttps.listen(process.env.NODEJS_SERVICE_PORT_3002);
 }
 
-serverHttps.listen(process.env.NODEJS_SERVICE_PORT_3002);
+const interval = setInterval(() => {
+  const req = (httpUrlReadOnly.startsWith('https://') ? https : http).get(
+    `${httpUrlReadOnly}/version`, resp => {
+      if (resp.statusCode !== 200) {
+        log('Status code different from 200', 'error');
+        console.log(resp.statusCode);
+        process.exit();
+      }
 
-(httpUrlReadOnly[0].startsWith('https://') ? https : http).get(
-  `${httpUrlReadOnly[0]}/version`,
-  (resp) => {
-    log(`RChain node responding at ${pickRandomReadOnly()}/version`);
+      log(`RChain node responding at ${httpUrlReadOnly}/version`);
 
-    if (resp.statusCode !== 200) {
-      log('Status code different from 200', 'error');
-      console.log(resp.statusCode);
-      process.exit();
-    }
+      resp.setEncoding('utf8');
+      let rawData = '';
+      resp.on('data', (chunk) => {
+        rawData += chunk;
+      });
 
-    resp.setEncoding('utf8');
-    let rawData = '';
-    resp.on('data', (chunk) => {
-      rawData += chunk;
+      resp.on('end', () => {
+        log(`${rawData}\n`);
+        rnodeVersion = rawData;
+        initServers();
+        initJobs();
+        clearInterval(interval);
+      });
+      resp.on('error', err => {
+        throw new Error(err)
+      });
     });
-
-    resp.on('end', () => {
-      log(`${rawData}\n`);
-      rnodeVersion = rawData;
-      initJobs();
-      return;
-    });
-
-    resp.on('error', (err) => {
-      log('error: ' + err);
-      process.exit();
-    });
-  }
-);
+  req.on('error', err => {
+    log('rnode observer not ready, will try again in 10s')
+  })
+}, 10000);
