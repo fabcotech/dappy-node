@@ -33,8 +33,6 @@ spec:
               value: '1'
             - name: VALIDATOR
               value: https://node0.testnet.rchain-dev.tk,https://node1.testnet.rchain-dev.tk,https://node2.testnet.rchain-dev.tk,https://node4.testnet.rchain-dev.tk
-            - name: RNODE_SERVICE_EXTERNAL_IP
-              value: '10.10.10.10'
           ports:
             - containerPort: 3001
             - containerPort: 3002
@@ -93,10 +91,12 @@ spec:
         app: nginx
     spec:
       containers:
-        - image: fabcotech/dappy-nginx:2.6
+        - image: fabcotech/dappy-nginx:2.8
           env:
             - name: NGINX_SERVER_NAME
               value: testnetwork
+            - name: CLUSTER_DOMAIN_NAME
+              value: 'dappy.tech'
           name: nginx
           volumeMounts:
             - mountPath: '/etc/nginx/ssl'
@@ -139,19 +139,24 @@ spec:
       labels:
         app: rnode
     spec:
+      hostNetwork: true
       containers:
         - image: fabcotech/rnode-donkey:0.4
           name: rnode
           env:
             - name: BOOTSTRAP
-              value: 'rnode://7b893c7a676877ad48ec56871c19e3b481e2a102@observer.testnet.rchain.coop?protocol=45400&discovery=45404'
+              value: 'rnode://ef5438d8042be159cb84caf5ad50f8192540dff1@observer-lfs.testnet.rchain.coop?protocol=46400&discovery=46404'
             - name: NETWORK
               value: 'testnet02032020'
-            - name: RNODE_SERVICE_EXTERNAL_IP
-              value: '10.10.10.10'
+            - name: CLUSTER_DOMAIN_NAME
+              value: 'dappy.tech'
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           command: ['rnode']
           args: [
-            'run','--bootstrap','$(BOOTSTRAP)', '--network-id','$(NETWORK)', --host, '$(RNODE_SERVICE_EXTERNAL_IP)', '--protocol-port', '40400', '--discovery-port', '40404', '--finalization-rate', '1', '--fault-tolerance-threshold', '-1', '--synchrony-constraint-threshold', '0.99'
+            'run','--bootstrap','$(BOOTSTRAP)', '--network-id','$(NETWORK)', --host, '$(HOSTNAME).$(CLUSTER_DOMAIN_NAME)', '--protocol-port', '40400', '--discovery-port', '40404', '--finalization-rate', '1', '--fault-tolerance-threshold', '-1', '--synchrony-constraint-threshold', '0.99'
           ]
           ports:
             - containerPort: 40400
@@ -204,7 +209,7 @@ metadata:
   name: nginx
 spec:
   type: LoadBalancer
-  loadBalancerIP: 11.11.11.11
+  loadBalancerIP: 195.154.70.253
   selector:
     app: nginx
   ports:
@@ -214,13 +219,25 @@ spec:
     - port: 443
       name: 'https'
       targetPort: 443
+    - port: 40400
+      name: '40400'
+      targetPort: 40400
+    - port: 40401
+      name: '40401'
+      targetPort: 40401
+    - port: 40403
+      name: '40403'
+      targetPort: 40403
+    - port: 40404
+      name: '40404'
+      targetPort: 40404
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: rnode
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: rnode
   ports:

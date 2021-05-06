@@ -157,7 +157,7 @@ let httpUrlValidator = process.env.VALIDATOR.includes(',')
   ? process.env.VALIDATOR.split(',')
   : [process.env.VALIDATOR];
 
-let httpUrlReadOnly = `${process.env.RNODE_SERVICE_EXTERNAL_IP}:${process.env.RNODE_SERVICE_PORT_40403}`;
+let httpUrlReadOnly = `${process.env.RNODE_SERVICE_HOST}:${process.env.RNODE_SERVICE_PORT_40403}`;
 if (!httpUrlReadOnly.startsWith('http')) {
   httpUrlReadOnly = `http://${httpUrlReadOnly}`
 }
@@ -504,8 +504,6 @@ const interval = setInterval(() => {
         process.exit();
       }
 
-      log(`RChain node responding at ${httpUrlReadOnly}/version`);
-
       resp.setEncoding('utf8');
       let rawData = '';
       resp.on('data', (chunk) => {
@@ -513,16 +511,44 @@ const interval = setInterval(() => {
       });
 
       resp.on('end', () => {
-        log(`${rawData}\n`);
         rnodeVersion = rawData;
-        initServers();
-        initJobs();
-        clearInterval(interval);
+        const req2 = (httpUrlReadOnly.startsWith('https://') ? https : http).get(
+          `${httpUrlReadOnly}/api/blocks/1`, resp2 => {
+            if (resp2.statusCode !== 200) {
+              log('rnode observer blocks api not ready (1), will try again in 10s')
+              return;
+            }
+
+            resp2.setEncoding('utf8');
+            let rawData2 = '';
+            resp2.on('data', (chunk) => {
+              rawData2 += chunk;
+            });
+            resp2.on('end', () => {
+              if (typeof JSON.parse(rawData2)[0].blockHash === 'string') {
+                log(`${rawData}\n`);
+                log(`RChain node responding at ${httpUrlReadOnly}/version and /api/blocks/1`);
+                initServers();
+                initJobs();
+                clearInterval(interval);
+              }
+            });
+            resp2.on('error', err => {
+              throw new Error(err)
+            });
+          });
+
+        req2.end();
+        req2.on('error', err => {
+          console.log(err);
+          log('rnode observer blocks api not ready (2), will try again in 10s')
+        })
       });
       resp.on('error', err => {
         throw new Error(err)
       });
     });
+  req.end();
   req.on('error', err => {
     log('rnode observer not ready, will try again in 10s')
   })

@@ -19,6 +19,12 @@ if (
   throw new Error('Missing env NGINX_SERVER_NAME');
 }
 if (
+  !process.env.CLUSTER_DOMAIN_NAME ||
+  typeof process.env.CLUSTER_DOMAIN_NAME !== 'string'
+) {
+  throw new Error('Missing env CLUSTER_DOMAIN_NAME');
+}
+if (
   !process.env.NODEJS_SERVICE_HOST ||
   typeof process.env.NODEJS_SERVICE_HOST !== 'string'
 ) {
@@ -28,6 +34,62 @@ if (
 const nginxConfigFileHttp = `
 limit_req_zone $binary_remote_addr zone=req_limit_per_ip:10m rate=2r/s;
 limit_conn_zone $binary_remote_addr zone=conn_limit_per_ip:10m;
+
+server {
+  listen 40400 http2;
+  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replaceAll(".", "\\.")}$;
+  access_log /etc/nginx/access-grpc.log;
+  error_log  /etc/nginx/error-grpc.log;
+
+  grpc_read_timeout 3600s;
+  grpc_send_timeout 3600s;
+
+  location / {
+    grpc_pass grpc://${process.env.RNODE_SERVICE_HOST}:${process.env.RNODE_SERVICE_PORT_40400};
+    proxy_set_header Host            $subdomain;
+  }
+}
+
+server {
+  listen 40401 http2;
+  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replaceAll(".", "\\.")}$;
+  access_log /etc/nginx/access-grpc.log;
+  error_log  /etc/nginx/error-grpc.log;
+
+  grpc_read_timeout 3600s;
+  grpc_send_timeout 3600s;
+
+  location / {
+    grpc_pass grpc://${process.env.RNODE_SERVICE_HOST}:${process.env.RNODE_SERVICE_PORT_40401};
+    proxy_set_header Host            $subdomain;
+  }
+}
+
+server {
+  listen 40404 http2;
+  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replaceAll(".", "\\.")}$;
+  access_log /etc/nginx/access-grpc.log;
+  error_log  /etc/nginx/error-grpc.log;
+
+  grpc_read_timeout 3600s;
+  grpc_send_timeout 3600s;
+
+  location / {
+    grpc_pass grpc://${process.env.RNODE_SERVICE_HOST}:${process.env.RNODE_SERVICE_PORT_40404};
+    proxy_set_header Host            $subdomain;
+  }
+}
+
+server {
+  listen 40403;
+  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replaceAll(".", "\\.")}$;
+  access_log /etc/nginx/access-http.log;
+  error_log  /etc/nginx/error-http.log;
+  location / {
+    proxy_pass http://${process.env.RNODE_SERVICE_HOST}:${process.env.RNODE_SERVICE_PORT_40403};
+    proxy_set_header Host            $subdomain;
+  }
+}
 
 server {
     listen 80 default_server;
