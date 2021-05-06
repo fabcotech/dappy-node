@@ -14,7 +14,7 @@ spec:
         app: nodejs
     spec:
       containers:
-        - image: fabcotech/dappy-node:1.7
+        - image: fabcotech/dappy-node:1.9
           name: nodejs
           env:
             - name: CACHING
@@ -22,7 +22,7 @@ spec:
             - name: CRON_JOBS_NAMES_MODULO
               value: '0'
             - name: DAPPY_NETWORK
-              value: deltanetwork
+              value: testnetwork
             - name: LAST_BLOCK_JOB_INTERVAL
               value: '40000'
             - name: RCHAIN_NAMES_REGISTRY_URI
@@ -91,9 +91,9 @@ spec:
         app: nginx
     spec:
       containers:
-        - image: fabcotech/dappy-nginx:2.8
+        - image: fabcotech/dappy-nginx:3.1
           env:
-            - name: NGINX_SERVER_NAME
+            - name: DAPPY_NETWORK
               value: testnetwork
             - name: CLUSTER_DOMAIN_NAME
               value: 'dappy.tech'

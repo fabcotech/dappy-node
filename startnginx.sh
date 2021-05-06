@@ -1,4 +1,3 @@
 #!/bin/bash
 
-node setupnginx.js
-nginx -g "daemon off;"
+node setupnginx.js && nginx -g "daemon off;"

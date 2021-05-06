@@ -13,10 +13,10 @@ if (
   throw new Error('Missing env NODEJS_SERVICE_PORT_3001');
 }
 if (
-  !process.env.NGINX_SERVER_NAME ||
-  typeof process.env.NGINX_SERVER_NAME !== 'string'
+  !process.env.DAPPY_NETWORK ||
+  typeof process.env.DAPPY_NETWORK !== 'string'
 ) {
-  throw new Error('Missing env NGINX_SERVER_NAME');
+  throw new Error('Missing env DAPPY_NETWORK');
 }
 if (
   !process.env.CLUSTER_DOMAIN_NAME ||
@@ -37,7 +37,7 @@ limit_conn_zone $binary_remote_addr zone=conn_limit_per_ip:10m;
 
 server {
   listen 40400 http2;
-  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replaceAll(".", "\\.")}$;
+  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replace(/\./g, "\\.")}$;
   access_log /etc/nginx/access-grpc.log;
   error_log  /etc/nginx/error-grpc.log;
 
@@ -52,7 +52,7 @@ server {
 
 server {
   listen 40401 http2;
-  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replaceAll(".", "\\.")}$;
+  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replace(/\./g, "\\.")}$;
   access_log /etc/nginx/access-grpc.log;
   error_log  /etc/nginx/error-grpc.log;
 
@@ -67,7 +67,7 @@ server {
 
 server {
   listen 40404 http2;
-  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replaceAll(".", "\\.")}$;
+  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replace(/\./g, "\\.")}$;
   access_log /etc/nginx/access-grpc.log;
   error_log  /etc/nginx/error-grpc.log;
 
@@ -82,7 +82,7 @@ server {
 
 server {
   listen 40403;
-  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replaceAll(".", "\\.")}$;
+  server_name ~^(?<subdomain>\w+)\.${process.env.CLUSTER_DOMAIN_NAME.replace(/\./g, "\\.")}$;
   access_log /etc/nginx/access-http.log;
   error_log  /etc/nginx/error-http.log;
   location / {
@@ -93,7 +93,7 @@ server {
 
 server {
     listen 80 default_server;
-    server_name ${process.env.NGINX_SERVER_NAME};
+    server_name ${process.env.DAPPY_NETWORK};
     location / {
       limit_req zone=req_limit_per_ip burst=10 nodelay;
       limit_conn conn_limit_per_ip 30;
@@ -103,7 +103,7 @@ server {
 
 server {
     listen 443 ssl http2;
-    server_name ${process.env.NGINX_SERVER_NAME};
+    server_name ${process.env.DAPPY_NETWORK};
     location / {
       limit_req zone=req_limit_per_ip burst=10 nodelay;
       limit_conn conn_limit_per_ip 30;

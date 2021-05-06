@@ -164,14 +164,13 @@ node stresstest/ping-pong.js
 Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 
 
-**(1)** You need to have one static IP, and reference it in `nginx service .loadBalancerIP`, `rnode service` can have a new IP address when it is redeployed, for now rnode replicas will each have a subdomain like pod-abbcbabbdba.dappy.tech.
+**(1)** You need to have one static IP, and reference it in `nginx service .loadBalancerIP`, `rnode service` can have a new IP address when it is redeployed, for now rnode replicas will each have a subdomain like pod-abbcbabbdba.dappy.tech. A fixed IP address only matters for the [dappy browser] -> [dappy node] communication that is no-DNS.
 
-On scaleway:
-https://www.scaleway.com/en/docs/using-a-load-balancer-to-expose-your-kubernetes-kapsule-ingress-controller-service/
+**(2)** Set the `CLUSTER_DOMAIN_NAME` (ex: dappy.tech), `BOOTSTRAP` (rnode setting), `NETWORK` (rnode setting) in `dappy-kubernetes.yml rnode .env`. The domain name you set as `CLUSTER_DOMAIN_NAME` (example: dappy.tech) should point all the subdomains *.dappy.tech to the public IP of the cluster.
 
-**(2)** Set the `CLUSTER_DOMAIN_NAME`, `BOOTSTRAP` (rnode setting), `NETWORK` (rnode setting) in `dappy-kubernetes.yml rnode .env`. The domain name you set as `CLUSTER_DOMAIN_NAME` (example: dappy.tech) should point all the subdomains *.dappy.tech to the public IP of the cluster.
+**(3)** Set the `DAPPY_NETWORK` (dappy setting, ex: testnetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `dappy-kubernetes.yml nodejs .env`
 
-**(3)** Set the `NGINX_SERVER_NAME` (dappy setting), and again `CLUSTER_DOMAIN_NAME` in `dappy-kubernetes.yml nginx .env`
+**(4)** Set the `DAPPY_NETWORK` (dappy setting), and again `CLUSTER_DOMAIN_NAME` in `dappy-kubernetes.yml nginx .env`
 
 ```
 # start or update config
