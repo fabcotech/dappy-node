@@ -1,3 +1,44 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dnsutils
+  namespace: default
+spec:
+  containers:
+  - name: dnsutils
+    image: gcr.io/kubernetes-e2e-test-images/dnsutils:1.3
+    command:
+      - sleep
+      - "3600"
+    imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health {
+            lameduck 5s
+        }
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+            pods verified
+            fallthrough in-addr.arpa ip6.arpa
+            ttl 30
+        }
+        prometheus :9153
+        forward . 1.1.1.1 1.1.1.2
+        cache 30
+        loop
+        reload
+        loadbalance
+    }   
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,7 +55,7 @@ spec:
         app: nodejs
     spec:
       containers:
-        - image: fabcotech/dappy-node:1.9
+        - image: fabcotech/dappy-node:2.0
           name: nodejs
           env:
             - name: CACHING
@@ -28,7 +69,7 @@ spec:
             - name: RCHAIN_NAMES_REGISTRY_URI
               value: 1rjuqxchdg85n38x3i9syez6ingq8nbreex5ajz1tf9i53rji9iksz
             - name: RCHAIN_NETWORK
-              value: testnet
+              value: testnet02032020
             - name: REDIS_DB
               value: '1'
             - name: VALIDATOR
@@ -41,10 +82,6 @@ spec:
               memory: '128Mi'
               cpu: '500m'
       restartPolicy: Always
-      dnsPolicy: 'None'
-      dnsConfig:
-        nameservers:
-          - 8.8.8.8
 status: {}
 
 ---
@@ -89,12 +126,15 @@ spec:
     metadata:
       labels:
         app: nginx
+
     spec:
       containers:
-        - image: fabcotech/dappy-nginx:3.1
+        - image: fabcotech/dappy-nginx:5.6
           env:
             - name: DAPPY_NETWORK
               value: testnetwork
+            - name: RCHAIN_NETWORK
+              value: 'testnet02032020'
             - name: CLUSTER_DOMAIN_NAME
               value: 'dappy.tech'
           name: nginx
@@ -118,45 +158,40 @@ spec:
           secret:
             secretName: nginx-ssl
       restartPolicy: Always
-      dnsPolicy: 'None'
-      dnsConfig:
-        nameservers:
-          - 8.8.8.8
 status: {}
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: rnode
 spec:
+  serviceName: rnode
   replicas: 1
   selector:
     matchLabels:
       app: rnode
-  strategy: {}
   template:
     metadata:
       labels:
         app: rnode
     spec:
-      hostNetwork: true
       containers:
-        - image: fabcotech/rnode-donkey:0.4
+        - image: rchain/rnode:v0.11.0-alpha.2
           name: rnode
           env:
-            - name: BOOTSTRAP
+            - name: ENVBOOTSTRAP
               value: 'rnode://ef5438d8042be159cb84caf5ad50f8192540dff1@observer-lfs.testnet.rchain.coop?protocol=46400&discovery=46404'
-            - name: NETWORK
+            - name: RCHAIN_NETWORK
               value: 'testnet02032020'
             - name: CLUSTER_DOMAIN_NAME
               value: 'dappy.tech'
-            - name: HOSTNAME
+            - name: ENVHOSTNAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-          command: ['rnode']
+          command: ['/opt/docker/bin/rnode']
           args: [
-            'run','--bootstrap','$(BOOTSTRAP)', '--network-id','$(NETWORK)', --host, '$(HOSTNAME).$(CLUSTER_DOMAIN_NAME)', '--protocol-port', '40400', '--discovery-port', '40404', '--finalization-rate', '1', '--fault-tolerance-threshold', '-1', '--synchrony-constraint-threshold', '0.99'
+            'run','--bootstrap','$(ENVBOOTSTRAP)', '--network-id','$(RCHAIN_NETWORK)', --host, '$(ENVHOSTNAME).$(RCHAIN_NETWORK).$(CLUSTER_DOMAIN_NAME)', '--protocol-port', '40400', '--discovery-port', '40404', '--finalization-rate', '1', '--fault-tolerance-threshold', '-1', '--synchrony-constraint-threshold', '0.99'
           ]
           ports:
             - containerPort: 40400
@@ -165,14 +200,9 @@ spec:
             - containerPort: 40404
           resources:
             limits:
-              memory: '12Gi'
+              memory: '6Gi'
               cpu: '500m'
       restartPolicy: Always
-      dnsPolicy: 'None'
-      dnsConfig:
-        nameservers:
-          - 8.8.8.8
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -209,7 +239,7 @@ metadata:
   name: nginx
 spec:
   type: LoadBalancer
-  loadBalancerIP: 195.154.70.253
+  loadBalancerIP: 195.154.71.146
   selector:
     app: nginx
   ports:
@@ -235,9 +265,26 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: rnodehttp
+spec:
+  type: ClusterIP
+  selector:
+    app: rnode
+  ports:
+    - port: 40400
+      name: '40400'
+      targetPort: 40400
+    - port: 40403
+      name: '40403'
+      targetPort: 40403
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: rnode
 spec:
   type: ClusterIP
+  clusterIP: None
   selector:
     app: rnode
   ports:
