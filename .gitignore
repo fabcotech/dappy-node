@@ -66,3 +66,7 @@ www/monitor.html
 nginx-*
 sslsecret.yml
 dhparams.pem
+rnode.key
+rnode.crt
+dappynode.key
+dappynode.crt

@@ -157,7 +157,7 @@ let httpUrlValidator = process.env.VALIDATOR.includes(',')
   ? process.env.VALIDATOR.split(',')
   : [process.env.VALIDATOR];
 
-let httpUrlReadOnly = `${process.env.RNODE_SERVICE_HOST}:${process.env.RNODE_SERVICE_PORT_40403}`;
+let httpUrlReadOnly = `${process.env.RNODEHTTP_SERVICE_HOST}:${process.env.RNODEHTTP_SERVICE_PORT_40403}`;
 if (!httpUrlReadOnly.startsWith('http')) {
   httpUrlReadOnly = `http://${httpUrlReadOnly}`
 }
@@ -275,7 +275,8 @@ app.post('/info', (req, res) => {
     dappyNodeVersion: DAPPY_NODE_VERSION,
     lastFinalizedBlockNumber: lastFinalizedBlockNumber,
     rnodeVersion: rnodeVersion,
-    rchainNamesRegistryUri: process.env.RCHAIN_NAMES_REGISTRY_URI,
+    rchainNamesMasterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+    rchainNamesContractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
     rchainNetwork: process.env.RCHAIN_NETWORK,
     namePrice: namePrice,
   };

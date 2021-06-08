@@ -1,6 +1,10 @@
 const Ajv = require('ajv');
 const rchainToolkit = require('rchain-toolkit');
-const { readPursesDataTerm, readPursesTerm } = require('rchain-token');
+const {
+  readPursesDataTerm,
+  readPursesTerm,
+  readBoxTerm,
+} = require('rchain-token');
 
 const redisHgetall = require('./utils').redisHgetall;
 const redisKeys = require('./utils').redisKeys;
@@ -28,7 +32,7 @@ const recordSchema = {
   type: 'object',
   properties: {
     name: {
-      type: 'string'
+      type: 'string',
     },
     address: {
       type: 'string',
@@ -82,7 +86,10 @@ const storeRecord = async (record, redisClient) => {
     throw new Error('');
   }
   const match = record.name.match(/[a-z]([A-Za-z0-9]*)*/g);
-  if (!match || match.length !== 1 && match[0].length !== record.name.length) {
+  if (
+    !match ||
+    (match.length !== 1 && match[0].length !== record.name.length)
+  ) {
     log('invalid record (regexp) ' + record.name);
     throw new Error('');
   }
@@ -171,8 +178,6 @@ module.exports.getXRecordsWsHandler = async (
     };
   }
 
-  await new Promise((r) => setTimeout(r, 5000));
-
   if (body.names.length > 5) {
     return {
       success: false,
@@ -214,7 +219,9 @@ module.exports.getXRecordsWsHandler = async (
         exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
           httpUrlReadOnly,
           {
-            term: readPursesTerm(process.env.RCHAIN_NAMES_REGISTRY_URI, {
+            term: readPursesTerm({
+              masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+              contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
               pursesIds: missings,
             }),
           }
@@ -222,7 +229,9 @@ module.exports.getXRecordsWsHandler = async (
         exploreDeployResponseData = await rchainToolkit.http.exploreDeploy(
           httpUrlReadOnly,
           {
-            term: readPursesDataTerm(process.env.RCHAIN_NAMES_REGISTRY_URI, {
+            term: readPursesDataTerm({
+              masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+              contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
               pursesIds: missings,
             }),
           }
@@ -266,24 +275,84 @@ module.exports.getXRecordsWsHandler = async (
 
       const completeRecords = await Promise.all(
         Object.keys(purses).map((k) => {
-          return new Promise((resolve) => {
+          return new Promise(async (resolve) => {
             if (!pursesData[k]) {
               resolve(null);
               return;
             }
+            let boxConfig;
             try {
+              const boxKeys = await redisKeys(
+                redisClient,
+                `box:${process.env.REDIS_DB}:${purses[k].boxId}`
+              );
+              const boxKey = boxKeys.find(
+                (bk) => bk === `box:${process.env.REDIS_DB}:${purses[k].boxId}`
+              );
+              if (typeof boxKey === 'string') {
+                const hg = await redisHgetall(redisClient, boxKey);
+                boxConfig = JSON.parse(hg.values);
+              } else {
+                const exploreDeployResponseBox =
+                  await rchainToolkit.http.exploreDeploy(httpUrlReadOnly, {
+                    term: readBoxTerm({
+                      masterRegistryUri:
+                        process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+                      boxId: purses[k].boxId,
+                    }),
+                  });
+                try {
+                  boxConfig = rchainToolkit.utils.rhoValToJs(
+                    JSON.parse(exploreDeployResponseBox).expr[0]
+                  );
+                } catch (err) {
+                  log('could not get box ' + missings.join(', ') + '', 'error');
+                  // it simply means that none have been found
+                  resolve(null);
+                  return;
+                }
+                await new Promise((res, rej) => {
+                  let over = false;
+                  setTimeout(() => {
+                    if (!over) {
+                      over = true;
+                      rej('redis timeout error 1');
+                    }
+                  }, 5000);
+                  redisClient.hmset(
+                    `box:${process.env.REDIS_DB}:${purses[k].boxId}`,
+                    'values',
+                    JSON.stringify(boxConfig),
+                    (err, resp) => {
+                      if (!over) {
+                        over = true;
+                        if (err) {
+                          log(err, 'error');
+                          return rej(err);
+                        }
+                        res();
+                      }
+                    }
+                  );
+                });
+              }
+
               record = JSON.parse(
                 Buffer.from(pursesData[k], 'hex').toString('utf8')
               );
               const completeRecord = {
                 ...record,
                 name: k,
-                publicKey: purses[k].publicKey,
-                box: purses[k].box,
+                publicKey: boxConfig.publicKey,
+                box: purses[k].boxId,
               };
+
               // redis cannot store undefined as value
               // price will be stored in redis, and sent back to client as string
-              if (typeof purses[k].price === 'number' && !isNaN(purses[k].price)) {
+              if (
+                typeof purses[k].price === 'number' &&
+                !isNaN(purses[k].price)
+              ) {
                 completeRecord.price = purses[k].price;
               }
               if (!completeRecord.address) {
@@ -294,6 +363,7 @@ module.exports.getXRecordsWsHandler = async (
                 .then((result) => resolve(result))
                 .catch((err) => resolve(null));
             } catch (err) {
+              console.log(err);
               log('failed to parse record ' + k, 'warning');
               resolve(null);
             }

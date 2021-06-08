@@ -24,7 +24,9 @@ module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
     exploreDeployResult = await rchainToolkit.http.exploreDeploy(
       httpUrlReadOnly,
       {
-        term: readPursesTerm(process.env.RCHAIN_NAMES_REGISTRY_URI, {
+        term: readPursesTerm({
+          masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+          contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
           pursesIds: ['0'],
         }),
       }

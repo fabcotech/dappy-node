@@ -8,7 +8,11 @@ module.exports.getDappyRecordsAndSaveToDb = async (redisClient, quarter) => {
     redisClient,
     `name:${process.env.REDIS_DB}:*`
   );
-  const keysToDelete = nameKeys.filter((n) => {
+  const boxesKeys = await redisKeys(
+    redisClient,
+    `box:${process.env.REDIS_DB}:*`
+  );
+  const keysToDelete = nameKeys.concat(boxesKeys).filter((n) => {
     if (n === `name:${process.env.REDIS_DB}:0`) {
       return false;
     }

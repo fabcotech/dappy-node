@@ -93,17 +93,14 @@ In production, dappy-node is ran with kubernetes, see `dappy-kubernetes.yml` . T
 If your working on the dappy-node code, `src/`, or dappy-nginx image, follow the following to build and update image on dockeer hub.
 
 ```
-# dappy-node image
+# dappy-node (nodejs)
 docker build . -t fabcotech/dappy-node:0.1
 docker push fabcotech/dappy-node:0.1
 
-# dappy-nginx
+# dappy-nginx (nginx)
 docker build . -f DockerfileNginx -t fabcotech/dappy-nginx:0.1
 docker push fabcotech/dappy-nginx:0.1
 
-# rnode-donkey
-docker build . -f DockerfileRnodeDonkey -t fabcotech/rnode-donkey:0.1
-docker push fabcotech/rnode-donkey:0.1
 ```
 
 #### Kubernetes
@@ -114,15 +111,29 @@ Have `kubectl` installed
 
 TLS/SSL security files `dhparams.pem` and `sslparams.conf` are generated following this link https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
 
-Certificates and private key. A given cluster deployment will use one .crt and one .key file, they are only used by nginx and must be set as secretes with kubernetes. Let's say you have `nginx.crt` file and `nginx.key` file.
+Certificates and private key. A given cluster deployment will use one .crt and one .key file, they are only used by nginx and must be set as secretes with kubernetes. Let's say you have `nginx.crt` file, `nginx.key` file, `rnode.crt` file and `rnode.key` file.
+
+#### create certificates and private keys
+
+```
+# just input US as country name and you can leave the rest blank
+openssl req -x509 -nodes -days 3000 -newkey rsa:2048 -keyout rnode.key -out rnode.crt -outform PEM
+openssl req -x509 -nodes -days 3000 -newkey rsa:2048 -keyout dappynode.key -out dappynode.crt -outform PEM
+```
 
 ##### Set the secrets
 
 ```
-base64 -w 0 nginx.crt
+base64 -w 0 rnode.crt
 # outputs aabcbdbabbc...
 
-base64 -w 0 nginx.key
+base64 -w 0 rnode.key
+# outputs cba56fdeadaed...
+
+base64 -w 0 dappynode.crt
+# outputs aabcbdbabbc...
+
+base64 -w 0 dappynode.key
 # outputs cba56fdeadaed...
 
 # generate dhparams.pem
@@ -133,7 +144,7 @@ base64 -w 0 dhparams.pem
 
 cp sslsecret.example.yml sslsecret.yml
 
-# Now replace the 3 values in sslsecret.yml with the base64 generated
+# Now replace the 5 values in sslsecret.yml with the base64 generated
 
 # Create or update the secret in kubernetes
 kubectl apply -f sslsecret.yml
@@ -163,10 +174,9 @@ node stresstest/ping-pong.js
 
 Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 
-
 **(1)** You need to have one static IP, and reference it in `nginx service .loadBalancerIP`, `rnode service` can have a new IP address when it is redeployed, for now rnode replicas will each have a subdomain like pod-abbcbabbdba.dappy.tech. A fixed IP address only matters for the [dappy browser] -> [dappy node] communication that is no-DNS.
 
-**(2)** Set the `CLUSTER_DOMAIN_NAME` (ex: dappy.tech), `BOOTSTRAP` (rnode setting), `NETWORK` (rnode setting) in `dappy-kubernetes.yml rnode .env`. The domain name you set as `CLUSTER_DOMAIN_NAME` (example: dappy.tech) should point all the subdomains *.dappy.tech to the public IP of the cluster.
+**(2)** Set the `CLUSTER_DOMAIN_NAME` (ex: dappy.tech), `BOOTSTRAP` (rnode setting), `NETWORK` (rnode setting) in `dappy-kubernetes.yml rnode .env`. The domain name you set as `CLUSTER_DOMAIN_NAME` (example: dappy.tech) should point all the subdomains \*.dappy.tech to the public IP of the cluster.
 
 **(3)** Set the `DAPPY_NETWORK` (dappy setting, ex: testnetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `dappy-kubernetes.yml nodejs .env`
 
@@ -182,3 +192,9 @@ kubectl delete -f dappy-kubernetes.yml
 kubectl get pods
 kubectl logs [pod name]
 ```
+
+grpc:
+rnode 1 grpc -> MITM -> grpc rnode 2
+
+grpcs:
+rnode 1 grpc -> physical internet network ISP -> grpc rnode 2

@@ -61,9 +61,17 @@ const main = async () => {
     const resp = await Promise.all(
       a.map(() => doRequest(readPursesIdsTerm(registryUri)))
     );
-    const data = JSON.parse(resp[0]);
-    let ids = rchainToolkit.utils.rhoValToJs(JSON.parse(data.data).expr[0]);
-
+    let data;
+    let ids;
+    try {
+      data = JSON.parse(resp[0]);
+      ids = rchainToolkit.utils.rhoValToJs(JSON.parse(data.data).expr[0]);
+    } catch (err) {
+      console.warn('probably ddos protection stoping the stress test');
+      console.log(resp[0]);
+      console.log(err);
+    }
+    console.log(ids);
     const resp2 = await Promise.all(
       a.map(() =>
         doRequest(
