@@ -40,7 +40,7 @@ spec:
         app: nodejs
     spec:
       containers:
-        - image: fabcotech/dappy-node:2.0
+        - image: fabcotech/dappy-node:2.1
           name: nodejs
           env:
             - name: CACHING
@@ -48,17 +48,19 @@ spec:
             - name: CRON_JOBS_NAMES_MODULO
               value: '0'
             - name: DAPPY_NETWORK
-              value: testnetwork
+              value: gammanetwork
             - name: LAST_BLOCK_JOB_INTERVAL
               value: '40000'
-            - name: RCHAIN_NAMES_REGISTRY_URI
-              value: 1rjuqxchdg85n38x3i9syez6ingq8nbreex5ajz1tf9i53rji9iksz
+            - name: RCHAIN_NAMES_CONTRACT_ID
+              value: dappynamesystemtestnet
+            - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
+              value: mpddrwyph33qikosct81pbgkb11td4qrzub4najkfs63skn3fr1di8
             - name: RCHAIN_NETWORK
               value: testnet210604
             - name: REDIS_DB
               value: '1'
             - name: VALIDATOR
-              value: https://node0.testnet.rchain-dev.tk,https://node1.testnet.rchain-dev.tk,https://node2.testnet.rchain-dev.tk,https://node4.testnet.rchain-dev.tk
+              value: https://node2.testnet.rchain.coop
           ports:
             - containerPort: 3001
             - containerPort: 3002
@@ -113,10 +115,10 @@ spec:
         app: nginx
     spec:
       containers:
-        - image: fabcotech/dappy-nginx:10.8
+        - image: fabcotech/dappy-nginx:13.2
           env:
             - name: DAPPY_NETWORK
-              value: testnetwork
+              value: gammanetwork
             - name: RCHAIN_NETWORK
               value: 'testnet210604'
             - name: CLUSTER_DOMAIN_NAME
@@ -128,7 +130,7 @@ spec:
               readOnly: true
           resources:
             limits:
-              memory: '128Mi'
+              memory: '512Mi'
               cpu: '500m'
           ports:
             - containerPort: 80
@@ -163,13 +165,15 @@ spec:
         - image: tgrospic/rnode:grpc-ssl-off
           name: aarnode
           env:
-            - name: ENVBOOTSTRAP
-              value: 'rnode://950597ab69a307272ed57367de4ffd6929a27419@node4.testnet.rchain.coop?protocol=44400&discovery=44404'
+            - name: BOOTSTRAP
+              value: 'rnode://4a92f5d858a9ef9e6bf6e0fc1974f28ee8b067f6@node2.testnet.rchain.coop?protocol=42400&discovery=42404'
             - name: RCHAIN_NETWORK
               value: 'testnet210604'
+            - name: SHARD_NAME
+              value: 'testnet2'
             - name: CLUSTER_DOMAIN_NAME
               value: 'dappy.tech'
-            - name: ENVHOSTNAME
+            - name: HOSTNAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
@@ -182,11 +186,13 @@ spec:
             [
               'run',
               '--bootstrap',
-              '$(ENVBOOTSTRAP)',
+              '$(BOOTSTRAP)',
               '--network-id',
               '$(RCHAIN_NETWORK)',
+              '--shard-name',
+              '$(SHARD_NAME)',
               --host,
-              '$(ENVHOSTNAME).$(RCHAIN_NETWORK).$(CLUSTER_DOMAIN_NAME)',
+              '$(HOSTNAME).$(RCHAIN_NETWORK).$(CLUSTER_DOMAIN_NAME)',
               '--protocol-port',
               '40400',
               '--discovery-port',
@@ -197,12 +203,12 @@ spec:
               '40403',
               '--finalization-rate',
               '1',
+              '--max-number-of-parents',
+              '1',
               '--fault-tolerance-threshold',
               '-1',
               '--synchrony-constraint-threshold',
               '0.99',
-              '--data-dir',
-              '/root/.rnode',
               '--tls-certificate-path',
               '/ssl/rnode.crt',
               '--tls-key-path',
@@ -216,7 +222,10 @@ spec:
           resources:
             limits:
               memory: '6Gi'
-              cpu: '500m'
+              cpu: '1800m'
+            requests:
+              memory: '5Gi'
+              cpu: '1400m'
       volumes:
         - name: sslsecret
           secret:

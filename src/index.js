@@ -159,7 +159,7 @@ let httpUrlValidator = process.env.VALIDATOR.includes(',')
 
 let httpUrlReadOnly = `${process.env.RNODEHTTP_SERVICE_HOST}:${process.env.RNODEHTTP_SERVICE_PORT_40403}`;
 if (!httpUrlReadOnly.startsWith('http')) {
-  httpUrlReadOnly = `http://${httpUrlReadOnly}`
+  httpUrlReadOnly = `http://${httpUrlReadOnly}`;
 }
 
 log(`host (read-only):                   ${httpUrlReadOnly}`);
@@ -380,10 +380,7 @@ app.post('/explore-deploy-x', async (req, res) => {
 app.post('/api/listen-for-data-at-name', async (req, res) => {
   requests.total += 1;
   requests['/api/listen-for-data-at-name'] += 1;
-  const data = await listenForDataAtNameWsHandler(
-    req.body,
-    httpUrlReadOnly
-  );
+  const data = await listenForDataAtNameWsHandler(req.body, httpUrlReadOnly);
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -396,10 +393,7 @@ app.post('/api/listen-for-data-at-name', async (req, res) => {
 app.post('/listen-for-data-at-name-x', async (req, res) => {
   requests.total += 1;
   requests['/listen-for-data-at-name-x'] += 1;
-  const data = await listenForDataAtNameXWsHandler(
-    req.body,
-    httpUrlReadOnly
-  );
+  const data = await listenForDataAtNameXWsHandler(req.body, httpUrlReadOnly);
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -482,8 +476,8 @@ const initServers = () => {
       `Listening for HTTP+TLS on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS handled by nodeJS)`
     );
     const options = {
-      key: fs.readFileSync(path.join(__dirname, '../server-key.pem')),
-      cert: fs.readFileSync(path.join(__dirname, '../server-crt.pem')),
+      key: fs.readFileSync(path.join(__dirname, '../dappynode.key')),
+      cert: fs.readFileSync(path.join(__dirname, '../dappynode.crt')),
     };
     serverHttps = https.createServer(options, app);
   } else {
@@ -494,11 +488,12 @@ const initServers = () => {
   }
 
   serverHttps.listen(process.env.NODEJS_SERVICE_PORT_3002);
-}
+};
 
 const interval = setInterval(() => {
   const req = (httpUrlReadOnly.startsWith('https://') ? https : http).get(
-    `${httpUrlReadOnly}/version`, resp => {
+    `${httpUrlReadOnly}/version`,
+    (resp) => {
       if (resp.statusCode !== 200) {
         log('Status code different from 200', 'error');
         console.log(resp.statusCode);
@@ -513,44 +508,50 @@ const interval = setInterval(() => {
 
       resp.on('end', () => {
         rnodeVersion = rawData;
-        const req2 = (httpUrlReadOnly.startsWith('https://') ? https : http).get(
-          `${httpUrlReadOnly}/api/blocks/1`, resp2 => {
-            if (resp2.statusCode !== 200) {
-              log('rnode observer blocks api not ready (1), will try again in 10s')
-              return;
-            }
+        const req2 = (
+          httpUrlReadOnly.startsWith('https://') ? https : http
+        ).get(`${httpUrlReadOnly}/api/blocks/1`, (resp2) => {
+          if (resp2.statusCode !== 200) {
+            log(
+              'rnode observer blocks api not ready (1), will try again in 10s'
+            );
+            return;
+          }
 
-            resp2.setEncoding('utf8');
-            let rawData2 = '';
-            resp2.on('data', (chunk) => {
-              rawData2 += chunk;
-            });
-            resp2.on('end', () => {
-              if (typeof JSON.parse(rawData2)[0].blockHash === 'string') {
-                log(`${rawData}\n`);
-                log(`RChain node responding at ${httpUrlReadOnly}/version and /api/blocks/1`);
-                initServers();
-                initJobs();
-                clearInterval(interval);
-              }
-            });
-            resp2.on('error', err => {
-              throw new Error(err)
-            });
+          resp2.setEncoding('utf8');
+          let rawData2 = '';
+          resp2.on('data', (chunk) => {
+            rawData2 += chunk;
           });
+          resp2.on('end', () => {
+            if (typeof JSON.parse(rawData2)[0].blockHash === 'string') {
+              log(`${rawData}\n`);
+              log(
+                `RChain node responding at ${httpUrlReadOnly}/version and /api/blocks/1`
+              );
+              initServers();
+              initJobs();
+              clearInterval(interval);
+            }
+          });
+          resp2.on('error', (err) => {
+            throw new Error(err);
+          });
+        });
 
         req2.end();
-        req2.on('error', err => {
+        req2.on('error', (err) => {
           console.log(err);
-          log('rnode observer blocks api not ready (2), will try again in 10s')
-        })
+          log('rnode observer blocks api not ready (2), will try again in 10s');
+        });
       });
-      resp.on('error', err => {
-        throw new Error(err)
+      resp.on('error', (err) => {
+        throw new Error(err);
       });
-    });
+    }
+  );
   req.end();
-  req.on('error', err => {
-    log('rnode observer not ready, will try again in 10s')
-  })
+  req.on('error', (err) => {
+    log('rnode observer not ready, will try again in 10s');
+  });
 }, 10000);

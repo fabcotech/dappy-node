@@ -56,7 +56,7 @@ limit_conn_zone $binary_remote_addr zone=conn_limit_per_ip:10m;
 
 server {
   listen 40400 ssl http2;
-  server_name ~^aarnode\\-(?<n>[0-9]+)\\.${
+  server_name ~^(?P<name>aarnode-[0-9]+)\\.${
     process.env.RCHAIN_NETWORK
   }\\.${process.env.CLUSTER_DOMAIN_NAME.replace('.', '\\.')}$;
   access_log /etc/nginx/access-40400.log;
@@ -66,10 +66,16 @@ server {
   ssl_certificate     /ssl/rnode.crt;
   ssl_certificate_key /ssl/rnode.key;
 
+  client_max_body_size 10M;
+
   location / {
-    # aarnode-$n.rnode.default.svc.cluster.local
-    grpc_pass grpc://aarnode-$n.rnode.default.svc.cluster.local:40400;
-    grpc_set_header Host aarnode-$n.${process.env.RCHAIN_NETWORK}.${
+    grpc_pass grpc://aarnode-0.rnode.default.svc.cluster.local:40400;
+    grpc_set_header ssl-client-verify      $ssl_client_verify;
+    grpc_set_header ssl-client-subject-dn  $ssl_client_s_dn;
+    grpc_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
+
+    # grpc_pass grpc://${process.env.RNODE_SERVICE_HOST}:40400;
+    # grpc_set_header Host aarnode-0.${process.env.RCHAIN_NETWORK}.${
   process.env.CLUSTER_DOMAIN_NAME
 };
   }
@@ -77,15 +83,20 @@ server {
 
 server {
   listen 40401 http2;
-  server_name ~^aarnode\\-(?<n>[0-9]+)\\.${
+  server_name ~^(?P<name>aarnode-[0-9]+)\\.${
     process.env.RCHAIN_NETWORK
   }\\.${process.env.CLUSTER_DOMAIN_NAME.replace('.', '\\.')}$;
   access_log /etc/nginx/access-40401.log;
   error_log  /etc/nginx/error-40401.log;
 
   location / {
-    grpc_pass grpc://aarnode-$n.rnode.default.svc.cluster.local:40401;
-    grpc_set_header Host aarnode-$n.${process.env.RCHAIN_NETWORK}.${
+    grpc_pass grpc://aarnode-0.rnode.default.svc.cluster.local:40401;
+    grpc_set_header ssl-client-verify      $ssl_client_verify;
+    grpc_set_header ssl-client-subject-dn  $ssl_client_s_dn;
+    grpc_set_header ssl-client-issuer-dn   $ssl_client_i_dn;
+
+    # grpc_pass grpc://${process.env.RNODE_SERVICE_HOST}:40401;
+    # grpc_set_header Host aarnode-0.${process.env.RCHAIN_NETWORK}.${
   process.env.CLUSTER_DOMAIN_NAME
 };
   }
@@ -93,30 +104,29 @@ server {
 
 server {
   listen 40404 http2;
-  server_name ~^aarnode\\-(?<n>[0-9]+)\\.${
+  server_name ~^(?P<name>aarnode-[0-9]+)\\.${
     process.env.RCHAIN_NETWORK
   }\\.${process.env.CLUSTER_DOMAIN_NAME.replace('.', '\\.')}$;
   access_log /etc/nginx/access-40404.log;
   error_log  /etc/nginx/error-40404.log;
 
   location / {
-    proxy_pass http://aarnode-$n.rnode.default.svc.cluster.local:40404;
-    proxy_set_header Host aarnode-$n.${process.env.RCHAIN_NETWORK}.${
-  process.env.CLUSTER_DOMAIN_NAME
-};
+    proxy_pass http://aarnode-0.rnode.default.svc.cluster.local:40404;
+    # proxy_pass http://${process.env.RNODE_SERVICE_HOST}:40404;
   }
 }
 
 server {
-  listen 40403 http2;
-  server_name ~^aarnode\\-(?<n>[0-9]+)\\.${
+  listen 40403;
+  server_name ~^(?P<name>aarnode-[0-9]+)\\.${
     process.env.RCHAIN_NETWORK
   }\\.${process.env.CLUSTER_DOMAIN_NAME.replace('.', '\\.')}$;
   access_log /etc/nginx/access-40403.log;
   error_log  /etc/nginx/error-40403.log;
   location / {
-    proxy_pass http://aarnode-$n.rnode.default.svc.cluster.local:40403;
-    proxy_set_header Host aarnode-$n.${process.env.RCHAIN_NETWORK}.${
+    proxy_pass http://aarnode-0.rnode.default.svc.cluster.local:40403;
+    # proxy_pass http://${process.env.RNODE_SERVICE_HOST}:40403;
+    proxy_set_header Host aarnode-0.${process.env.RCHAIN_NETWORK}.${
   process.env.CLUSTER_DOMAIN_NAME
 };
   }

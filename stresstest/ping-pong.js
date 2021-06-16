@@ -2,10 +2,10 @@ const fs = require('fs');
 const https = require('https');
 const http = require('http');
 
-const dappyNodeIp = '192.168.49.2';
-const dappyNodePortHttp = '31236';
-const dappyNodePortHttps = '31961';
-const dappyNodeHost = 't1.dappy.tech';
+const dappyNodeIp = '51.159.114.136';
+const dappyNodePortHttp = '80';
+const dappyNodePortHttps = '443';
+const dappyNodeHost = 'testnetwork';
 const certificate = fs.readFileSync('./nginx-selfsigned-t1.crt', 'utf8');
 
 const doRequestHttp = () => {

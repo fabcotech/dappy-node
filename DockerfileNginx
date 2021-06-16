@@ -1,4 +1,4 @@
-FROM nginx:1.21.0-alpine
+FROM nginx:1.19.10-alpine
 
 RUN apk add --no-cache --update nodejs=14.16.1-r1
 

@@ -176,11 +176,11 @@ Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 
 **(1)** You need to have one static IP, and reference it in `nginx service .loadBalancerIP`, `rnode service` can have a new IP address when it is redeployed, for now rnode replicas will each have a subdomain like pod-abbcbabbdba.dappy.tech. A fixed IP address only matters for the [dappy browser] -> [dappy node] communication that is no-DNS.
 
-**(2)** Set the `CLUSTER_DOMAIN_NAME` (ex: dappy.tech), `BOOTSTRAP` (rnode setting), `NETWORK` (rnode setting) in `dappy-kubernetes.yml rnode .env`. The domain name you set as `CLUSTER_DOMAIN_NAME` (example: dappy.tech) should point all the subdomains \*.dappy.tech to the public IP of the cluster.
+**(2)** Set the `CLUSTER_DOMAIN_NAME` (ex: dappy.tech), `BOOTSTRAP` (rnode setting), `NETWORK` (rnode setting), `SHARD_NAME` (rnode setting), `RCHAIN_NETWORK` in `dappy-kubernetes.yml rnode .env`. The domain name you set as `CLUSTER_DOMAIN_NAME` (example: dappy.tech) should point all the subdomains \*.dappy.tech to the public IP of the cluster.
 
-**(3)** Set the `DAPPY_NETWORK` (dappy setting, ex: testnetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `dappy-kubernetes.yml nodejs .env`
+**(3)** Set the `DAPPY_NETWORK` (dappy setting, ex: gammanetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `dappy-kubernetes.yml nodejs .env`
 
-**(4)** Set the `DAPPY_NETWORK` (dappy setting), and again `CLUSTER_DOMAIN_NAME` in `dappy-kubernetes.yml nginx .env`
+**(4)** Set the `DAPPY_NETWORK` (dappy setting), and again `RCHAIN_NETWORK` and `CLUSTER_DOMAIN_NAME` in `dappy-kubernetes.yml nginx .env`
 
 ```
 # start or update config
@@ -192,9 +192,3 @@ kubectl delete -f dappy-kubernetes.yml
 kubectl get pods
 kubectl logs [pod name]
 ```
-
-grpc:
-rnode 1 grpc -> MITM -> grpc rnode 2
-
-grpcs:
-rnode 1 grpc -> physical internet network ISP -> grpc rnode 2
