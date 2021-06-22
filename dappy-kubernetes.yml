@@ -40,7 +40,7 @@ spec:
         app: nodejs
     spec:
       containers:
-        - image: fabcotech/dappy-node:2.2
+        - image: fabcotech/dappy-node:2.3
           name: nodejs
           env:
             - name: CACHING
