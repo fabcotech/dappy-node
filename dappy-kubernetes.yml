@@ -115,7 +115,7 @@ spec:
         app: nginx
     spec:
       containers:
-        - image: fabcotech/dappy-nginx:13.3
+        - image: fabcotech/dappy-nginx:13.4
           env:
             - name: DAPPY_NETWORK
               value: gammanetwork
