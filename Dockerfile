@@ -1,9 +1,9 @@
 # copied from https://www.digitalocean.com/community/tutorials/how-to-build-a-node-js-application-with-docker
 
-FROM node:10.24.1-alpine3.10
+FROM node:14.17.1-alpine3.13
 
 # needed for the package.json dependencies (rchain-token) that are on github and not on npm
-RUN apk --no-cache add git=2.22.5-r0 less openssh && \
+RUN apk --no-cache add git=2.30.2-r0 less openssh && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app

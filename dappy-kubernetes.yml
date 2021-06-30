@@ -40,7 +40,7 @@ spec:
         app: nodejs
     spec:
       containers:
-        - image: fabcotech/dappy-node:2.3
+        - image: fabcotech/dappy-node:2.4
           name: nodejs
           env:
             - name: CACHING
@@ -115,7 +115,7 @@ spec:
         app: nginx
     spec:
       containers:
-        - image: fabcotech/dappy-nginx:13.2
+        - image: fabcotech/dappy-nginx:13.3
           env:
             - name: DAPPY_NETWORK
               value: gammanetwork
