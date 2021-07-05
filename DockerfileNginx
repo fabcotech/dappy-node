@@ -8,8 +8,8 @@ RUN rm /etc/nginx/conf.d/default.conf
 
 RUN mkdir /etc/nginx/snippets
 
-COPY sslparams.conf /etc/nginx/snippets/
-COPY setupnginx.js ./
-COPY startnginx.sh ./
+COPY nginx/sslparams.conf /etc/nginx/snippets/
+COPY nginx/setupnginx.js ./
+COPY nginx/startnginx.sh ./
 
 CMD ["sh", "startnginx.sh"]

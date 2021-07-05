@@ -76,7 +76,7 @@ The kubernetes stack includes 4 programs:
 
 **dappy-node only uses self-signed certificates**
 
-TLS/SSL security files `dhparams.pem` and `sslparams.conf` are generated following this link https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
+TLS/SSL security files `dhparams.pem` and `nginx/sslparams.conf` are generated following this link https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
 
 Certificates and private key. A given cluster deployment will use one `dappynode.crt` file and one `dappynode.key` file, they are only used by nginx and must be set as secretes with kubernetes.
 
