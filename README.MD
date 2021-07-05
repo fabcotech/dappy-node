@@ -1,8 +1,8 @@
-### dappy-node
+# Dappy node
 
-dappy-node is a Node JS + Redis proxy + caching program, it sits between dappy browser and a RChain node, or a cluster of RChain nodes.
+Kubernetes stack that each dappy network member must run. Inludes a quick start (dev) setup, and a production k8s stack that includes 4 programs.
 
-#### Quick start (dev)
+## Quick start (dev)
 
 You have to have a RChain node running locally or remotely with regular API exposed, and a redis server running also. Generate certificates `.crt` and private key `.key` (see below).
 
@@ -19,7 +19,7 @@ node --max-old-space-size=8192 src/index.js --ssl
 **Note:** Of course set the 8192 value according to the capabilities of your server. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
 
 
-#### HTTPS/HTTP exposition
+## HTTPS/HTTP exposition
 
 This program must be accessible through HTTP/TLS and also regular HTTP traffic.
 
@@ -40,13 +40,11 @@ List of the methods exposed for each kind of traffic :
 - `/info` : General node version number and information
 - `/get-nodes?network=NETWORK_NAME` : Get the nodes powering this network (expressed in rholang AST format)
 
-### Program execution
-
-#### Production
+## Production
 
 In production, dappy-node is ran with kubernetes, see `dappy-kubernetes.yml` . The kubernetes application uses two custom docker images:` dappy-nginx` (`DockerFileNginx`) and `dappy-node` (`DockerFile`). All the `.env` files are ignored and not part of the docker images, everything is in `dappy-kubernetes.yml` file.
 
-#### Build and push to docker hub
+### Build and push to docker hub
 
 If your working on the dappy-node code, `src/`, or dappy-nginx image, follow the following to build and update image on docker hub.
 
@@ -60,11 +58,9 @@ docker build . -f DockerfileNginx -t fabcotech/dappy-nginx:0.1
 docker push fabcotech/dappy-nginx:0.1
 ```
 
-#### Kubernetes
+### Kubernetes stack
 
 Have `kubectl` installed
-
-##### Kubernetes Stack
 
 The kubernetes stack includes 4 programs:
 - `nodejs` (`DockerfileNodejs`)
@@ -72,7 +68,7 @@ The kubernetes stack includes 4 programs:
 - `redis` (default redis docker image)
 - `rnode` (modified rnode image to work with no-tls no-encrypted traffic)
 
-##### create certificates and private keys
+### create certificates and private keys
 
 **dappy-node only uses self-signed certificates**
 
@@ -87,7 +83,7 @@ openssl req -x509 -nodes -days 3000 -newkey rsa:2048 -keyout dappynode.key -out 
 
 **Warning**: `rnode.crt` and `rnode.key` can be obtained by running rnode locally, it will create a new key pair, `nginx` and `rnode` will use this keypair (see `dappy-kubernetes.yml`). When 1+ rnode instances will run in the same kubernetes stack, it is probable that a bug will occur because they will use same public key.
 
-##### Set the secrets
+### Set the secrets
 
 ```
 base64 -w 0 rnode.crt
@@ -116,7 +112,7 @@ cp sslsecret.example.yml sslsecret.yml
 kubectl apply -f sslsecret.yml
 ```
 
-##### Run kubernetes (dev)
+### Run kubernetes (dev)
 
 ```
 minikube start
@@ -136,7 +132,7 @@ node stresstest/ping-pong.js
 
 ```
 
-##### Run kubernetes (prod)
+### Run kubernetes (prod)
 
 Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 
