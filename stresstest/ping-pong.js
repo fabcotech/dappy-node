@@ -6,7 +6,7 @@ const dappyNodeIp = '51.159.114.136';
 const dappyNodePortHttp = '80';
 const dappyNodePortHttps = '443';
 const dappyNodeHost = 'testnetwork';
-const certificate = fs.readFileSync('./nginx-selfsigned-t1.crt', 'utf8');
+const certificate = fs.readFileSync('./dappynode.crt', 'utf8');
 
 const doRequestHttp = () => {
   return new Promise((resolve, reject) => {
