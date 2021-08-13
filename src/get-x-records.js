@@ -37,6 +37,9 @@ const recordSchema = {
     address: {
       type: 'string',
     },
+    csp: {
+      type: 'string',
+    },
     publicKey: {
       type: 'string',
     },

@@ -40,7 +40,7 @@ spec:
         app: nodejs
     spec:
       containers:
-        - image: fabcotech/dappy-node:2.4
+        - image: fabcotech/dappy-node:2.6
           name: nodejs
           env:
             - name: CACHING
@@ -52,9 +52,9 @@ spec:
             - name: LAST_BLOCK_JOB_INTERVAL
               value: '40000'
             - name: RCHAIN_NAMES_CONTRACT_ID
-              value: dappynamesystemtestnet
+              value: dappynamesystem
             - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
-              value: mpddrwyph33qikosct81pbgkb11td4qrzub4najkfs63skn3fr1di8
+              value: tbozu3i1mgptyhesbooas9u56xmuc7tmxzkgxd9dtwtsaat9bqxejs
             - name: RCHAIN_NETWORK
               value: testnet210604
             - name: REDIS_DB
@@ -166,7 +166,7 @@ spec:
           name: aarnode
           env:
             - name: BOOTSTRAP
-              value: 'rnode://4a92f5d858a9ef9e6bf6e0fc1974f28ee8b067f6@node2.testnet.rchain.coop?protocol=42400&discovery=42404'
+              value: 'rnode://f601833bb379882668d2aa7093162aa11deb3e22@node0.testnet.rchain.coop?protocol=40400&discovery=40404'
             - name: RCHAIN_NETWORK
               value: 'testnet210604'
             - name: SHARD_NAME
@@ -209,6 +209,8 @@ spec:
               '-1',
               '--synchrony-constraint-threshold',
               '0.99',
+              '--fork-choice-stale-threshold',
+              '60 minutes',
               '--tls-certificate-path',
               '/ssl/rnode.crt',
               '--tls-key-path',

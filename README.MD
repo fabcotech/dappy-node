@@ -4,7 +4,7 @@ Kubernetes stack that each dappy network member must run. Inludes a quick start 
 
 ## Quick start (dev)
 
-You have to have a RChain node running locally or remotely with regular API exposed, and a redis server running also. Generate certificates `.crt` and private key `.key` (see below).
+You have to have a RChain node running locally or remotely with regular API exposed ([rchain.coop/developer.html](https://rchain.coop/developer.html)), and a redis server running also. Generate certificates `.crt` and private key `.key` (see below).
 
 You must copy the values in any of the `.env.*.example` files, and rename it to `.env` so environment variables will be read. Of course you must also edit the `.env` variables so it fits with your rnode program and variables.
 
@@ -17,7 +17,6 @@ node --max-old-space-size=8192 src/index.js --ssl
 ```
 
 **Note:** Of course set the 8192 value according to the capabilities of your server. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
-
 
 ## HTTPS/HTTP exposition
 
@@ -63,6 +62,7 @@ docker push fabcotech/dappy-nginx:0.1
 Have `kubectl` installed
 
 The kubernetes stack includes 4 programs:
+
 - `nodejs` (`DockerfileNodejs`)
 - `nginx` (`DockerfileNginx`)
 - `redis` (default redis docker image)
