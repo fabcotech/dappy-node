@@ -66,7 +66,6 @@ The kubernetes stack includes 4 programs:
 - `nodejs` (`DockerfileNodejs`)
 - `nginx` (`DockerfileNginx`)
 - `redis` (default redis docker image)
-- `rnode` (modified rnode image to work with no-tls no-encrypted traffic)
 
 ### create certificates and private keys
 
@@ -81,17 +80,9 @@ Certificates and private key. A given cluster deployment will use one `dappynode
 openssl req -x509 -nodes -days 3000 -newkey rsa:2048 -keyout dappynode.key -out dappynode.crt -outform PEM
 ```
 
-**Warning**: `rnode.crt` and `rnode.key` can be obtained by running rnode locally, it will create a new key pair, `nginx` and `rnode` will use this keypair (see `dappy-kubernetes.yml`). When 1+ rnode instances will run in the same kubernetes stack, it is probable that a bug will occur because they will use same public key.
-
 ### Set the secrets
 
 ```
-base64 -w 0 rnode.crt
-# outputs aabcbdbabbc...
-
-base64 -w 0 rnode.key
-# outputs cba56fdeadaed...
-
 base64 -w 0 dappynode.crt
 # outputs aabcbdbabbc...
 
@@ -106,7 +97,7 @@ base64 -w 0 dhparams.pem
 
 cp sslsecret.example.yml sslsecret.yml
 
-# Now replace the 5 values in sslsecret.yml with the base64 generated
+# Now replace the 3 values in sslsecret.yml with the base64 generated
 
 # Create or update the secret in kubernetes
 kubectl apply -f sslsecret.yml
@@ -136,13 +127,13 @@ node stresstest/ping-pong.js
 
 Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 
-**(1) static IP** You need to have one static IP, and reference it in `nginx service .loadBalancerIP`, `rnode service` can have a new IP address when it is redeployed, for now rnode replicas will each have a subdomain like pod-abbcbabbdba.dappy.tech. A fixed IP address only matters for the [dappy browser] -> [dappy node] communication that is no-DNS.
+**(1) static IP** You need to have one static IP, and reference it in `nginx service .loadBalancerIP`. A fixed IP address only matters for the [dappy browser] -> [dappy node] communication that is no-DNS.
 
-**(2) rnode** Set the `CLUSTER_DOMAIN_NAME` (ex: dappy.tech), `BOOTSTRAP` (rnode setting), `NETWORK` (rnode setting), `SHARD_NAME` (rnode setting), `RCHAIN_NETWORK` in `dappy-kubernetes.yml rnode .env`. The domain name you set as `CLUSTER_DOMAIN_NAME` (example: dappy.tech) should point all the subdomains \*.dappy.tech to the public IP of the cluster.
+**(2) rnode** nodejs must know one `VALIDATOR` and one/many `RNODEHTTP_SERVICE_HOST` (comma separated) read only nodes.
 
 **(3) nodejs** Set the `DAPPY_NETWORK` (dappy setting, ex: gammanetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `dappy-kubernetes.yml nodejs .env`
 
-**(4) nginx** Set the `DAPPY_NETWORK` (dappy setting), and again `RCHAIN_NETWORK` and `CLUSTER_DOMAIN_NAME` in `dappy-kubernetes.yml nginx .env`
+**(4) nginx** Set the `DAPPY_NETWORK` (dappy setting), and `RCHAIN_NETWORK` in `dappy-kubernetes.yml nginx .env`
 
 ```
 # start or update config
