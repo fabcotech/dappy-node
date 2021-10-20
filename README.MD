@@ -8,7 +8,7 @@ You have to have a RChain node running locally or remotely with regular API expo
 
 You must copy the values in any of the `.env.*.example` files, and rename it to `.env` so environment variables will be read. Of course you must also edit the `.env` variables so it fits with your rnode program and variables.
 
-```
+```sh
 git clone https://github.com/fabcotech/dappy-node.git
 cd dapppy-node
 npm install
@@ -47,7 +47,7 @@ In production, dappy-node is ran with kubernetes, see `dappy-kubernetes.yml` . T
 
 If your working on the dappy-node code, `src/`, or dappy-nginx image, follow the following to build and update image on docker hub.
 
-```
+```sh
 # dappy-node (nodejs)
 docker build . -f DockerfileNodejs -t fabcotech/dappy-node:0.1
 docker push fabcotech/dappy-node:0.1
@@ -82,7 +82,7 @@ openssl req -x509 -nodes -days 3000 -newkey rsa:2048 -keyout dappynode.key -out 
 
 ### Set the secrets
 
-```
+```sh
 base64 -w 0 dappynode.crt
 # outputs aabcbdbabbc...
 
@@ -105,7 +105,7 @@ kubectl apply -f sslsecret.yml
 
 ### Run kubernetes (dev)
 
-```
+```sh
 minikube start
 
 # start or update config
@@ -135,7 +135,7 @@ Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 
 **(4) nginx** Set the `DAPPY_NETWORK` (dappy setting), and `RCHAIN_NETWORK` in `dappy-kubernetes.yml nginx .env`
 
-```
+```sh
 # start or update config
 kubectl apply -f dappy-kubernetes.yml
 
