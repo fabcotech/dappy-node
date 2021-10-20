@@ -41,7 +41,7 @@ List of the methods exposed for each kind of traffic :
 
 ## Production
 
-In production, dappy-node is ran with kubernetes, see `dappy-kubernetes.yml` . The kubernetes application uses two custom docker images:` dappy-nginx` (`DockerFileNginx`) and `dappy-node` (`DockerFile`). All the `.env` files are ignored and not part of the docker images, everything is in `dappy-kubernetes.yml` file.
+In production, dappy-node is ran with kubernetes, see `kubernetes/dappy.yml` . The kubernetes application uses two custom docker images:` dappy-nginx` (`DockerFileNginx`) and `dappy-node` (`DockerFile`). All the `.env` files are ignored and not part of the docker images, everything is in `kubernetes/dappy.yml` file.
 
 ### Build and push to docker hub
 
@@ -109,10 +109,10 @@ kubectl apply -f sslsecret.yml
 minikube start
 
 # start or update config
-kubectl apply -f dappy-kubernetes.yml
+kubectl apply -f kubernetes/dappy.yml
 
 # stop
-kubectl delete -f dappy-kubernetes.yml
+kubectl delete -f kubernetes/dappy.yml
 
 kubectl get pods
 kubectl logs [pod name]
@@ -131,16 +131,16 @@ Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 
 **(2) rnode** nodejs must know one `VALIDATOR` and one/many `RNODEHTTP_SERVICE_HOST` (comma separated) read only nodes.
 
-**(3) nodejs** Set the `DAPPY_NETWORK` (dappy setting, ex: gammanetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `dappy-kubernetes.yml nodejs .env`
+**(3) nodejs** Set the `DAPPY_NETWORK` (dappy setting, ex: gammanetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `kubernetes/dappy.yml nodejs .env`
 
-**(4) nginx** Set the `DAPPY_NETWORK` (dappy setting), and `RCHAIN_NETWORK` in `dappy-kubernetes.yml nginx .env`
+**(4) nginx** Set the `DAPPY_NETWORK` (dappy setting), and `RCHAIN_NETWORK` in `kubernetes/dappy.yml nginx .env`
 
 ```sh
 # start or update config
-kubectl apply -f dappy-kubernetes.yml
+kubectl apply -f kubernetes/dappy.yml
 
 # stop
-kubectl delete -f dappy-kubernetes.yml
+kubectl delete -f kubernetes/dappy.yml
 
 kubectl get pods
 kubectl logs [pod name]
