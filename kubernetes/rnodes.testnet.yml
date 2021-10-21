@@ -12,7 +12,7 @@ spec:
         app: aarnode
     spec:
       nodeSelector:
-        rnode: "true"
+        rnode: 'true'
       containers:
         - image: rchain/rnode:v0.12.2-rc1
           name: aarnode
@@ -23,8 +23,8 @@ spec:
               value: 'testbm210724'
             - name: SHARD_NAME
               value: 'testbm'
-            - name: CLUSTER_DOMAIN_NAME
-              value: 'dappy.tech'
+            - name: 'PUBLIC_URL'
+              value: 'c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud'
             - name: HOSTNAME
               valueFrom:
                 fieldRef:
@@ -44,7 +44,7 @@ spec:
               '--shard-name',
               '$(SHARD_NAME)',
               --host,
-              '$(HOSTNAME).$(RCHAIN_NETWORK).$(CLUSTER_DOMAIN_NAME)',
+              '$(PUBLIC_URL)',
               '--protocol-port',
               '40400',
               '--discovery-port',

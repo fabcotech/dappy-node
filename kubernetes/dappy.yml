@@ -58,9 +58,9 @@ spec:
             - name: RCHAIN_NETWORK
               value: testbm210724
             - name: RNODEHTTP_SERVICE_HOST
-              value: https://observer.bm.testnet.rchain.coop
+              value: http://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud
             - name: RNODEHTTP_SERVICE_PORT_40403
-              value: '443'
+              value: '40403'
             - name: REDIS_DB
               value: '1'
             - name: VALIDATOR

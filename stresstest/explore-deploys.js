@@ -1,17 +1,23 @@
 const rchainToolkit = require('rchain-toolkit');
 const https = require('https');
 
-const { readTerm, readPursesTerm, readPursesIdsTerm } = require('rchain-token');
+const {
+  readPursesTerm,
+  readAllPursesTerm,
+  decodePurses,
+} = require('rchain-token');
 
-const registryUri = '1rjuqxchdg85n38x3i9syez6ingq8nbreex5ajz1tf9i53rji9iksz';
-const dappyNodeIp = '51.159.114.136';
+const masterRegistryUri =
+  'zjfa7r7aqdg1weao6ozk6s3fhyiw5wo6pytrggaxkeqhsfw4rrd8yg';
+const contractId = 'dappynamesystem';
+const dappyNodeIp = '195.154.71.146';
 const dappyNodePort = '443';
-const dappyNodeHost = 't1.dappy.tech';
+const dappyNodeHost = 'gammanetwork';
 
 // n is the number of  blockchain read operations you want to do each time
 // 1 read operation = 2 explore-deploys
 // if n = 4 it does 8 explore-deploys each time
-const n = 2;
+const n = 1;
 
 const doRequest = (term) => {
   return new Promise((resolve, reject) => {
@@ -59,13 +65,29 @@ const main = async () => {
       a.push(i);
     }
     const resp = await Promise.all(
-      a.map(() => doRequest(readPursesIdsTerm(registryUri)))
+      a.map(() =>
+        doRequest(
+          readAllPursesTerm({
+            masterRegistryUri: masterRegistryUri,
+            contractId: contractId,
+            depth: 2,
+          })
+        )
+      )
     );
     let data;
     let ids;
+    let purses;
     try {
       data = JSON.parse(resp[0]);
-      ids = rchainToolkit.utils.rhoValToJs(JSON.parse(data.data).expr[0]);
+      const pursesAsBytes = data.expr[0];
+      purses = decodePurses(
+        pursesAsBytes,
+        rchainToolkit.utils.rhoExprToVar,
+        rchainToolkit.utils.decodePar
+      );
+      console.log(purses);
+      ids = Object.keys(purses);
     } catch (err) {
       console.warn('probably ddos protection stoping the stress test');
       console.log(resp[0]);
@@ -75,14 +97,16 @@ const main = async () => {
     const resp2 = await Promise.all(
       a.map(() =>
         doRequest(
-          readPursesTerm(registryUri, {
+          readPursesTerm({
+            masterRegistryUri: masterRegistryUri,
+            contractId: contractId,
             pursesIds: ids.slice(0, 30),
           })
         )
       )
     );
     const data2 = JSON.parse(resp2[0]);
-
+    console.log(data2);
     console.log(
       ids.length +
         ' NFT ids and 30 ' +
