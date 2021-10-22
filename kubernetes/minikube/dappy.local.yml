@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dappy-node
+spec:
+  selector:
+    matchLabels:
+      app: dappy-node
+  template:
+    metadata:
+      labels:
+        app: dappy-node
+    spec:
+      containers:
+        - image: fabcotech/dappy-node:2.9
+          name: dappy-node
+          env:
+            - name: REDIS_SERVICE_HOST
+              value: redis
+            - name: REDIS_DB
+              value: '1'
+            - name: CACHING
+              value: '0'
+            - name: NODEJS_SERVICE_PORT_3001
+              value: '3001'
+            - name: NODEJS_SERVICE_PORT_3002
+              value: '3002'
+            - name: RNODEHTTP_SERVICE_HOST
+              value: http://aarnode
+            - name: RNODEHTTP_SERVICE_PORT_40403
+              value: '40403'
+            - name: VALIDATOR
+              value: http://aarnode:40403
+            - name: LAST_BLOCK_JOB_INTERVAL
+              value: '40000'
+            - name: RCHAIN_NAMES_CONTRACT_ID
+              value: dappynamesystem
+            - name: RCHAIN_NETWORK
+              value: local
+            - name: DAPPY_NETWORK
+              value: local
+            # - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
+            #   value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
+          ports:
+            - containerPort: 3001
+            - containerPort: 3002
+          resources:
+            limits:
+              memory: '128Mi'
+              cpu: '500m'
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dappy-node
+spec:
+  type: NodePort
+  selector:
+    app: dappy-node
+  ports:
+    - port: 3001
+      targetPort: 3001
+    - port: 3002
+      targetPort: 3002
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - image: redis
+          name: redis
+          resources:
+            limits:
+              memory: 128Mi
+              cpu: 500m
+          ports:
+            - containerPort: 6379
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      name: redis
+      targetPort: 6379
