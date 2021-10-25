@@ -1,8 +1,9 @@
 apiVersion: apps/v1
-kind: DaemonSet
+kind: StatefulSet 
 metadata:
   name: aarnode
 spec:
+  serviceName: aarnode
   selector:
     matchLabels:
       app: aarnode
@@ -13,7 +14,18 @@ spec:
     spec:
       nodeSelector:
         rnode: 'true'
-
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                  matchExpressions:
+                    - key: "app"
+                      operator: In
+                      values:
+                      - arrnode
+              topologyKey: "kubernetes.io/hostname"
+            weight: 1
       initContainers:
         - name: get-public-domain-on-scw
           image: busybox:1.33.1
@@ -45,7 +57,9 @@ spec:
               mountPath: '/ssl'
               readOnly: true
             - name: config
-              mountPath: /var/lib/config              
+              mountPath: /var/lib/config
+            - name: csi-vol-scw
+              mountPath: /root/.rnode
           command:
             - sh
             - "-c" 
@@ -86,13 +100,21 @@ spec:
           name: config
 
       restartPolicy: Always
-
+  volumeClaimTemplates:
+  - metadata:
+      name: csi-vol-scw
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: scw-bssd
+      resources:
+        requests:
+          storage: 50Gi
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: metadata
+  name: scw-metadata
 spec:
   type: ExternalName
   externalName: 169.254.42.42
