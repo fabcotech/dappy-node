@@ -23,7 +23,7 @@ spec:
                     - key: "app"
                       operator: In
                       values:
-                      - arrnode
+                      - aarnode
               topologyKey: "kubernetes.io/hostname"
             weight: 1
       initContainers:
