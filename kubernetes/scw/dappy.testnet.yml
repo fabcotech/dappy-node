@@ -40,7 +40,7 @@ spec:
         app: nodejs
     spec:
       containers:
-        - image: fabcotech/dappy-node:2.9
+        - image: fabcotech/dappy-node:3.0
           name: nodejs
           env:
             - name: CACHING
@@ -57,10 +57,8 @@ spec:
               value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
             - name: RCHAIN_NETWORK
               value: testbm210724
-            - name: RNODEHTTP_SERVICE_HOST
-              value: http://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud
-            - name: RNODEHTTP_SERVICE_PORT_40403
-              value: '40403'
+            - name: READ_ONLY
+              value: http://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud:40403
             - name: REDIS_DB
               value: '1'
             - name: VALIDATOR

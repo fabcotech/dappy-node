@@ -12,7 +12,7 @@ spec:
         app: dappy-node
     spec:
       containers:
-        - image: fabcotech/dappy-node:2.9
+        - image: fabcotech/dappy-node:3.0
           name: dappy-node
           env:
             - name: REDIS_SERVICE_HOST
@@ -25,10 +25,8 @@ spec:
               value: '3001'
             - name: NODEJS_SERVICE_PORT_3002
               value: '3002'
-            - name: RNODEHTTP_SERVICE_HOST
-              value: http://aarnode
-            - name: RNODEHTTP_SERVICE_PORT_40403
-              value: '40403'
+            - name: READ_ONLY
+              value: http://aarnode:40403
             - name: VALIDATOR
               value: http://aarnode:40403
             - name: LAST_BLOCK_JOB_INTERVAL
@@ -64,8 +62,6 @@ spec:
     - port: 3002
       targetPort: 3002
 ---
-
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -129,7 +129,7 @@ Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 
 **(1) static IP** You need to have one static IP, and reference it in `nginx service .loadBalancerIP`. A fixed IP address only matters for the [dappy browser] -> [dappy node] communication that is no-DNS.
 
-**(2) rnode** nodejs must know one `VALIDATOR` and one/many `RNODEHTTP_SERVICE_HOST` (comma separated) read only nodes.
+**(2) rnode** nodejs must know one `VALIDATOR` and one/many `READ_ONLY` (comma separated) read only nodes.
 
 **(3) nodejs** Set the `DAPPY_NETWORK` (dappy setting, ex: gammanetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `kubernetes/dappy.yml nodejs .env`
 
