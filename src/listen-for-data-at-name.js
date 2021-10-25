@@ -1,47 +1,47 @@
-const Ajv = require("ajv");
-const rchainToolkit = require("rchain-toolkit");
+const Ajv = require('ajv');
+const rchainToolkit = require('rchain-toolkit');
 
-const log = require("./utils").log;
+const log = require('./utils').log;
 
 const ajv = new Ajv();
 const schema = {
-  schemaId: "listen-data-at-name",
-  type: "object",
+  schemaId: 'listen-data-at-name',
+  type: 'object',
   properties: {
     name: {
-      type: "object",
+      type: 'object',
       properties: {
         UnforgPrivate: {
-          type: "object",
+          type: 'object',
           properties: {
             data: {
-              type: "string",
+              type: 'string',
             },
           },
-          require: ["data"],
+          require: ['data'],
         },
         UnforgDeploy: {
-          type: "object",
+          type: 'object',
           properties: {
             data: {
-              type: "string",
+              type: 'string',
             },
           },
-          require: ["data"],
+          require: ['data'],
         },
       },
     },
-    depth: { type: "number" },
+    depth: { type: 'number' },
   },
-  required: ["name", "depth"],
+  required: ['name', 'depth'],
 };
 module.exports.schema = schema;
 
-ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
+ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
 const validate = ajv.compile(schema);
 
-module.exports.listenForDataAtNameWsHandler = async (body, httpUrl) => {
-  log("listen-data-at-name");
+module.exports.listenForDataAtNameWsHandler = async (body, urlOrOptions) => {
+  log('listen-data-at-name');
 
   const valid = validate(body);
 
@@ -54,7 +54,10 @@ module.exports.listenForDataAtNameWsHandler = async (body, httpUrl) => {
     };
   }
 
-  const dataAtNameResponse = await rchainToolkit.http.dataAtName(httpUrl, body);
+  const dataAtNameResponse = await rchainToolkit.http.dataAtName(
+    urlOrOptions,
+    body
+  );
 
   const parsedResponse = JSON.parse(dataAtNameResponse);
 

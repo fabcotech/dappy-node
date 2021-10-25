@@ -23,7 +23,7 @@ const validate = ajv.compile(schema);
 
 module.exports.exploreDeployXWsHandler = async (
   body,
-  httpUrl,
+  urlOrOptions,
   redisClient,
   useCache,
   caching,
@@ -67,7 +67,7 @@ module.exports.exploreDeployXWsHandler = async (
     ? JSON.parse(foundInCache).results
     : await Promise.all(
         body.terms.map((b) =>
-          rchainToolkit.http.exploreDeploy(httpUrl, { term: b })
+          rchainToolkit.http.exploreDeploy(urlOrOptions, { term: b })
         )
       );
 

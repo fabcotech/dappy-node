@@ -167,7 +167,7 @@ const storeRecord = async (record, redisClient) => {
 module.exports.getXRecordsWsHandler = async (
   body,
   redisClient,
-  httpUrlReadOnly
+  urlOrOptions
 ) => {
   log('get-x-records');
   const valid = validate(body);
@@ -220,7 +220,7 @@ module.exports.getXRecordsWsHandler = async (
       let exploreDeployResponseData;
       try {
         exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
-          httpUrlReadOnly,
+          urlOrOptions,
           {
             term: readPursesTerm({
               masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
@@ -230,7 +230,7 @@ module.exports.getXRecordsWsHandler = async (
           }
         );
         exploreDeployResponseData = await rchainToolkit.http.exploreDeploy(
-          httpUrlReadOnly,
+          urlOrOptions,
           {
             term: readPursesDataTerm({
               masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
@@ -297,7 +297,7 @@ module.exports.getXRecordsWsHandler = async (
                 boxConfig = JSON.parse(hg.values);
               } else {
                 const exploreDeployResponseBox =
-                  await rchainToolkit.http.exploreDeploy(httpUrlReadOnly, {
+                  await rchainToolkit.http.exploreDeploy(urlOrOptions, {
                     term: readBoxTerm({
                       masterRegistryUri:
                         process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,

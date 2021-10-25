@@ -23,7 +23,7 @@ const validate = ajv.compile(schema);
 
 module.exports.exploreDeployWsHandler = async (
   body,
-  httpUrl,
+  urlOrOptions,
   redisClient,
   useCache,
   caching,
@@ -65,7 +65,7 @@ module.exports.exploreDeployWsHandler = async (
 
   const exploreDeployResponse = !!foundInCache
     ? foundInCache
-    : await rchainToolkit.http.exploreDeploy(httpUrl, {
+    : await rchainToolkit.http.exploreDeploy(urlOrOptions, {
         term: body.term,
       });
 

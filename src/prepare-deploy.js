@@ -1,31 +1,31 @@
-const rchainToolkit = require("rchain-toolkit");
-const Ajv = require("ajv");
+const rchainToolkit = require('rchain-toolkit');
+const Ajv = require('ajv');
 
-const log = require("./utils").log;
+const log = require('./utils').log;
 
 const ajv = new Ajv();
 const schema = {
-  schemaId: "prepare-deploy",
-  type: "object",
+  schemaId: 'prepare-deploy',
+  type: 'object',
   properties: {
     deployer: {
-      type: "string"
+      type: 'string',
     },
     timestamp: {
-      type: "number"
+      type: 'number',
     },
     nameQty: {
-      type: "number"
-    }
+      type: 'number',
+    },
   },
-  required: ["deployer", "timestamp", "nameQty"]
+  required: ['deployer', 'timestamp', 'nameQty'],
 };
 
-ajv.addMetaSchema(require("ajv/lib/refs/json-schema-draft-06.json"));
+ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
 const validate = ajv.compile(schema);
 
-module.exports.prepareDeployWsHandler = async (body, httpUrl) => {
-  log("prepare-deploy");
+module.exports.prepareDeployWsHandler = async (body, urlOrOptions) => {
+  log('prepare-deploy');
 
   const valid = validate(body);
 
@@ -33,18 +33,18 @@ module.exports.prepareDeployWsHandler = async (body, httpUrl) => {
     return {
       success: false,
       error: {
-        message: validate.errors.map(e => `body${e.dataPath} ${e.message}`)
-      }
+        message: validate.errors.map((e) => `body${e.dataPath} ${e.message}`),
+      },
     };
   }
 
   const prepareDeployResponse = await rchainToolkit.http.prepareDeploy(
-    httpUrl,
+    urlOrOptions,
     body
   );
 
   return {
     success: true,
-    data: prepareDeployResponse
+    data: prepareDeployResponse,
   };
 };

@@ -4,11 +4,11 @@ const { readPursesTerm } = require('rchain-token');
 const log = require('../utils').log;
 const getRecordsTerm = require('../utils').getRecordsTerm;
 
-module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
+module.exports.getLastFinalizedBlockNumber = async (urlOrOptions) => {
   let validAfterBlockNumber;
   try {
     validAfterBlockNumber = JSON.parse(
-      await rchainToolkit.http.blocks(httpUrlReadOnly, {
+      await rchainToolkit.http.blocks(urlOrOptions, {
         position: 1,
       })
     )[0].blockNumber;
@@ -21,16 +21,13 @@ module.exports.getLastFinalizedBlockNumber = async (httpUrlReadOnly) => {
 
   let exploreDeployResult;
   try {
-    exploreDeployResult = await rchainToolkit.http.exploreDeploy(
-      httpUrlReadOnly,
-      {
-        term: readPursesTerm({
-          masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
-          contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
-          pursesIds: ['0'],
-        }),
-      }
-    );
+    exploreDeployResult = await rchainToolkit.http.exploreDeploy(urlOrOptions, {
+      term: readPursesTerm({
+        masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+        contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
+        pursesIds: ['0'],
+      }),
+    });
   } catch (err) {
     log('Unable to explore-deploy for name price', 'error');
     throw new Error(err);

@@ -52,7 +52,7 @@ const schema = {
 ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
 const validate = ajv.compile(schema);
 
-module.exports.deployWsHandler = async (body, httpUrl) => {
+module.exports.deployWsHandler = async (body, urlOrOptions) => {
   log('deploy');
 
   const valid = validate(body);
@@ -66,7 +66,7 @@ module.exports.deployWsHandler = async (body, httpUrl) => {
     };
   }
 
-  const deployResponse = await rchainToolkit.http.deploy(httpUrl, body);
+  const deployResponse = await rchainToolkit.http.deploy(urlOrOptions, body);
   if (!deployResponse.startsWith('"Success')) {
     return {
       success: false,

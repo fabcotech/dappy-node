@@ -86,7 +86,7 @@ const runRecordsChildProcessJob = async (quarter) => {
 };
 
 const initJobs = () => {
-  getLastFinalizedBlockNumber(httpUrlReadOnly, pickRandomValidator())
+  getLastFinalizedBlockNumber(pickRandomReadOnly())
     .then((a) => {
       lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
       namePrice = a.namePrice;
@@ -107,12 +107,12 @@ const initJobs = () => {
   }, 1000 * 60);
 
   setInterval(() => {
-    health(httpUrlReadOnly);
+    health(pickRandomReadOnly());
     generateMonitor();
   }, 30000);
 
   setInterval(() => {
-    getLastFinalizedBlockNumber(httpUrlReadOnly, pickRandomValidator())
+    getLastFinalizedBlockNumber(pickRandomReadOnly())
       .then((a) => {
         lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
         namePrice = a.namePrice;
@@ -157,16 +157,43 @@ let httpUrlValidator = process.env.VALIDATOR.includes(',')
   ? process.env.VALIDATOR.split(',')
   : [process.env.VALIDATOR];
 
-let httpUrlReadOnly = `${process.env.RNODEHTTP_SERVICE_HOST}:${process.env.RNODEHTTP_SERVICE_PORT_40403}`;
-if (!httpUrlReadOnly.startsWith('http')) {
-  httpUrlReadOnly = `http://${httpUrlReadOnly}`;
-}
+let httpUrlReadOnly = process.env.READ_ONLY.includes(',')
+  ? process.env.READ_ONLY.split(',')
+  : [process.env.READ_ONLY];
 
 log(`host (read-only):                   ${httpUrlReadOnly}`);
 log('host (validator):                   ' + process.env.VALIDATOR);
 
 const pickRandomValidator = () => {
-  return httpUrlValidator[Math.floor(Math.random() * httpUrlValidator.length)];
+  return {
+    url: httpUrlValidator[Math.floor(Math.random() * httpUrlValidator.length)],
+  };
+};
+
+const readOnlyOptions = {};
+const pickRandomReadOnly = () => {
+  const r = httpUrlReadOnly[Math.floor(Math.random() * httpUrlReadOnly.length)];
+  if (readOnlyOptions[r]) {
+    return readOnlyOptions[r];
+  } else {
+    if (r.startsWith('http://')) {
+      readOnlyOptions[r] = {
+        url: r,
+      };
+    } else {
+      const cert = fs.readFileSync(
+        process.env.READ_ONLY_CERTIFICATE_PATH,
+        'utf8'
+      );
+      readOnlyOptions[r] = {
+        url: r,
+        rejectUnauthorized: false, // cert does not have to be signed by CA (self-signed)
+        cert: cert,
+        ca: [], // we don't want to rely on CA
+      };
+    }
+    return readOnlyOptions[r];
+  }
 };
 
 const app = express();
@@ -319,7 +346,7 @@ app.post('/api/deploy', async (req, res) => {
 app.post('/api/prepare-deploy', async (req, res) => {
   requests.total += 1;
   requests['/api/prepare-deploy'] += 1;
-  const data = await prepareDeployWsHandler(req.body, httpUrlReadOnly);
+  const data = await prepareDeployWsHandler(req.body, pickRandomReadOnly());
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -338,7 +365,7 @@ app.post('/api/explore-deploy', async (req, res) => {
   requests['/api/explore-deploy'] += 1;
   const data = await exploreDeployWsHandler(
     req.body,
-    httpUrlReadOnly,
+    pickRandomReadOnly(),
     redisClient,
     useCache,
     caching,
@@ -362,7 +389,7 @@ app.post('/explore-deploy-x', async (req, res) => {
   requests['/explore-deploy-x'] += 1;
   const data = await exploreDeployXWsHandler(
     req.body,
-    httpUrlReadOnly,
+    pickRandomReadOnly(),
     redisClient,
     useCache,
     caching,
@@ -380,7 +407,10 @@ app.post('/explore-deploy-x', async (req, res) => {
 app.post('/api/listen-for-data-at-name', async (req, res) => {
   requests.total += 1;
   requests['/api/listen-for-data-at-name'] += 1;
-  const data = await listenForDataAtNameWsHandler(req.body, httpUrlReadOnly);
+  const data = await listenForDataAtNameWsHandler(
+    req.body,
+    pickRandomReadOnly()
+  );
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -393,7 +423,10 @@ app.post('/api/listen-for-data-at-name', async (req, res) => {
 app.post('/listen-for-data-at-name-x', async (req, res) => {
   requests.total += 1;
   requests['/listen-for-data-at-name-x'] += 1;
-  const data = await listenForDataAtNameXWsHandler(req.body, httpUrlReadOnly);
+  const data = await listenForDataAtNameXWsHandler(
+    req.body,
+    pickRandomReadOnly()
+  );
   if (data.success) {
     res.write(JSON.stringify(data));
     res.end();
@@ -421,7 +454,7 @@ app.post('/get-x-records', async (req, res) => {
   const data = await getXRecordsWsHandler(
     req.body,
     redisClient,
-    httpUrlReadOnly
+    pickRandomReadOnly()
   );
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -495,8 +528,9 @@ const initServers = () => {
 };
 
 const interval = setInterval(() => {
-  const req = (httpUrlReadOnly.startsWith('https://') ? https : http).get(
-    `${httpUrlReadOnly}/version`,
+  const randomUrlReadOnly = pickRandomReadOnly();
+  const req = (randomUrlReadOnly.url.startsWith('https://') ? https : http).get(
+    `${randomUrlReadOnly.url}/version`,
     (resp) => {
       if (resp.statusCode !== 200) {
         log('Status code different from 200', 'error');
@@ -513,8 +547,8 @@ const interval = setInterval(() => {
       resp.on('end', () => {
         rnodeVersion = rawData;
         const req2 = (
-          httpUrlReadOnly.startsWith('https://') ? https : http
-        ).get(`${httpUrlReadOnly}/api/blocks/1`, (resp2) => {
+          randomUrlReadOnly.url.startsWith('https://') ? https : http
+        ).get(`${randomUrlReadOnly.url}/api/blocks/1`, (resp2) => {
           if (resp2.statusCode !== 200) {
             log(
               'rnode observer blocks api not ready (1), will try again in 10s'
@@ -531,7 +565,7 @@ const interval = setInterval(() => {
             if (typeof JSON.parse(rawData2)[0].blockHash === 'string') {
               log(`${rawData}\n`);
               log(
-                `RChain node responding at ${httpUrlReadOnly}/version and /api/blocks/1`
+                `RChain node responding at ${randomUrlReadOnly.url}/version and /api/blocks/1`
               );
               initServers();
               initJobs();
