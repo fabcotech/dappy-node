@@ -75,12 +75,13 @@ TLS/SSL security files `dhparams.pem` and `nginx/sslparams.conf` are generated f
 
 Certificates and private key. A given cluster deployment will use one `dappynode.crt` file and one `dappynode.key` file, they are only used by nginx and must be set as secretes with kubernetes.
 
-```
+```sh
 # just input US as country name and you can leave the rest blank
 openssl req -x509 -nodes -days 3000 -newkey rsa:2048 -keyout dappynode.key -out dappynode.crt -outform PEM
 ```
 
 ### Set the secrets
+
 
 ```sh
 base64 -w 0 dappynode.crt
@@ -103,16 +104,53 @@ cp sslsecret.example.yml sslsecret.yml
 kubectl apply -f sslsecret.yml
 ```
 
-### Run kubernetes (dev)
+### Run dev/local environment on minikube (kubernetes)
 
 ```sh
 minikube start
+```
 
+#### Deploy read only / observer rnode
+
+Install [mkcert](https://github.com/FiloSottile/mkcert). It enables locally-trusted development certificates
+
+```sh
+cd <DAPPY_NODE_FOLDER>/kubernetes/minikube
+# generate certificate for rnode HTTPS endpoint
+mkcert rnode.dev
+
+# Create secret from certificate and key file
+kubectl create secret tls test-tls --key="rnode.dev-key.pem" --cert="rnode.dev.pem"
+
+# Deploy rnode in devMode on minikube
+kubectl apply -f rnodes.local.yml
+
+# Add local entries to HOST file
+sudo -s
+echo "127.0.0.1    rnode.dev" >> /etc/hosts
+echo "127.0.0.1    rnode.http.dev" >> /etc/hosts
+exit
+
+# Check HTTP and HTTPS endpoints
+curl https://rnode.dev/status
+curl http://rnode.http.dev/status
+```
+
+#### Deploy dappy-node 
+
+Inside folder `<DAPPY_NODE_FOLDER>/kubernetes/minikube`
+
+```sh
 # start or update config
-kubectl apply -f kubernetes/dappy.yml
+kubectl apply -f dappy.local.yml
 
+```
+
+#### Other commands
+
+```sh
 # stop
-kubectl delete -f kubernetes/dappy.yml
+kubectl delete -f dappy.local.yml
 
 kubectl get pods
 kubectl logs [pod name]
