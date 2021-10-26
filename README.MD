@@ -106,15 +106,28 @@ kubectl apply -f sslsecret.yml
 
 ### Run dev/local environment on minikube (kubernetes)
 
+#### Install and run minikube cluster
+
+Install these tools:
+- [Docker](https://www.docker.com/get-started) : Docker CLI and container runtime
+- [minikube](https://minikube.sigs.k8s.io/): CLI to create and manage local k8s clusters
+
 ```sh
+# Start k8s cluster
 minikube start
+
+# Install ingress controller
+minikube addons enable ingress
 ```
 
 #### Deploy read only / observer rnode
 
-Install [mkcert](https://github.com/FiloSottile/mkcert). It enables locally-trusted development certificates
+Install [mkcert](https://github.com/FiloSottile/mkcert): It enables locally-trusted development certificates
 
 ```sh
+# On macOS run following command in a dedicated terminal 
+sudo minikube tunnel
+
 cd <DAPPY_NODE_FOLDER>/kubernetes/minikube
 # generate certificate for rnode HTTPS endpoint
 mkcert rnode.dev
