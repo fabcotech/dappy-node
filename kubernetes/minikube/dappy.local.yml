@@ -37,8 +37,11 @@ spec:
               value: local
             - name: DAPPY_NETWORK
               value: local
-            # - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
-            #   value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
+            - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: master-uri
+                  key: RCHAIN_NAMES_MASTER_REGISTRY_URI             
           ports:
             - containerPort: 3001
             - containerPort: 3002
@@ -57,9 +60,11 @@ spec:
   selector:
     app: dappy-node
   ports:
-    - port: 3001
+    - name: '3001'
+      port: 3001
       targetPort: 3001
-    - port: 3002
+    - name: '3002'
+      port: 3002
       targetPort: 3002
 ---
 apiVersion: apps/v1

@@ -108,7 +108,9 @@ kubectl apply -f sslsecret.yml
 
 #### Install and run minikube cluster
 
-Install these tools:
+Be sure to have these tools installed:
+- [NodeJS](https://nodejs.org/): Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine.
+- [Git](https://git-scm.com/):  Open source distributed version control system
 - [Docker](https://www.docker.com/get-started) : Docker CLI and container runtime
 - [minikube](https://minikube.sigs.k8s.io/): CLI to create and manage local k8s clusters
 
@@ -128,12 +130,12 @@ Install [mkcert](https://github.com/FiloSottile/mkcert): It enables locally-trus
 # On macOS run following command in a dedicated terminal 
 sudo minikube tunnel
 
-cd <DAPPY_NODE_FOLDER>/kubernetes/minikube
+cd <DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/minikube
 # generate certificate for rnode HTTPS endpoint
 mkcert rnode.dev
 
-# Create secret from certificate and key file
-kubectl create secret tls test-tls --key="rnode.dev-key.pem" --cert="rnode.dev.pem"
+# Create secret sslsecret from certificate and key file
+kubectl create secret tls sslsecret --key="rnode.dev-key.pem" --cert="rnode.dev.pem"
 
 # Deploy rnode in devMode on minikube
 kubectl apply -f rnodes.local.yml
@@ -151,12 +153,46 @@ curl http://rnode.http.dev/status
 
 #### Deploy dappy-node 
 
-Inside folder `<DAPPY_NODE_FOLDER>/kubernetes/minikube`
+Prerequisites to run dappy-node:
+- Dappy name system master uri is needed and set to `RCHAIN_NAMES_MASTER_REGISTRY_URI` env variable.
+- Dappy name system contract `dappynamesystem` must exists on local rnode network
+
+To create master and deploy dappy name system contract on local rnode network, follow instructions below.
 
 ```sh
+git clone git@github.com:fabcotech/rchain-token.git
+
+cd rchain-token
+
+npm install
+
+cat << EOF > .env
+READ_ONLY_HOST=http://rnode.http.dev
+VALIDATOR_HOST=http://rnode.http.dev
+PRIVATE_KEY=28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36
+EOF
+
+# deploy master contract
+node cli deploy-master
+
+# create a box aaa
+node cli deploy-box --box-id aaa
+
+# Deploy name system contract dappynamesystem on box aaa
+npm run dappy:namesystem
+```
+
+Contract is now deployed on your local rnode network, you can get its master URI from stdout, it is the `Master registry URI` value.
+Save it, you will use master URI in next step, referenced as `MASTER_REGISTRY_URI`.
+
+Inside folder `<DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/minikube`
+
+```sh
+# Create configmap that contains master uri
+kubectl create configmap master-uri --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_URI=<MASTER_REGISTRY_URI>
+
 # start or update config
 kubectl apply -f dappy.local.yml
-
 ```
 
 #### Other commands
