@@ -193,6 +193,12 @@ kubectl create configmap master-uri --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_
 
 # start or update config
 kubectl apply -f dappy.local.yml
+
+# Add local entries to HOST file
+sudo -s
+echo "127.0.0.1    dappy.dev" >> /etc/hosts
+exit
+
 ```
 
 #### Other commands
