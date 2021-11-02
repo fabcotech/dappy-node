@@ -113,7 +113,6 @@ spec:
                   --api-port-grpc-external '40401' \
                   --api-port-http '40403' \
                   --finalization-rate '1' \
-                  --max-number-of-parents '1' \
                   --fault-tolerance-threshold '-1' \
                   --synchrony-constraint-threshold '0.99' \
                   --fork-choice-stale-threshold '60 minutes'
