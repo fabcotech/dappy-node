@@ -23,6 +23,48 @@ data:
         reload
         loadbalance
     }
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dappy-jobs
+spec:
+  selector:
+    matchLabels:
+      app: dappy-jobs
+  template:
+    metadata:
+      labels:
+        app: dappy-jobs
+    spec:
+      containers:
+        - image: fabcotech/dappy-node:3.1
+          name: get-contract-logs
+          env:
+            - name: REDIS_URL
+              value: redis://redis:6379/2
+            - name: MASTER_REGISTRY_URI
+              value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
+            - name: RNODE_URI
+              value: http://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud:40403
+            - name: LOGS_INTERVAL
+              value: '10000'
+            - name: CONTRACTS
+              value: dappynamesystem
+            - name: START_JOB
+              value: 'true'
+          resources:
+            limits:
+              memory: '128Mi'
+              cpu: '500m'
+          command:
+          - sh
+          - '-c'
+          - node src/jobs/get-contract-logs.js
+      restartPolicy: Always
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -40,7 +82,7 @@ spec:
         app: nodejs
     spec:
       containers:
-        - image: fabcotech/dappy-node:3.0
+        - image: fabcotech/dappy-node:3.1
           name: nodejs
           env:
             - name: CACHING
