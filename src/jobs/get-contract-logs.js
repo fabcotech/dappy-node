@@ -2,6 +2,18 @@ const rchainToolkit = require('rchain-toolkit');
 const { readLogsTerm, logs } = require('rchain-token');
 const redis = require('redis');
 
+function formatLogMessage(msg) {
+  return `${new Date().toISOString()} - ${msg}`;
+}
+
+function logInfo(msg) {
+  console.log(formatLogMessage(msg));
+}
+
+function logError(msg) {
+  console.error(formatLogMessage(msg));
+}
+
 function mandatory(varName, value) {
   if (value === undefined) {
     throw new Error(`${varName} env var is not defined`);
@@ -63,8 +75,8 @@ function parseLogs(rawLogs) {
         logs.checkLine(l);
         return true;
       } catch (err) {
-        console.log(l);
-        console.error(err);
+        logInfo(l);
+        logError(err);
         return false; 
       }
     })
@@ -99,7 +111,7 @@ async function saveToSortedSetsInRedis(zAdd, contract, logs) {
   ]);
 
   if (nbEntries) {
-    console.info(`Added ${nbEntries} entries`);
+    logInfo(`Added ${nbEntries} entries`);
   }
 }
 
@@ -110,7 +122,7 @@ async function saveContractLogs(exploreDeploy, zAdd, { masterRegistryUri, rnodeU
       await saveToSortedSetsInRedis(zAdd, contract, logs);
     }
     catch (err) {
-      console.error(err);
+      logError(err);
     }
   }
 }
@@ -124,7 +136,7 @@ async function startJob() {
   const redisClient = initClientRedis(config.redisUrl);
   const zAdd = getZAdd(redisClient);
 
-  console.log('get contract logs started');
+  logInfo('get contract logs started');
 
   while (true) {
     await saveContractLogs(rchainToolkit.http.exploreDeploy, zAdd, config);
