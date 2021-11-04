@@ -60,27 +60,6 @@ module.exports.getManyBagsDataTerm = (registryUri, ids) => {
       }
     }
   }`;
-
-  return `new return, ${registryUris.map((r, i) => `r${i}`).join(', ')},
-    ${registryUris
-      .map((r, i) => `s${i}`)
-      .join(', ')}, recordCh, readCh, lookup(\`rho:registry:lookup\`) in {
-    ${registryUris
-      .map(
-        (r, i) => `
-      lookup!(\`${r}\`, *r${i}) |
-      for(record <- r${i}) {
-        s${i}!(*record)
-      }`
-      )
-      .join(' |\n')} |
-
-    for (${registryUris.map((r, i) => `@v${i} <- s${i}`).join(' ;')}) {
-      return!([
-        ${registryUris.map((r, i) => `v${i}`).join(',')}
-      ])
-    }
-  }`;
 };
 
 const redisGet = (client, pattern) => {
