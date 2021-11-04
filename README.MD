@@ -220,7 +220,7 @@ kubectl logs [pod name]
 cd <DAPPY_NODE_GIT_ROOT_FOLDER> 
 eval $(minikube docker-env)
 docker build -t fabcotech/dappy-node -f DockerfileNodejs .
-kubectl rollout restart deployment dappy-jobs
+kubectl rollout restart deployment dappy-jobs dappy-node
 
 # update values in file stresstest/ping-pong.js
 # and check ping/pong on http(3001) and https(3002)
