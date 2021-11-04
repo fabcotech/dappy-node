@@ -89,6 +89,7 @@ spec:
               cpu: 500m
           ports:
             - containerPort: 6379
+              hostPort: 6379
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -96,7 +97,7 @@ kind: Service
 metadata:
   name: redis
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: redis
   ports:
