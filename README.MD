@@ -191,6 +191,12 @@ Inside folder `<DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/minikube`
 # Create configmap that contains master uri
 kubectl create configmap master-uri --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_URI=<MASTER_REGISTRY_URI>
 
+# Use minikube docker runtime
+eval $(minikube docker-env)
+
+# Build dappy-node image and push it into minikube docker runtime
+docker build -t fabcotech/dappy-node -f DockerfileNodejs ../../.
+
 # start or update config
 kubectl apply -f dappy.local.yml
 
@@ -209,6 +215,12 @@ kubectl delete -f dappy.local.yml
 
 kubectl get pods
 kubectl logs [pod name]
+
+# Update dappy-node image and run it on kubernetes
+cd <DAPPY_NODE_GIT_ROOT_FOLDER> 
+eval $(minikube docker-env)
+docker build -t fabcotech/dappy-node -f DockerfileNodejs .
+kubectl rollout restart deployment dappy-jobs
 
 # update values in file stresstest/ping-pong.js
 # and check ping/pong on http(3001) and https(3002)
