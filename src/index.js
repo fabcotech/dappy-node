@@ -60,6 +60,7 @@ let special;
 const redisClient = redis.createClient({
   db: 1,
   host: process.env.REDIS_SERVICE_HOST,
+  port: process.env.REDIS_SERVICE_PORT || 6379,
 });
 
 redisClient.on('error', (err) => {
@@ -187,9 +188,7 @@ const pickRandomReadOnly = () => {
       );
       readOnlyOptions[r] = {
         url: r,
-        rejectUnauthorized: false, // cert does not have to be signed by CA (self-signed)
-        cert: cert,
-        ca: [], // we don't want to rely on CA
+        ca: [cert], 
       };
     }
     return readOnlyOptions[r];
@@ -528,9 +527,11 @@ const initServers = () => {
 };
 
 const interval = setInterval(() => {
-  const randomUrlReadOnly = pickRandomReadOnly();
-  const req = (randomUrlReadOnly.url.startsWith('https://') ? https : http).get(
-    `${randomUrlReadOnly.url}/version`,
+  const randomOptionsReadOnly = pickRandomReadOnly();
+
+  const req = (randomOptionsReadOnly.url.startsWith('https://') ? https : http).get(
+    `${randomOptionsReadOnly.url}/version`, 
+    randomOptionsReadOnly,
     (resp) => {
       if (resp.statusCode !== 200) {
         log('Status code different from 200', 'error');
@@ -547,8 +548,10 @@ const interval = setInterval(() => {
       resp.on('end', () => {
         rnodeVersion = rawData;
         const req2 = (
-          randomUrlReadOnly.url.startsWith('https://') ? https : http
-        ).get(`${randomUrlReadOnly.url}/api/blocks/1`, (resp2) => {
+          randomOptionsReadOnly.url.startsWith('https://') ? https : http
+        ).get(`${randomOptionsReadOnly.url}/api/blocks/1`,
+        randomOptionsReadOnly, 
+        (resp2) => {
           if (resp2.statusCode !== 200) {
             log(
               'rnode observer blocks api not ready (1), will try again in 10s'
@@ -565,7 +568,7 @@ const interval = setInterval(() => {
             if (typeof JSON.parse(rawData2)[0].blockHash === 'string') {
               log(`${rawData}\n`);
               log(
-                `RChain node responding at ${randomUrlReadOnly.url}/version and /api/blocks/1`
+                `RChain node responding at ${randomOptionsReadOnly.url}/version and /api/blocks/1`
               );
               initServers();
               initJobs();

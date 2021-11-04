@@ -71,3 +71,5 @@ rnode.crt
 dappynode.key
 dappynode.crt
 .metals
+
+ca-rnode.pem
