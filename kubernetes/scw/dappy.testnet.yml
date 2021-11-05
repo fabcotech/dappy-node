@@ -47,12 +47,14 @@ spec:
               value: redis://redis:6379/2
             - name: MASTER_REGISTRY_URI
               value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
-            - name: RNODE_URI
-              value: http://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud:40403
+            - name: READ_ONLY
+              value: https://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud
             - name: LOGS_INTERVAL
               value: '10000'
             - name: CONTRACTS
               value: dappynamesystem
+            - name: READ_ONLY_CERTIFICATE_PATH
+              value: /ssl/rnode.crt
             - name: START_JOB
               value: 'true'
           resources:
@@ -63,7 +65,15 @@ spec:
           - sh
           - '-c'
           - node src/jobs/get-contract-logs.js
+          volumeMounts:
+          - name: sslsecret
+            mountPath: '/ssl'
+            readOnly: true   
       restartPolicy: Always
+      volumes:
+        - name: sslsecret
+          secret:
+            secretName: sslsecret      
 
 ---
 apiVersion: apps/v1
@@ -100,7 +110,9 @@ spec:
             - name: RCHAIN_NETWORK
               value: testbm210724
             - name: READ_ONLY
-              value: http://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud:40403
+              value: https://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud
+            - name: READ_ONLY_CERTIFICATE_PATH
+              value: /ssl/rnode.crt
             - name: REDIS_DB
               value: '1'
             - name: VALIDATOR
@@ -108,10 +120,18 @@ spec:
           ports:
             - containerPort: 3001
             - containerPort: 3002
+          volumeMounts:
+          - name: sslsecret
+            mountPath: '/ssl'
+            readOnly: true            
           resources:
             limits:
               memory: '128Mi'
               cpu: '500m'
+      volumes:
+        - name: sslsecret
+          secret:
+            secretName: sslsecret              
       restartPolicy: Always
 status: {}
 ---

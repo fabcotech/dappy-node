@@ -1,3 +1,4 @@
+const fs = require('fs');
 const rchainToolkit = require('rchain-toolkit');
 const { readLogsTerm, logs } = require('rchain-token');
 const redis = require('redis');
@@ -39,13 +40,23 @@ function parseRedisUrl(value) {
   return value;
 }
 
+function getFileContent(path) {
+  if (!path) return;
+
+  return fs.readFileSync(
+    process.env.READ_ONLY_CERTIFICATE_PATH,
+    'utf8'
+  );
+}
+
 function initConfig(env = {}){
   return {
     logsInteval: parseInt(env.LOGS_INTERVAL) || 10 * 1000,
     masterRegistryUri: mandatory('MASTER_REGISTRY_URI', env.MASTER_REGISTRY_URI),
     contracts: parseArray(mandatory('CONTRACTS', env.CONTRACTS)),
-    rnodeUri: mandatory('RNODE_URI', env.RNODE_URI),
+    rnodeUri: mandatory('READ_ONLY', env.READ_ONLY),
     redisUrl: parseRedisUrl(mandatory('REDIS_URL', env.REDIS_URL)),
+    caCertificate: getFileContent(env.READ_ONLY_CERTIFICATE_PATH),
   }
 } 
 
@@ -82,17 +93,19 @@ function parseLogs(rawLogs) {
     })
     .map(l => ({
       ts: parseLogTs(l),
-      msg: logs.formatLine(l).trim()
+      msg: l
     }));
 }
 
-async function queryLogs(exploreDeploy, masterRegistryUri, rnodeUri, contractId) {
+async function queryLogs(exploreDeploy, contract, { masterRegistryUri, rnodeUri, caCertificate }) {
   const result = await exploreDeploy(
-    rnodeUri,
     {
+      url: rnodeUri,
+      ...caCertificate ? { ca: [caCertificate] } : {},
+    }, {
       term: readLogsTerm({
         masterRegistryUri: masterRegistryUri,
-        contractId: contractId,
+        contractId: contract,
       })
     }
   );
@@ -106,7 +119,7 @@ async function saveToSortedSetsInRedis(zAdd, contract, logs) {
   if (!logs.length) return;
 
   const nbEntries = await zAdd([
-    contract, 
+    `logs:${contract}`, 
     ...logs.map(l => [l.ts, l.msg]).flat()
   ]);
 
@@ -115,10 +128,10 @@ async function saveToSortedSetsInRedis(zAdd, contract, logs) {
   }
 }
 
-async function saveContractLogs(exploreDeploy, zAdd, { masterRegistryUri, rnodeUri, contracts }) {
-  for (let contract of contracts) {
+async function saveContractLogs(exploreDeploy, zAdd, config) {
+  for (let contract of config.contracts) {
     try {
-      const logs = await queryLogs(exploreDeploy, masterRegistryUri, rnodeUri, contract)
+      const logs = await queryLogs(exploreDeploy, contract, config)
       await saveToSortedSetsInRedis(zAdd, contract, logs);
     }
     catch (err) {

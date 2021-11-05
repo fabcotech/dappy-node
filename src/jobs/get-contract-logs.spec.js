@@ -42,7 +42,7 @@ describe('get-contract-logs', () => {
 
     const config = initConfig({
       MASTER_REGISTRY_URI: 'foo',
-      RNODE_URI: 'http://foo',
+      READ_ONLY: 'http://foo',
       CONTRACTS: 'foo,bar',
       REDIS_URL: 'redis://redis_host:1234/4'
     });
@@ -67,8 +67,8 @@ describe('get-contract-logs', () => {
     );
 
     expect(logs).to.eql([
-      { ts: 1635865140000, msg: "2021-11-02T14:59 box aaa purchased NFT foo from box aaa at price 50000000" },
-      { ts: 1635865500000, msg: "2021-11-02T15:05 box aaa purchased NFT bar from box aaa at price 10000" }
+      { ts: 1635865140000, msg: "p,1635865140000,aaa,aaa,1,50000000,0,foo" },
+      { ts: 1635865500000, msg: "p,1635865500000,aaa,aaa,1,10000,0,bar" }
     ]);
   });
 
@@ -90,7 +90,7 @@ describe('get-contract-logs', () => {
     ];
     await saveToSortedSetsInRedis(zAdd, 'foo', logs);
 
-    expect(zAdd).have.been.called.with(['foo', logs[0].ts, logs[0].msg, logs[1].ts, logs[1].msg]);
+    expect(zAdd).have.been.called.with(['logs:foo', logs[0].ts, logs[0].msg, logs[1].ts, logs[1].msg]);
   });
   it('should save nothing if no logs', async () => {
     const zAdd = chai.spy();
