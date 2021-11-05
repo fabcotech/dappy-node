@@ -71,8 +71,8 @@ server {
     proxy_set_header Connection "Upgrade";
     proxy_set_header Host $host;
 
-    ssl_certificate /ssl/dappynode.crt;
-    ssl_certificate_key /ssl/dappynode.key;
+    ssl_certificate /ssl/tls.crt;
+    ssl_certificate_key /ssl/tls.key;
     include /etc/nginx/snippets/sslparams.conf;
 }
 `;

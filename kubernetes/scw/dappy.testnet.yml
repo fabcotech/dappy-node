@@ -60,7 +60,7 @@ spec:
           resources:
             limits:
               memory: '128Mi'
-              cpu: '500m'
+              cpu: '100m'
           command:
           - sh
           - '-c'
@@ -79,21 +79,21 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nodejs
+  name: dappy-node
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nodejs
+      app: dappy-node
   strategy: {}
   template:
     metadata:
       labels:
-        app: nodejs
+        app: dappy-node
     spec:
       containers:
         - image: fabcotech/dappy-node:3.1
-          name: nodejs
+          name: dappy-node
           env:
             - name: CACHING
               value: '30'
@@ -185,19 +185,19 @@ spec:
           name: nginx
           volumeMounts:
             - mountPath: '/ssl'
-              name: sslsecret
+              name: dappy-node-tls
               readOnly: true
           resources:
             limits:
               memory: '512Mi'
-              cpu: '500m'
+              cpu: '100m'
           ports:
             - containerPort: 80
             - containerPort: 443
       volumes:
-        - name: sslsecret
+        - name: dappy-node-tls
           secret:
-            secretName: sslsecret
+            secretName: dappy-node-tls
       restartPolicy: Always
 status: {}
 ---
