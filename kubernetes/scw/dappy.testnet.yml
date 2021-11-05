@@ -40,7 +40,7 @@ spec:
         app: dappy-jobs
     spec:
       containers:
-        - image: fabcotech/dappy-node:3.1
+        - image: fabcotech/dappy-node:3.2
           name: get-contract-logs
           env:
             - name: REDIS_URL
@@ -92,7 +92,7 @@ spec:
         app: dappy-node
     spec:
       containers:
-        - image: fabcotech/dappy-node:3.1
+        - image: fabcotech/dappy-node:3.2
           name: dappy-node
           env:
             - name: CACHING
