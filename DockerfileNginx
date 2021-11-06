@@ -1,6 +1,6 @@
 FROM nginx:1.19.10-alpine
 
-RUN apk add --no-cache --update nodejs=14.16.1-r1
+RUN apk add --no-cache --update nodejs=14.18.1-r0
 
 WORKDIR /home/node/app
 

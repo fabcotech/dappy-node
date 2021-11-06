@@ -50,7 +50,6 @@ limit_conn_zone $binary_remote_addr zone=conn_limit_per_ip:10m;
 
 server {
     listen 80 default_server;
-    server_name ${process.env.DAPPY_NETWORK};
     location / {
       limit_req zone=req_limit_per_ip burst=10 nodelay;
       limit_conn conn_limit_per_ip 30;
@@ -60,7 +59,6 @@ server {
 
 server {
     listen 443 ssl http2;
-    server_name ${process.env.DAPPY_NETWORK};
     location / {
       limit_req zone=req_limit_per_ip burst=10 nodelay;
       limit_conn conn_limit_per_ip 30;
