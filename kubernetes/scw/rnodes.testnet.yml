@@ -7,8 +7,8 @@ data:
     server {
       listen 443 ssl;
 
-      ssl_certificate /ssl/rnode.crt;
-      ssl_certificate_key /ssl/rnode.key;
+      ssl_certificate /ssl/tls.crt;
+      ssl_certificate_key /ssl/tls.key;
 
       location / {
         rewrite /(.*) /$1 break;
@@ -70,7 +70,7 @@ spec:
         - image: nginx:1.21.3
           name: nginx
           volumeMounts:
-          - name: sslsecret
+          - name: rnode-tls
             mountPath: '/ssl'
             readOnly: true
           - name: aarnode-nginx-config
@@ -92,7 +92,7 @@ spec:
             - name: SHARD_NAME
               value: 'testbm'
           volumeMounts:
-            - name: sslsecret
+            - name: rnode-tls 
               mountPath: '/ssl'
               readOnly: true
             - name: config
@@ -131,9 +131,9 @@ spec:
               cpu: 1400m
       
       volumes:
-        - name: sslsecret
+        - name: rnode-tls 
           secret:
-            secretName: sslsecret
+            secretName: rnode-tls 
         - emptyDir: {}
           name: config
         - name: aarnode-nginx-config
@@ -148,7 +148,7 @@ spec:
       storageClassName: scw-bssd
       resources:
         requests:
-          storage: 50Gi
+          storage: 150Gi
 ---
 
 apiVersion: v1

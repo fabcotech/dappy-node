@@ -40,7 +40,7 @@ spec:
         app: dappy-jobs
     spec:
       containers:
-        - image: fabcotech/dappy-node:3.2
+        - image: paulmusso/dappy-node:3.3
           name: get-contract-logs
           env:
             - name: REDIS_URL
@@ -54,7 +54,7 @@ spec:
             - name: CONTRACTS
               value: dappynamesystem
             - name: READ_ONLY_CERTIFICATE_PATH
-              value: /ssl/rnode.crt
+              value: /ssl/tls.crt
             - name: START_JOB
               value: 'true'
           resources:
@@ -66,14 +66,14 @@ spec:
           - '-c'
           - node src/jobs/get-contract-logs.js
           volumeMounts:
-          - name: sslsecret
+          - name: rnode-tls 
             mountPath: '/ssl'
             readOnly: true   
       restartPolicy: Always
       volumes:
-        - name: sslsecret
+        - name: rnode-tls
           secret:
-            secretName: sslsecret      
+            secretName: rnode-tls      
 
 ---
 apiVersion: apps/v1
@@ -92,7 +92,7 @@ spec:
         app: dappy-node
     spec:
       containers:
-        - image: fabcotech/dappy-node:3.2
+        - image: paulmusso/dappy-node:3.3
           name: dappy-node
           env:
             - name: CACHING
@@ -112,7 +112,7 @@ spec:
             - name: READ_ONLY
               value: https://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud
             - name: READ_ONLY_CERTIFICATE_PATH
-              value: /ssl/rnode.crt
+              value: /ssl/tls.crt
             - name: REDIS_DB
               value: '1'
             - name: VALIDATOR
@@ -121,7 +121,7 @@ spec:
             - containerPort: 3001
             - containerPort: 3002
           volumeMounts:
-          - name: sslsecret
+          - name: rnode-tls
             mountPath: '/ssl'
             readOnly: true            
           resources:
@@ -129,9 +129,9 @@ spec:
               memory: '128Mi'
               cpu: '500m'
       volumes:
-        - name: sslsecret
+        - name: rnode-tls
           secret:
-            secretName: sslsecret              
+            secretName: rnode-tls              
       restartPolicy: Always
 status: {}
 ---
@@ -178,7 +178,7 @@ spec:
         app: nginx
     spec:
       containers:
-        - image: fabcotech/dappy-nginx:13.8
+        - image: paulmusso/dappy-nginx:13.9
           env:
             - name: DAPPY_NETWORK
               value: gammanetwork
@@ -208,7 +208,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: nodejs
+    app: dappy-node
   ports:
     - port: 3001
       name: '3001'
