@@ -17,13 +17,13 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: REDIS_URL
-              value: redis://redis:6379/2
+              value: redis://redis:6379/1
             - name: MASTER_REGISTRY_URI
               valueFrom:
                 configMapKeyRef:
                   name: master-uri
                   key: RCHAIN_NAMES_MASTER_REGISTRY_URI   
-            - name: RNODE_URI
+            - name: READ_ONLY
               value: http://aarnode:40403
             - name: LOGS_INTERVAL
               value: '1000'
@@ -154,8 +154,14 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: dappy-http
+  name: dappy-https
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
+  tls:
+    - hosts:
+      - dappy.dev
+      secretName: dappy-node-tls
   rules:
     - host: dappy.dev
       http:

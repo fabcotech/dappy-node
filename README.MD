@@ -143,12 +143,11 @@ kubectl apply -f rnodes.local.yml
 # Add local entries to HOST file
 sudo -s
 echo "127.0.0.1    rnode.dev" >> /etc/hosts
-echo "127.0.0.1    rnode.http.dev" >> /etc/hosts
 exit
 
 # Check HTTP and HTTPS endpoints
+curl http://rnode.dev/status
 curl https://rnode.dev/status
-curl http://rnode.http.dev/status
 ```
 
 #### Deploy dappy-node 
@@ -167,8 +166,8 @@ cd rchain-token
 npm install
 
 cat << EOF > .env
-READ_ONLY_HOST=http://rnode.http.dev
-VALIDATOR_HOST=http://rnode.http.dev
+READ_ONLY_HOST=http://rnode.dev
+VALIDATOR_HOST=http://rnode.dev
 PRIVATE_KEY=28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36
 EOF
 
@@ -196,6 +195,12 @@ eval $(minikube docker-env)
 
 # Build dappy-node image and push it into minikube docker runtime
 docker build -t fabcotech/dappy-node -f DockerfileNodejs ../../.
+
+# generate certificate for dappy-node HTTPS endpoint
+mkcert dappy.dev
+
+# Create secret sslsecret from certificate and key file
+kubectl create secret tls dappy-node-tls --key="dappy.dev-key.pem" --cert="dappy.dev.pem"
 
 # start or update config
 kubectl apply -f dappy.local.yml

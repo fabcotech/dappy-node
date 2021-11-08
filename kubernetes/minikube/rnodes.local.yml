@@ -84,6 +84,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: aarnode-https
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   tls:
     - hosts:
@@ -100,22 +102,3 @@ spec:
               name: aarnode
               port:
                 number: 40403
-
----
-
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: aarnode-http
-spec:
-  rules:
-    - host: rnode.http.dev
-      http:
-        paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: aarnode
-              port:
-                number: 40403                
