@@ -11,6 +11,7 @@ const Tracing = require('@sentry/tracing');
 // will not override the env variables in docker-compose
 require('dotenv').config();
 
+const { logs } = require("./routes");
 const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
 const {
   listenForDataAtNameXWsHandler,
@@ -29,9 +30,7 @@ const { generateMonitor } = require('./jobs/generateMonitor');
 const { getDappyRecordsAndSaveToDb } = require('./jobs/records');
 const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 
-const log = require('./utils').log;
-const redisHgetall = require('./utils').redisHgetall;
-const redisKeys = require('./utils').redisKeys;
+const { log, getRedisMethod, redisKeys } = require('./utils');
 
 if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
   require('dotenv').config();
@@ -58,7 +57,7 @@ try {
 let special;
 
 const redisClient = redis.createClient({
-  db: 1,
+  db: process.env.REDIS_DB,
   host: process.env.REDIS_SERVICE_HOST,
   port: process.env.REDIS_SERVICE_PORT || 6379,
 });
@@ -294,6 +293,17 @@ app.get('/monitor', (req, res) => {
     res.end('not found');
   }
 });
+app.get('/logs/:contract', (req, res) => {
+  logs(
+    getRedisMethod(redisClient, 'zrevrange'),
+    log,
+  )({
+    contract: req.params.contract,
+    size: req.query.size,
+    offset: req.query.offset
+  }, res);
+});
+
 app.post('/info', (req, res) => {
   requests.total += 1;
   requests['/info'] += 1;
