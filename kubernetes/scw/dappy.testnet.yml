@@ -40,7 +40,7 @@ spec:
         app: dappy-jobs
     spec:
       containers:
-        - image: paulmusso/dappy-node:3.4
+        - image: paulmusso/dappy-node:3.5
           name: get-contract-logs
           env:
             - name: REDIS_URL
@@ -92,7 +92,7 @@ spec:
         app: dappy-node
     spec:
       containers:
-        - image: paulmusso/dappy-node:3.4
+        - image: paulmusso/dappy-node:3.5
           name: dappy-node
           env:
             - name: CACHING
