@@ -12,6 +12,7 @@ const Tracing = require('@sentry/tracing');
 require('dotenv').config();
 
 const { logs } = require("./routes");
+const { initRequestMetrics, incRequestMetricsMiddleware, incRequestMetric } = require('./requestMetrics');
 const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
 const {
   listenForDataAtNameXWsHandler,
@@ -215,41 +216,10 @@ if (process.env.SENTRY) {
   app.use(Sentry.Handlers.errorHandler());
 }
 
+initRequestMetrics();
+
 app.use(bodyParser.json());
-
-const requestsDefault = {
-  total: 0,
-  '/get-all-records': 0,
-  '/get-x-records': 0,
-  '/get-x-records-by-public-key': 0,
-  '/ping': 0,
-  '/info': 0,
-  ['/last-finalized-block-number']: 0,
-  ['/api/deploy']: 0,
-  ['/api/prepare-deploy']: 0,
-  ['/api/explore-deploy']: 0,
-  ['/api/explore-deploy-from-cache']: 0,
-  ['/explore-deploy-x']: 0,
-  ['/explore-deploy-x-from-cache']: 0,
-  '/api/listen-for-data-at-name': 0,
-  '/listen-for-data-at-name-x': 0,
-};
-let requests = { ...requestsDefault };
-setInterval(() => {
-  let day = new Date().toISOString().slice(0, 10);
-  let logs = {};
-  try {
-    logs = JSON.parse(fs.readFileSync(`./logs/dappy-node-${day}.json`, 'utf8'));
-  } catch (err) {}
-  logs[new Date().toISOString().slice(11, 19)] = Object.values(requests);
-  fs.writeFileSync(
-    `./logs/dappy-node-${day}.json`,
-    JSON.stringify(logs),
-    'utf8'
-  );
-
-  requests = { ...requestsDefault };
-}, 30000);
+app.use(incRequestMetricsMiddleware);
 
 /*
  Clean cached results from exlore-deploy and explore-deploy-x
@@ -275,9 +245,8 @@ if (useCache) {
     }
   }, 30000);
 }
+
 app.post('/ping', (req, res) => {
-  requests.total += 1;
-  requests['/ping'] += 1;
   res.setHeader('Content-Type', 'application/json');
   res.write(JSON.stringify({ data: 'pong' }));
   res.end();
@@ -293,20 +262,8 @@ app.get('/monitor', (req, res) => {
     res.end('not found');
   }
 });
-app.get('/logs/:contract', (req, res) => {
-  logs(
-    getRedisMethod(redisClient, 'zrevrange'),
-    log,
-  )({
-    contract: req.params.contract,
-    size: req.query.size,
-    offset: req.query.offset
-  }, res);
-});
 
 app.post('/info', (req, res) => {
-  requests.total += 1;
-  requests['/info'] += 1;
   const data = {
     dappyNodeVersion: DAPPY_NODE_VERSION,
     lastFinalizedBlockNumber: lastFinalizedBlockNumber,
@@ -334,8 +291,6 @@ app.post('/info', (req, res) => {
   res.end();
 });
 app.post('/last-finalized-block-number', (req, res) => {
-  requests.total += 1;
-  requests['/last-finalized-block-number'] += 1;
   res.setHeader('Content-Type', 'application/json');
   res.write(
     JSON.stringify({
@@ -346,15 +301,11 @@ app.post('/last-finalized-block-number', (req, res) => {
   res.end();
 });
 app.post('/api/deploy', async (req, res) => {
-  requests.total += 1;
-  requests['/api/deploy'] += 1;
   const data = await deployWsHandler(req.body, pickRandomValidator());
   res.write(JSON.stringify(data));
   res.end();
 });
 app.post('/api/prepare-deploy', async (req, res) => {
-  requests.total += 1;
-  requests['/api/prepare-deploy'] += 1;
   const data = await prepareDeployWsHandler(req.body, pickRandomReadOnly());
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -370,8 +321,6 @@ const edFromCachePlusOne = () => {
   requests['/explore-deploy-from-cache'] += 1;
 };
 app.post('/api/explore-deploy', async (req, res) => {
-  requests.total += 1;
-  requests['/api/explore-deploy'] += 1;
   const data = await exploreDeployWsHandler(
     req.body,
     pickRandomReadOnly(),
@@ -394,8 +343,6 @@ const edxFromCachePlusOne = () => {
   requests['/explore-deploy-x-from-cache'] += 1;
 };
 app.post('/explore-deploy-x', async (req, res) => {
-  requests.total += 1;
-  requests['/explore-deploy-x'] += 1;
   const data = await exploreDeployXWsHandler(
     req.body,
     pickRandomReadOnly(),
@@ -414,8 +361,6 @@ app.post('/explore-deploy-x', async (req, res) => {
   }
 });
 app.post('/api/listen-for-data-at-name', async (req, res) => {
-  requests.total += 1;
-  requests['/api/listen-for-data-at-name'] += 1;
   const data = await listenForDataAtNameWsHandler(
     req.body,
     pickRandomReadOnly()
@@ -430,8 +375,6 @@ app.post('/api/listen-for-data-at-name', async (req, res) => {
   }
 });
 app.post('/listen-for-data-at-name-x', async (req, res) => {
-  requests.total += 1;
-  requests['/listen-for-data-at-name-x'] += 1;
   const data = await listenForDataAtNameXWsHandler(
     req.body,
     pickRandomReadOnly()
@@ -458,8 +401,6 @@ app.post('/get-all-records', async (req, res) => {
 });
 
 app.post('/get-x-records', async (req, res) => {
-  requests.total += 1;
-  requests['/get-x-records'] += 1;
   const data = await getXRecordsWsHandler(
     req.body,
     redisClient,
@@ -475,8 +416,6 @@ app.post('/get-x-records', async (req, res) => {
   }
 });
 app.post('/get-x-records-by-public-key', async (req, res) => {
-  requests.total += 1;
-  requests['/get-x-records-by-public-key'] += 1;
   const data = await getXRecordsByPublicKeyWsHandler(req.body, redisClient);
   if (data.success) {
     res.write(JSON.stringify(data));
@@ -489,8 +428,6 @@ app.post('/get-x-records-by-public-key', async (req, res) => {
 });
 
 app.post('/get-nodes', (req, res) => {
-  requests.total += 1;
-  requests['/get-nodes'] += 1;
   if (nodes) {
     res.write(
       JSON.stringify({
@@ -501,6 +438,19 @@ app.post('/get-nodes', (req, res) => {
   } else {
     res.status(404).end();
   }
+});
+
+app.post('/api/get-contract-logs', (req, res) => {
+  logs(
+    getRedisMethod(redisClient, 'zrevrange'),
+    log,
+  )(req.body
+    // {
+    // contract: req.params.contract,
+    // size: req.query.size,
+    // offset: req.query.offset
+  // }
+  , res);
 });
 
 const initServers = () => {
