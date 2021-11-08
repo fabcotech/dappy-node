@@ -40,9 +40,82 @@ const log = (a, level = 'info') => {
   }
 };
 
-module.exports.log = log;
+const getValueFromCache = (client, cacheId) => {
+  return new Promise((res, rej) => {
+    redisGet(client, cacheId)
+      .then((data) => {
+        if (data === null) {
+          rej(null);
+        } else {
+          res(data);
+        }
+      })
+      .catch((err) => {
+        rej(err);
+        console.log(err);
+        log('redis error get keys for ' + n, 'error');
+      });
+  });
+};
 
-module.exports.getManyBagsDataTerm = (registryUri, ids) => {
+const redisKeys = (client, pattern) => {
+  return new Promise((resolve, reject) => {
+    client.keys(pattern, (err, res) => {
+      if (err) {
+        log('error : ' + err);
+      }
+      resolve(res);
+    });
+  });
+};
+
+const redisGet = (client, pattern) => {
+  return new Promise((resolve, reject) => {
+    console.log('get pattern', pattern);
+    client.get(pattern, (err, res) => {
+      if (err) {
+        log('error : ' + err);
+      }
+      console.log('GET', err);
+      resolve(res);
+    });
+  });
+};
+
+const redisSmembers = (client, pattern) => {
+  return new Promise((resolve, reject) => {
+    client.smembers(pattern, (err, res) => {
+      if (err) {
+        log('error : ' + err);
+      }
+      resolve(res);
+    });
+  });
+};
+
+const redisHgetall = (client, pattern) => {
+  return new Promise((resolve, reject) => {
+    client.hgetall(pattern, (err, res) => {
+      if (err) {
+        log('error : ' + err);
+      }
+      resolve(res);
+    });
+  });
+};
+
+const redisSMembers = (client, pattern) => {
+  return new Promise((resolve, reject) => {
+    client.smembers(pattern, (err, res) => {
+      if (err) {
+        log('error : ' + err);
+      }
+      resolve(res);
+    });
+  });
+};
+
+const getManyBagsDataTerm = (registryUri, ids) => {
   return `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
     lookup!(\`rho:id:${registryUri}\`, *entryCh) |
     for(entry <- entryCh) {
@@ -62,94 +135,9 @@ module.exports.getManyBagsDataTerm = (registryUri, ids) => {
   }`;
 };
 
-const redisGet = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    client.get(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      resolve(res);
-    });
-  });
-};
-module.exports.redisGet = redisGet;
-
-module.exports.getValueFromCache = (client, cacheId) => {
-  return new Promise((res, rej) => {
-    redisGet(client, cacheId)
-      .then((data) => {
-        if (data === null) {
-          rej(null);
-        } else {
-          res(data);
-        }
-      })
-      .catch((err) => {
-        rej(err);
-        console.log(err);
-        log('redis error get keys for ' + n, 'error');
-      });
-  });
-};
-module.exports.redisKeys = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    client.keys(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      resolve(res);
-    });
-  });
-};
-
-module.exports.redisGet = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    console.log('get pattern', pattern);
-    client.get(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      console.log('GET', err);
-      resolve(res);
-    });
-  });
-};
-
-module.exports.redisSmembers = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    client.smembers(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      resolve(res);
-    });
-  });
-};
-
-module.exports.redisHgetall = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    client.hgetall(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      resolve(res);
-    });
-  });
-};
-module.exports.redisSMembers = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    client.smembers(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      resolve(res);
-    });
-  });
-};
-
 // Careful, it is different than the function that build
 // the unforgeable query for dappy-node
-module.exports.buildUnforgeableNameQuery = (unforgeableName) => {
+const buildUnforgeableNameQuery = (unforgeableName) => {
   return {
     unforgeables: [
       {
@@ -160,3 +148,15 @@ module.exports.buildUnforgeableNameQuery = (unforgeableName) => {
     ],
   };
 };
+
+module.exports = {
+  log,
+  buildUnforgeableNameQuery,
+  getManyBagsDataTerm,
+  redisGet,
+  getValueFromCache,
+  redisKeys,
+  redisSmembers,
+  redisHgetall,
+  redisSMembers,
+}
