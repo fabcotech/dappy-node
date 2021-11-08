@@ -64,6 +64,25 @@ describe('/logs', () => {
     expect(res.status).to.have.been.called.with(400);
     expect(res.send).to.have.been.called.with('bad request');
   });
+
+  it('should returns error 400 when contract is not defined', async () => {
+    const zRevRange = spy();
+    const log = spy();
+    const res = {
+      status: spy(),
+      send: spy()
+    };
+
+    await logs(zRevRange, log)({
+      size: 100,
+      offset: 0
+    }, res);
+    
+    expect(zRevRange).not.to.have.been.called();
+    expect(res.status).to.have.been.called.with(400);
+    expect(res.send).to.have.been.called.with('bad request');
+  });
+
   it('parameter size should be between 1 and 100', async () => {
     const contractLogs = ["log1", "log2", "log3"];
     const zRevRange = spy(() => Promise.resolve(contractLogs));
