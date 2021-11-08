@@ -40,11 +40,11 @@ spec:
         app: dappy-jobs
     spec:
       containers:
-        - image: paulmusso/dappy-node:3.3
+        - image: paulmusso/dappy-node:3.4
           name: get-contract-logs
           env:
             - name: REDIS_URL
-              value: redis://redis:6379/2
+              value: redis://redis:6379/1
             - name: MASTER_REGISTRY_URI
               value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
             - name: READ_ONLY
@@ -92,7 +92,7 @@ spec:
         app: dappy-node
     spec:
       containers:
-        - image: paulmusso/dappy-node:3.3
+        - image: paulmusso/dappy-node:3.4
           name: dappy-node
           env:
             - name: CACHING
