@@ -80,6 +80,8 @@ Certificates and private key. A given cluster deployment will use one `dappynode
 openssl req -x509 -nodes -days 3000 -newkey rsa:2048 -keyout dappynode.key -out dappynode.crt -outform PEM
 ```
 
+
+
 ### Set the secrets
 
 
@@ -234,6 +236,31 @@ node stresstest/ping-pong.js
 ```
 
 ### Run kubernetes (prod)
+#### Generate read only / observer rnode certificate
+
+Values required: 
+- <RNODE_PUBLIC_DOMAIN_NAME>: RNode public domain name  (Example: `c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud`)
+
+```sh
+openssl req \
+  -x509 \
+  -newkey rsa:2048 \
+  -sha256 \
+  -days 3000 \
+  -nodes \
+  -keyout rnode.key \
+  -out rnode.crt \
+  -outform PEM \
+  -subj '/CN=rnode' \
+  -extensions san \
+  -config <( \
+    echo '[req]'; \
+    echo 'distinguished_name=req'; \
+    echo '[san]'; \
+    echo 'subjectAltName=DNS.1:localhost,DNS.2:aarnode,DNS.3:<RNODE_PUBLIC_DOMAIN_NAME>')
+
+kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" 
+```
 
 Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 

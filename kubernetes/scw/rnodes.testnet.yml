@@ -22,6 +22,21 @@ data:
 
 ---
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: aarnode
+spec:
+  type: ClusterIP
+  selector:
+    app: aarnode 
+  ports:
+    - port: 443
+      name: 'aarnode'
+      targetPort: 443
+
+---
+
 apiVersion: apps/v1
 kind: StatefulSet 
 metadata:

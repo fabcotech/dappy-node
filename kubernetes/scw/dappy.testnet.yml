@@ -110,7 +110,7 @@ spec:
             - name: RCHAIN_NETWORK
               value: testbm210724
             - name: READ_ONLY
-              value: https://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud
+              value: https://aarnode
             - name: READ_ONLY_CERTIFICATE_PATH
               value: /ssl/tls.crt
             - name: REDIS_DB
