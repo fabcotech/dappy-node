@@ -59,16 +59,12 @@ spec:
           name: dappy-node
           imagePullPolicy: IfNotPresent
           env:
-            - name: REDIS_SERVICE_HOST
-              value: redis
             - name: REDIS_DB
               value: '1'
             - name: CACHING
               value: '0'
-            - name: NODEJS_SERVICE_PORT_3001
+            - name: HTTP_PORT
               value: '3001'
-            - name: NODEJS_SERVICE_PORT_3002
-              value: '3002'
             - name: READ_ONLY
               value: http://aarnode:40403
             - name: VALIDATOR
@@ -104,13 +100,12 @@ spec:
   selector:
     app: dappy-node
   ports:
-    - name: '3001'
+    - name: 'http'
       port: 3001
       targetPort: 3001
-    - name: '3002'
-      port: 3002
-      targetPort: 3002
+
 ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -172,4 +167,4 @@ spec:
             service:
               name: dappy-node
               port:
-                number: 3002
+                number: 3001

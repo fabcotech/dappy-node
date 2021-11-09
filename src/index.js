@@ -449,35 +449,26 @@ app.post('/get-contract-logs', (req, res) => {
 
 const initServers = () => {
   log(
-    `Listening for HTTP on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3001} !`
+    `Listening for HTTP on address 127.0.0.1:${process.env.HTTP_PORT} !`
   );
   // Unencrypted HTTP endpoint (3001)
   serverHttp = http.createServer(app);
-  serverHttp.listen(process.env.NODEJS_SERVICE_PORT_3001);
+  serverHttp.listen(process.env.HTTP_PORT);
 
-  // Encrypted SSL/TLS endpoint (3002), is regular http in PROD (nginx handles TLS), and https in DEV
-  let serverHttps;
-  if (process.argv.includes('--ssl')) {
-    log(
-      `Listening for HTTP+TLS on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS handled by nodeJS)`
-    );
-    const key = fs.readFileSync(path.join(__dirname, '../dappynode.key'));
-    const cert = fs.readFileSync(path.join(__dirname, '../dappynode.crt'));
-    const options = {
-      key: key,
-      cert: cert,
-      minVersion: 'TLSv1.3',
-      cipher: 'TLS_AES_256_GCM_SHA384',
-    };
-    serverHttps = https.createServer(options, app);
-  } else {
-    log(
-      `Listening for HTTP on address 127.0.0.1:${process.env.NODEJS_SERVICE_PORT_3002} ! (TLS not handled by nodeJS)`
-    );
-    serverHttps = http.createServer(app);
-  }
+  log(
+    `Listening for HTTP+TLS on address 127.0.0.1:${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`
+  );
+  const key = fs.readFileSync(path.join(__dirname, '../dappynode.key'));
+  const cert = fs.readFileSync(path.join(__dirname, '../dappynode.crt'));
+  const options = {
+    key: key,
+    cert: cert,
+    minVersion: 'TLSv1.3',
+    cipher: 'TLS_AES_256_GCM_SHA384',
+  };
+  serverHttps = https.createServer(options, app);
 
-  serverHttps.listen(process.env.NODEJS_SERVICE_PORT_3002);
+  serverHttps.listen(process.env.HTTPS_PORT);
 };
 
 const interval = setInterval(() => {
