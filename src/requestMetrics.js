@@ -20,7 +20,7 @@ function resetRequestMetrics() {
       '/explore-deploy-x-from-cache',
       '/api/listen-for-data-at-name',
       '/listen-for-data-at-name-x',
-      '/api/get-contract-logs',
+      '/get-contract-logs',
     ].map(r => [r, 0]))
   };
 }

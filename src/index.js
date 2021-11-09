@@ -440,17 +440,11 @@ app.post('/get-nodes', (req, res) => {
   }
 });
 
-app.post('/api/get-contract-logs', (req, res) => {
+app.post('/get-contract-logs', (req, res) => {
   logs(
     getRedisMethod(redisClient, 'zrevrange'),
     log,
-  )(req.body
-    // {
-    // contract: req.params.contract,
-    // size: req.query.size,
-    // offset: req.query.offset
-  // }
-  , res);
+  )(req.body, res);
 });
 
 const initServers = () => {
