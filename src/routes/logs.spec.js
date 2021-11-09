@@ -43,7 +43,7 @@ describe('/logs', () => {
     }, res);
     
     expect(zRevRange).to.have.been.called.with(['logs:foo', 0, 99])
-    expect(res.send).to.have.been.called.with(contractLogs);
+    expect(res.send).to.have.been.called.with({ data: contractLogs });
   });
   
   it('should returns error 400 when size and offset are not numbers', async () => {

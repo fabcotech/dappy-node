@@ -32,7 +32,9 @@ const logs = (zRevRange, log) => async (params, res) => {
 
   try {
     const contractLogs = await zRevRange([`logs:${contract}`, offset, (offset + size-1)]);
-    res.send(contractLogs);
+    res.send({
+      data: contractLogs
+    });
   }
   catch (err) {
     res.status(500);
