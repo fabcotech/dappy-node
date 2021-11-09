@@ -41,21 +41,16 @@ List of the methods exposed for each kind of traffic :
 
 ## Production
 
-In production, dappy-node is ran with kubernetes, see `kubernetes/dappy.yml` . The kubernetes application uses two custom docker images:` dappy-nginx` (`DockerFileNginx`) and `dappy-node` (`DockerFile`). All the `.env` files are ignored and not part of the docker images, everything is in `kubernetes/dappy.yml` file.
+In production, dappy-node is ran with kubernetes, see `kubernetes/dappy.yml` . The kubernetes application uses 1 custom docker image: `dappy-node` (`DockerFile`). All the `.env` files are ignored and not part of the docker images, everything is in `kubernetes/dappy.yml` file.
 
 ### Build and push to docker hub
 
-If your working on the dappy-node code, `src/`, or dappy-nginx image, follow the following to build and update image on docker hub.
+If your working on the dappy-node code, `src/`, follow the following to build and update image on docker hub.
 
 ```sh
 # dappy-node (nodejs)
 docker build . -f DockerfileNodejs -t fabcotech/dappy-node:0.1
 docker push fabcotech/dappy-node:0.1
-
-# dappy-nginx (nginx)
-docker build . -f DockerfileNginx -t fabcotech/dappy-nginx:0.1
-docker push fabcotech/dappy-nginx:0.1
-```
 
 ### Kubernetes stack
 
@@ -63,8 +58,7 @@ Have `kubectl` installed
 
 The kubernetes stack includes 4 programs:
 
-- `nodejs` (`DockerfileNodejs`)
-- `nginx` (`DockerfileNginx`)
+- `dappy-node` (`DockerfileNodejs`)
 - `redis` (default redis docker image)
 
 ### create certificates and private keys
@@ -264,11 +258,11 @@ kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt"
 
 Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
 
-**(1) static IP** You need to have one static IP, and reference it in `nginx service .loadBalancerIP`. A fixed IP address only matters for the [dappy browser] -> [dappy node] communication that is no-DNS.
+**(1) static IP** You need to have one static IP, and reference it in `lb-dappy-node service .loadBalancerIP`. A fixed IP address only matters for the [dappy browser] -> [dappy node] communication that is no-DNS.
 
 **(2) rnode** nodejs must know one `VALIDATOR` and one/many `READ_ONLY` (comma separated) read only nodes.
 
-**(3) nodejs** Set the `DAPPY_NETWORK` (dappy setting, ex: gammanetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `kubernetes/dappy.yml nodejs .env`
+**(3) dappy-node** Set the `DAPPY_NETWORK` (dappy setting, ex: gammanetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `kubernetes/dappy.yml nodejs .env`
 
 **(4) nginx** Set the `DAPPY_NETWORK` (dappy setting), and `RCHAIN_NETWORK` in `kubernetes/dappy.yml nginx .env`
 

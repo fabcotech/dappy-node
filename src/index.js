@@ -455,20 +455,22 @@ const initServers = () => {
   serverHttp = http.createServer(app);
   serverHttp.listen(process.env.HTTP_PORT);
 
-  log(
-    `Listening for HTTP+TLS on address 127.0.0.1:${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`
-  );
-  const key = fs.readFileSync(path.join(__dirname, '../dappynode.key'));
-  const cert = fs.readFileSync(path.join(__dirname, '../dappynode.crt'));
-  const options = {
-    key: key,
-    cert: cert,
-    minVersion: 'TLSv1.3',
-    cipher: 'TLS_AES_256_GCM_SHA384',
-  };
-  serverHttps = https.createServer(options, app);
+  if (process.env.HTTPS_PORT) {
+    log(
+      `Listening for HTTP+TLS on address 127.0.0.1:${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`
+    );
+    const key = fs.readFileSync(path.join(__dirname, '../dappynode.key'));
+    const cert = fs.readFileSync(path.join(__dirname, '../dappynode.crt'));
+    const options = {
+      key: key,
+      cert: cert,
+      minVersion: 'TLSv1.3',
+      cipher: 'TLS_AES_256_GCM_SHA384',
+    };
+    serverHttps = https.createServer(options, app);
 
-  serverHttps.listen(process.env.HTTPS_PORT);
+    serverHttps.listen(process.env.HTTPS_PORT);
+    }
 };
 
 const interval = setInterval(() => {
