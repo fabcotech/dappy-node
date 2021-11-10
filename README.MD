@@ -134,7 +134,7 @@ mkcert rnode.dev
 kubectl create secret tls sslsecret --key="rnode.dev-key.pem" --cert="rnode.dev.pem"
 
 # Deploy rnode in devMode on minikube
-kubectl apply -f rnodes.local.yml
+kubectl apply -f rnode
 
 # Add local entries to HOST file
 sudo -s
@@ -199,7 +199,7 @@ mkcert dappy.dev
 kubectl create secret tls dappy-node-tls --key="dappy.dev-key.pem" --cert="dappy.dev.pem"
 
 # start or update config
-kubectl apply -f dappy.local.yml
+kubectl apply -f dappy
 
 # Add local entries to HOST file
 sudo -s

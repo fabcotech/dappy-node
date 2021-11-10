@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dappy-jobs
+spec:
+  selector:
+    matchLabels:
+      app: dappy-jobs
+  template:
+    metadata:
+      labels:
+        app: dappy-jobs
+    spec:
+      containers:
+        - image: fabcotech/dappy-node:latest
+          name: get-contract-logs
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REDIS_URL
+              value: redis://redis:6379/1
+            - name: MASTER_REGISTRY_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: master-uri
+                  key: RCHAIN_NAMES_MASTER_REGISTRY_URI   
+            - name: READ_ONLY
+              value: http://aarnode:40403
+            - name: LOGS_INTERVAL
+              value: '1000'
+            - name: CONTRACTS
+              value: dappynamesystem
+            - name: START_JOB
+              value: 'true'
+          resources:
+            limits:
+              memory: '128Mi'
+              cpu: '500m'
+          command:
+          - sh
+          - '-c'
+          - node src/jobs/get-contract-logs.js
+      restartPolicy: Always
