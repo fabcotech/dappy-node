@@ -22,7 +22,7 @@ spec:
             - name: READ_ONLY
               value: https://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud
             - name: LOGS_INTERVAL
-              value: '10000'
+              value: '120000'
             - name: CONTRACTS
               value: dappynamesystem
             - name: READ_ONLY_CERTIFICATE_PATH
