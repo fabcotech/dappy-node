@@ -52,24 +52,18 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
       body.publicKeys.map(
         (n) =>
           new Promise((res, rej) => {
-            redisKeys(redisClient, `publicKey:${process.env.REDIS_DB}:${n}`)
+            redisKeys(redisClient, `publicKey:${n}`)
               .then((keys) => {
-                const key = keys.find(
-                  (k) => k === `publicKey:${process.env.REDIS_DB}:${n}`
-                );
+                const key = keys.find((k) => k === `publicKey:${n}`);
                 if (typeof key === 'string') {
                   redisSMembers(redisClient, key).then((names) => {
                     Promise.all(
                       names.map((name) => {
                         return new Promise((res2, rej2) => {
-                          redisKeys(
-                            redisClient,
-                            `name:${process.env.REDIS_DB}:${name}`
-                          )
+                          redisKeys(redisClient, `name:${name}`)
                             .then((keys2) => {
                               const key2 = keys2.find(
-                                (k) =>
-                                  k === `name:${process.env.REDIS_DB}:${name}`
+                                (k) => k === `name:${name}`
                               );
                               if (typeof key2 === 'string') {
                                 redisHgetall(redisClient, key2).then(

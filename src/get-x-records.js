@@ -116,20 +116,16 @@ const storeRecord = async (record, redisClient) => {
         rej('redis timeout error 1');
       }
     }, 5000);
-    redisClient.hmset(
-      `name:${process.env.REDIS_DB}:${record.name}`,
-      ...redisSetValues,
-      (err, resp) => {
-        if (!over) {
-          over = true;
-          if (err) {
-            log(err, 'error');
-            return rej(err);
-          }
-          res();
+    redisClient.hmset(`name:${record.name}`, ...redisSetValues, (err, resp) => {
+      if (!over) {
+        over = true;
+        if (err) {
+          log(err, 'error');
+          return rej(err);
         }
+        res();
       }
-    );
+    });
   });
   await new Promise((res, rej) => {
     let over = false;
@@ -140,7 +136,7 @@ const storeRecord = async (record, redisClient) => {
       }
     }, 5000);
     redisClient.sadd(
-      `publicKey:${process.env.REDIS_DB}:${record.publicKey}`,
+      `publicKey:${record.publicKey}`,
       record.name,
       (err, resp) => {
         if (!over) {
@@ -194,11 +190,9 @@ module.exports.getXRecordsWsHandler = async (
       body.names.map(
         (n) =>
           new Promise((res, rej) => {
-            redisKeys(redisClient, `name:${process.env.REDIS_DB}:${n}`)
+            redisKeys(redisClient, `name:${n}`)
               .then((keys) => {
-                const key = keys.find(
-                  (k) => k === `name:${process.env.REDIS_DB}:${n}`
-                );
+                const key = keys.find((k) => k === `name:${n}`);
                 if (typeof key === 'string') {
                   redisHgetall(redisClient, key).then((record) => {
                     res(record);
@@ -287,10 +281,10 @@ module.exports.getXRecordsWsHandler = async (
             try {
               const boxKeys = await redisKeys(
                 redisClient,
-                `box:${process.env.REDIS_DB}:${purses[k].boxId}`
+                `box:${purses[k].boxId}`
               );
               const boxKey = boxKeys.find(
-                (bk) => bk === `box:${process.env.REDIS_DB}:${purses[k].boxId}`
+                (bk) => bk === `box:${purses[k].boxId}`
               );
               if (typeof boxKey === 'string') {
                 const hg = await redisHgetall(redisClient, boxKey);
@@ -323,7 +317,7 @@ module.exports.getXRecordsWsHandler = async (
                     }
                   }, 5000);
                   redisClient.hmset(
-                    `box:${process.env.REDIS_DB}:${purses[k].boxId}`,
+                    `box:${purses[k].boxId}`,
                     'values',
                     JSON.stringify(boxConfig),
                     (err, resp) => {
