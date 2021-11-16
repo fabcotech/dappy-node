@@ -1,0 +1,9 @@
+bases:
+- ../../../base/dappy
+
+resources:
+- dappy-node-service.yaml
+
+patchesStrategicMerge:
+- dappy-jobs-deployment.yaml
+- dappy-node-deployment.yaml

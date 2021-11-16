@@ -1,0 +1,5 @@
+resources:
+- rnode-nginx-configmap.yaml
+- rnode-service.yaml
+- rnode-statefulset.yaml
+- scw-metadata-service.yaml

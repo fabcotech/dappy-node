@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dappy-jobs
+spec:
+  selector:
+    matchLabels:
+      app: dappy-jobs
+  template:
+    spec:
+      containers:
+        - name: get-contract-logs
+          image: fabcotech/dappy-node:latest
+          env:
+            - name: MASTER_REGISTRY_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: master-uri
+                  key: RCHAIN_NAMES_MASTER_REGISTRY_URI
+            - name: READ_ONLY
+              value: http://aarnode:40403

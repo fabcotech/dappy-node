@@ -126,7 +126,7 @@ Install [mkcert](https://github.com/FiloSottile/mkcert): It enables locally-trus
 # On macOS run following command in a dedicated terminal 
 sudo minikube tunnel
 
-cd <DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/minikube
+cd <DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/envs/minikube
 # generate certificate for rnode HTTPS endpoint
 mkcert rnode.dev
 
@@ -134,7 +134,7 @@ mkcert rnode.dev
 kubectl create secret tls sslsecret --key="rnode.dev-key.pem" --cert="rnode.dev.pem"
 
 # Deploy rnode in devMode on minikube
-kubectl apply -f rnode
+kubectl apply -k rnode
 
 # Add local entries to HOST file
 sudo -s
@@ -180,7 +180,7 @@ npm run dappy:namesystem
 Contract is now deployed on your local rnode network, you can get its master URI from stdout, it is the `Master registry URI` value.
 Save it, you will use master URI in next step, referenced as `MASTER_REGISTRY_URI`.
 
-Inside folder `<DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/minikube`
+Inside folder `<DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/envs/minikube`
 
 ```sh
 # Create configmap that contains master uri
@@ -199,7 +199,7 @@ mkcert dappy.dev
 kubectl create secret tls dappy-node-tls --key="dappy.dev-key.pem" --cert="dappy.dev.pem"
 
 # start or update config
-kubectl apply -f dappy
+kubectl apply -k dappy
 
 # Add local entries to HOST file
 sudo -s

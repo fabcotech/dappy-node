@@ -7,42 +7,28 @@ spec:
     matchLabels:
       app: dappy-jobs
   template:
-    metadata:
-      labels:
-        app: dappy-jobs
     spec:
       containers:
-        - image: paulmusso/dappy-node:3.7
-          name: get-contract-logs
+        - name: get-contract-logs
+          image: paulmusso/dappy-node:3.8
           env:
-            - name: REDIS_URL
-              value: redis://redis:6379/1
             - name: MASTER_REGISTRY_URI
               value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
             - name: READ_ONLY
               value: https://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud
             - name: LOGS_INTERVAL
               value: '120000'
-            - name: CONTRACTS
-              value: dappynamesystem
             - name: READ_ONLY_CERTIFICATE_PATH
-              value: /ssl/tls.crt
-            - name: START_JOB
-              value: 'true'
+              value: /ssl/tls.crt              
           resources:
             limits:
               memory: '128Mi'
-              cpu: '100m'
-          command:
-          - sh
-          - '-c'
-          - node src/jobs/get-contract-logs.js
+              cpu: '100m'              
           volumeMounts:
           - name: rnode-tls 
             mountPath: '/ssl'
-            readOnly: true   
-      restartPolicy: Always
+            readOnly: true
       volumes:
         - name: rnode-tls
           secret:
-            secretName: rnode-tls    
+            secretName: rnode-tls              

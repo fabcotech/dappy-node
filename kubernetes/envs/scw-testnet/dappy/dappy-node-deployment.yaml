@@ -30,7 +30,7 @@ spec:
           resources:
             limits:
               cpu: 100m
-              memory: 500Mi
+              memory: 100Mi
         - image: paulmusso/dappy-node:3.8
           name: dappy-node
           env:
@@ -38,12 +38,6 @@ spec:
               value: '30'
             - name: CRON_JOBS_NAMES_MODULO
               value: '0'
-            - name: HTTP_PORT
-              value: '3001'
-            - name: LAST_BLOCK_JOB_INTERVAL
-              value: '40000'
-            - name: RCHAIN_NAMES_CONTRACT_ID
-              value: dappynamesystem
             - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
               value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
             - name: RCHAIN_NETWORK
@@ -52,13 +46,8 @@ spec:
               value: https://aarnode
             - name: READ_ONLY_CERTIFICATE_PATH
               value: /ssl/tls.crt
-            - name: REDIS_DB
-              value: '1'
             - name: VALIDATOR
               value: https://node0.bm.testnet.rchain.coop
-          ports:
-            - containerPort: 3001
-            - containerPort: 3002
           volumeMounts:
           - name: rnode-tls
             mountPath: /ssl
@@ -77,4 +66,3 @@ spec:
         - name: dappy-node-tls
           secret:
             secretName: dappy-node-tls            
-      restartPolicy: Always

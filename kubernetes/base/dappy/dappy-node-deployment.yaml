@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dappy-node
+spec:
+  selector:
+    matchLabels:
+      app: dappy-node
+  template:
+    metadata:
+      labels:
+        app: dappy-node
+    spec:
+      containers:
+        - image: fabcotech/dappy-node:latest
+          name: dappy-node
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REDIS_DB
+              value: '1'
+            - name: HTTP_PORT
+              value: '3001'
+            - name: LAST_BLOCK_JOB_INTERVAL
+              value: '40000'
+            - name: RCHAIN_NAMES_CONTRACT_ID
+              value: dappynamesystem
+          ports:
+            - containerPort: 3001
+            - containerPort: 3002
+      restartPolicy: Always

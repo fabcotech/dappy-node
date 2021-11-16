@@ -1,0 +1,5 @@
+resources:
+  - dappy-jobs-deployment.yaml
+  - dappy-node-deployment.yaml
+  - redis-deployment.yaml
+  - redis-service.yaml
