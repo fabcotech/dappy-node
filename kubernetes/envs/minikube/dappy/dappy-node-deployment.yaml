@@ -3,29 +3,11 @@ kind: Deployment
 metadata:
   name: dappy-node
 spec:
-  selector:
-    matchLabels:
-      app: dappy-node
   template:
-    metadata:
-      labels:
-        app: dappy-node
     spec:
       containers:
-        - image: fabcotech/dappy-node:latest
-          imagePullPolicy: IfNotPresent
-          name: dappy-node
+        - name: dappy-node
           env:
-            - name: CACHING
-              value: '0'
-            - name: READ_ONLY
-              value: http://aarnode:40403
-            - name: VALIDATOR
-              value: http://aarnode:40403
-            - name: RCHAIN_NETWORK
-              value: local
-            - name: DAPPY_NETWORK
-              value: local
             - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
               valueFrom:
                 configMapKeyRef:

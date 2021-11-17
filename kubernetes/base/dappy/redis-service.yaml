@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: redis
 spec:
+  type: NodePort
   selector:
     app: redis
   ports:

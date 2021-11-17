@@ -3,9 +3,6 @@ kind: Deployment
 metadata:
   name: dappy-jobs
 spec:
-  selector:
-    matchLabels:
-      app: dappy-jobs
   template:
     spec:
       containers:
