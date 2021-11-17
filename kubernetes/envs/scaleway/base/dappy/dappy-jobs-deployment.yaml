@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dappy-jobs
+spec:
+  template:
+    spec:
+      containers:
+        - name: get-contract-logs
+          image: paulmusso/dappy-node:3.8
+          env:
+            - name: READ_ONLY
+              value: https://rnode
+            - name: LOGS_INTERVAL
+              value: '120000'
+          resources:
+            limits:
+              memory: '128Mi'
+              cpu: '100m'              

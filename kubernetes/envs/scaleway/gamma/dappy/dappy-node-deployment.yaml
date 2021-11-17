@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dappy-node
+spec:
+  template:
+    spec:
+      containers:
+        - image: paulmusso/dappy-node:3.8
+          name: dappy-node
+          env:
+            - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
+              value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
+            - name: DAPPY_NETWORK
+              value: gamma
+            - name: RCHAIN_NETWORK
+              value: testbm210724
+            - name: READ_ONLY
+              value: https://rnode
+            - name: READ_ONLY_CERTIFICATE_PATH
+              value: /ssl/tls.crt              
+            - name: VALIDATOR
+              value: https://node0.bm.testnet.rchain.coop
+          volumeMounts:
+          - name: rnode-tls
+            mountPath: /ssl
+            readOnly: true              
+      volumes:
+        - name: rnode-tls
+          secret:
+            secretName: rnode-tls              

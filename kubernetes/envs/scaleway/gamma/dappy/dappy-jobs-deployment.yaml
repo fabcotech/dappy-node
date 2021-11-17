@@ -12,15 +12,9 @@ spec:
             - name: MASTER_REGISTRY_URI
               value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
             - name: READ_ONLY
-              value: https://c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud
-            - name: LOGS_INTERVAL
-              value: '120000'
+              value: https://rnode
             - name: READ_ONLY_CERTIFICATE_PATH
-              value: /ssl/tls.crt              
-          resources:
-            limits:
-              memory: '128Mi'
-              cpu: '100m'              
+              value: /ssl/tls.crt
           volumeMounts:
           - name: rnode-tls 
             mountPath: '/ssl'

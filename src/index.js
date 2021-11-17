@@ -177,19 +177,16 @@ const pickRandomReadOnly = () => {
   if (readOnlyOptions[r]) {
     return readOnlyOptions[r];
   } else {
-    if (r.startsWith('http://')) {
-      readOnlyOptions[r] = {
-        url: r,
-      };
-    } else {
+    readOnlyOptions[r] = {
+      url: r,
+    };
+
+    if (r.startsWith('https://') && process.env.READ_ONLY_CERTIFICATE_PATH) {
       const cert = fs.readFileSync(
         process.env.READ_ONLY_CERTIFICATE_PATH,
         'utf8'
       );
-      readOnlyOptions[r] = {
-        url: r,
-        ca: [cert], 
-      };
+      readOnlyOptions[r].ca = [cert];
     }
     return readOnlyOptions[r];
   }

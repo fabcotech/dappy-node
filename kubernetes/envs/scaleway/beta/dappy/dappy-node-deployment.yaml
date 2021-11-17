@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dappy-node
+spec:
+  template:
+    spec:
+      containers:
+        - image: paulmusso/dappy-node:3.8
+          name: dappy-node
+          env:
+            - name: DAPPY_NETWORK
+              value: beta
+            - name: RCHAIN_NETWORK
+              value: mainnet 
+            - name: READ_ONLY
+              value: https://observer-eu.services.mainnet.rchain.coop
+            - name: VALIDATOR
+              value: https://node0.root-shard.mainnet.rchain.coop

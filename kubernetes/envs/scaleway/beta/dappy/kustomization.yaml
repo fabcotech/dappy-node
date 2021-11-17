@@ -1,0 +1,12 @@
+namespace: beta 
+
+bases:
+- ../../base/dappy
+
+resources:
+- beta-namespace.yaml
+
+patchesStrategicMerge:
+- dappy-jobs-deployment.yaml
+- dappy-node-deployment.yaml
+- dappy-node-service.yaml

@@ -1,7 +1,8 @@
 bases:
-- ../../../base/dappy
+- ../../../../base/dappy
 
 resources:
+- dappy-node-nginx-configmap.yaml
 - dappy-node-service.yaml
 
 patchesStrategicMerge:

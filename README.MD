@@ -251,9 +251,32 @@ openssl req \
     echo '[req]'; \
     echo 'distinguished_name=req'; \
     echo '[san]'; \
-    echo 'subjectAltName=DNS.1:localhost,DNS.2:aarnode,DNS.3:<RNODE_PUBLIC_DOMAIN_NAME>')
+    echo 'subjectAltName=DNS.1:localhost,DNS.2:rnode,DNS.3:<RNODE_PUBLIC_DOMAIN_NAME>')
 
-kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" 
+kubectl create ns >CURRENT_NAMESPACE> # If namespace not exists
+kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" -n=<CURRENT_NAMESPACE>
+kubectl apply -k kubernetes/envs/<CURRENT_K8S_ENV>/rnode
+
+openssl req \
+  -x509 \
+  -newkey rsa:2048 \
+  -sha256 \
+  -days 3000 \
+  -nodes \
+  -keyout dappy-node.key \
+  -out dappy-node.crt \
+  -outform PEM \
+  -subj '/CN=dappy-node' \
+  -extensions san \
+  -config <( \
+    echo '[req]'; \
+    echo 'distinguished_name=req'; \
+    echo '[san]'; \
+    echo 'subjectAltName=DNS.1:localhost,DNS.2:dappy-node,DNS.3:<DAPPY_NODE_PUBLIC_DOMAIN_NAME>')
+
+kubectl create ns >CURRENT_NAMESPACE> # If namespace not exists
+kubectl create secret tls dappy-node-tls --key="dappy-node.key" --cert="dappy-node.crt" -n=<CURRENT_NAMESPACE>
+kubectl apply -k kubernetes/envs/<CURRENT_K8S_ENV>/dappy
 ```
 
 Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..

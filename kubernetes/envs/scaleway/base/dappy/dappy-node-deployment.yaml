@@ -31,30 +31,19 @@ spec:
               value: '30'
             - name: CRON_JOBS_NAMES_MODULO
               value: '0'
-            - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
-              value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
             - name: DAPPY_NETWORK
               value: gamma
             - name: RCHAIN_NETWORK
               value: testbm210724
             - name: READ_ONLY
-              value: https://aarnode
-            - name: READ_ONLY_CERTIFICATE_PATH
-              value: /ssl/tls.crt
+              value: https://rnode
             - name: VALIDATOR
               value: https://node0.bm.testnet.rchain.coop
-          volumeMounts:
-          - name: rnode-tls
-            mountPath: /ssl
-            readOnly: true            
           resources:
             limits:
               memory: 128Mi
               cpu: 200m
       volumes:
-        - name: rnode-tls
-          secret:
-            secretName: rnode-tls
         - name: dappy-node-nginx-config
           configMap:
             name: dappy-node-nginx-config

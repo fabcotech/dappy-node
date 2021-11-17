@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: StatefulSet 
 metadata:
-  name: aarnode
+  name: rnode
 spec:
-  serviceName: aarnode
+  serviceName: rnode
   selector:
     matchLabels:
-      app: aarnode
+      app: rnode
   template:
     metadata:
       labels:
-        app: aarnode
+        app: rnode
     spec:
       nodeSelector:
         rnode: 'true'
@@ -23,7 +23,7 @@ spec:
                     - key: app
                       operator: In
                       values:
-                      - aarnode
+                      - rnode
               topologyKey: "kubernetes.io/hostname"
             weight: 1
       initContainers:
@@ -49,7 +49,7 @@ spec:
           - name: rnode-tls
             mountPath: '/ssl'
             readOnly: true
-          - name: aarnode-nginx-config
+          - name: rnode-nginx-config
             mountPath: /etc/nginx/conf.d/default.conf
             subPath: nginx.conf
           ports:
@@ -59,7 +59,7 @@ spec:
             limits:
               memory: 500Mi
         - image: rchain/rnode:v0.12.2-rc1
-          name: aarnode
+          name: rnode
           env:
             - name: BOOTSTRAP
               value: 'rnode://a383f7404d045e3e3fa4f5ebb200c92fb3fc8e18@node0.bm.testnet.rchain.coop?protocol=40400&discovery=40404'
@@ -112,9 +112,9 @@ spec:
             secretName: rnode-tls 
         - emptyDir: {}
           name: config
-        - name: aarnode-nginx-config
+        - name: rnode-nginx-config
           configMap:
-            name: aarnode-nginx-config
+            name: rnode-nginx-config
       restartPolicy: Always
   volumeClaimTemplates:
   - metadata:
