@@ -6,8 +6,7 @@ spec:
   template:
     spec:
       containers:
-        - image: paulmusso/dappy-node:3.8
-          name: dappy-node
+        - name: dappy-node
           env:
             - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
               value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k

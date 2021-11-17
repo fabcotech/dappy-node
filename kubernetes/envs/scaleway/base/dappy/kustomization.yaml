@@ -9,3 +9,8 @@ patchesStrategicMerge:
 - dappy-jobs-deployment.yaml
 - dappy-node-deployment.yaml
 - redis-service.yaml
+
+images:
+- name: fabcotech/dappy-node
+  newName: paulmusso/dappy-node
+  newTag: '3.9'

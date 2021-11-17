@@ -7,7 +7,6 @@ spec:
     spec:
       containers:
         - name: get-contract-logs
-          image: paulmusso/dappy-node:3.8
           env:
             - name: MASTER_REGISTRY_URI
               value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k

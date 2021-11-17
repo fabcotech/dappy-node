@@ -7,7 +7,6 @@ spec:
     spec:
       containers:
         - name: get-contract-logs
-          image: paulmusso/dappy-node:3.8
           env:
             - name: READ_ONLY
               value: https://observer-eu.services.mainnet.rchain.coop

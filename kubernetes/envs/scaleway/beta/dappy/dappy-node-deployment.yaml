@@ -6,8 +6,7 @@ spec:
   template:
     spec:
       containers:
-        - image: paulmusso/dappy-node:3.8
-          name: dappy-node
+        - name: dappy-node
           env:
             - name: DAPPY_NETWORK
               value: beta

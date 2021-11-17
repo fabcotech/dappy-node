@@ -87,7 +87,7 @@ const runRecordsChildProcessJob = async (quarter) => {
 };
 
 const initJobs = () => {
-  getLastFinalizedBlockNumber(pickRandomReadOnly())
+  process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI && getLastFinalizedBlockNumber(pickRandomReadOnly())
     .then((a) => {
       lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
       namePrice = a.namePrice;
@@ -113,7 +113,7 @@ const initJobs = () => {
   }, 30000);
 
   setInterval(() => {
-    getLastFinalizedBlockNumber(pickRandomReadOnly())
+    process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI && getLastFinalizedBlockNumber(pickRandomReadOnly())
       .then((a) => {
         lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
         namePrice = a.namePrice;

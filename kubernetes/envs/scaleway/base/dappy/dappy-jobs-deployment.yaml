@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
         - name: get-contract-logs
-          image: paulmusso/dappy-node:3.8
+          image: fabcotech/dappy-node
           env:
             - name: READ_ONLY
               value: https://rnode
