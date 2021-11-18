@@ -255,7 +255,7 @@ openssl req \
 
 kubectl create ns >CURRENT_NAMESPACE> # If namespace not exists
 kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" -n=<CURRENT_NAMESPACE>
-kubectl apply -k kubernetes/envs/<CURRENT_K8S_ENV>/rnode
+kubectl apply -k kubernetes/envs/scaleway/<CURRENT_K8S_ENV>/rnode
 
 openssl req \
   -x509 \
@@ -266,17 +266,17 @@ openssl req \
   -keyout dappy-node.key \
   -out dappy-node.crt \
   -outform PEM \
-  -subj '/CN=dappy-node' \
+  -subj '/CN=<DAPPY_COMMON_NAME>'\
   -extensions san \
   -config <( \
     echo '[req]'; \
     echo 'distinguished_name=req'; \
     echo '[san]'; \
-    echo 'subjectAltName=DNS.1:localhost,DNS.2:dappy-node,DNS.3:<DAPPY_NODE_PUBLIC_DOMAIN_NAME>')
+    echo 'subjectAltName=DNS.1:localhost,DNS.2:dappynode,DNS.3:<DAPPY_NODE_PUBLIC_DOMAIN_NAME>')
 
 kubectl create ns >CURRENT_NAMESPACE> # If namespace not exists
 kubectl create secret tls dappy-node-tls --key="dappy-node.key" --cert="dappy-node.crt" -n=<CURRENT_NAMESPACE>
-kubectl apply -k kubernetes/envs/<CURRENT_K8S_ENV>/dappy
+kubectl apply -k kubernetes/envs/scaleway/<CURRENT_K8S_ENV>/dappy
 ```
 
 Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
