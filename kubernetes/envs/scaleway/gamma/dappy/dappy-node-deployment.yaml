@@ -9,7 +9,7 @@ spec:
         - name: dappy-node
           env:
             - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
-              value: 1m9nenussy7udjznij1b6pr59jicg11aygmpit6fi9jji5i5633d3k
+              value: 4cd18xb89d4e8sdfb997rzkcoq6mth1xdfcsz6eyi3j6uqkfha7i8a
             - name: DAPPY_NETWORK
               value: gamma
             - name: RCHAIN_NETWORK
