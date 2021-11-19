@@ -23,8 +23,8 @@ function mandatory(varName, value) {
 }
 
 function parseBool(str) {
-  return (/^true$/i.test(str));
-} 
+  return /^true$/i.test(str);
+}
 
 function parseArray(contractStr) {
   return (contractStr || '')
@@ -43,35 +43,36 @@ function parseRedisUrl(value) {
 function getFileContent(path) {
   if (!path) return;
 
-  return fs.readFileSync(
-    process.env.READ_ONLY_CERTIFICATE_PATH,
-    'utf8'
-  );
+  return fs.readFileSync(process.env.READ_ONLY_CERTIFICATE_PATH, 'utf8');
 }
 
-function initConfig(env = {}){
+function initConfig(env = {}) {
   return {
-    logsInteval: parseInt(env.LOGS_INTERVAL) || 10 * 1000,
-    masterRegistryUri: mandatory('MASTER_REGISTRY_URI', env.MASTER_REGISTRY_URI),
+    logsInteval: 10000, //parseInt(env.LOGS_INTERVAL) || 10 * 1000,
+    masterRegistryUri: mandatory(
+      'MASTER_REGISTRY_URI',
+      env.MASTER_REGISTRY_URI
+    ),
     contracts: parseArray(mandatory('CONTRACTS', env.CONTRACTS)),
     rnodeUri: mandatory('READ_ONLY', env.READ_ONLY),
     redisUrl: parseRedisUrl(mandatory('REDIS_URL', env.REDIS_URL)),
     caCertificate: getFileContent(env.READ_ONLY_CERTIFICATE_PATH),
-  }
-} 
+  };
+}
 
 function initClientRedis(redisUrl) {
   return redis.createClient(redisUrl);
 }
 
 function getZAdd(client) {
-  return args => new Promise((resolve, reject) => {
-    client.zadd(args, (errors, results) => {
-      if (errors) reject(errors);
-      else resolve(results);
+  return (args) =>
+    new Promise((resolve, reject) => {
+      client.zadd(args, (errors, results) => {
+        if (errors) reject(errors);
+        else resolve(results);
+      });
     });
-  });
-}  
+}
 
 function parseLogTs(l) {
   return parseInt(l.match(/^[^,]+,(\d+),/)[1]);
@@ -80,47 +81,48 @@ function parseLogTs(l) {
 function parseLogs(rawLogs) {
   return rawLogs
     .split(';')
-    .filter(l => l.length)
-    .filter(l => {
+    .filter((l) => l.length)
+    .filter((l) => {
       try {
         logs.checkLine(l);
         return true;
       } catch (err) {
-        logInfo(l);
-        logError(err);
-        return false; 
+        return false;
       }
     })
-    .map(l => ({
+    .map((l) => ({
       ts: parseLogTs(l),
-      msg: l
+      msg: l,
     }));
 }
 
-async function queryLogs(exploreDeploy, contract, { masterRegistryUri, rnodeUri, caCertificate }) {
+async function queryLogs(
+  exploreDeploy,
+  contract,
+  { masterRegistryUri, rnodeUri, caCertificate }
+) {
   const result = await exploreDeploy(
     {
       url: rnodeUri,
-      ...caCertificate ? { ca: [caCertificate] } : {},
-    }, {
+      ...(caCertificate ? { ca: [caCertificate] } : {}),
+    },
+    {
       term: readLogsTerm({
         masterRegistryUri: masterRegistryUri,
         contractId: contract,
-      })
+      }),
     }
   );
 
-  return parseLogs(rchainToolkit.utils.rhoValToJs(
-    JSON.parse(result).expr[0]
-  ));
+  return parseLogs(rchainToolkit.utils.rhoValToJs(JSON.parse(result).expr[0]));
 }
 
 async function saveToSortedSetsInRedis(zAdd, contract, logs) {
   if (!logs.length) return;
 
   const nbEntries = await zAdd([
-    `logs:${contract}`, 
-    ...logs.map(l => [l.ts, l.msg]).flat()
+    `logs:${contract}`,
+    ...logs.map((l) => [l.ts, l.msg]).flat(),
   ]);
 
   if (nbEntries) {
@@ -131,10 +133,9 @@ async function saveToSortedSetsInRedis(zAdd, contract, logs) {
 async function saveContractLogs(exploreDeploy, zAdd, config) {
   for (let contract of config.contracts) {
     try {
-      const logs = await queryLogs(exploreDeploy, contract, config)
+      const logs = await queryLogs(exploreDeploy, contract, config);
       await saveToSortedSetsInRedis(zAdd, contract, logs);
-    }
-    catch (err) {
+    } catch (err) {
       logError(err);
     }
   }
@@ -154,7 +155,7 @@ async function startJob() {
   while (true) {
     await saveContractLogs(rchainToolkit.http.exploreDeploy, zAdd, config);
     await waitDuration(config.logsInteval);
-  }  
+  }
 }
 
 parseBool(process.env.START_JOB) && startJob();

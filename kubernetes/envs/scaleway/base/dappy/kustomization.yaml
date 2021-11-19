@@ -11,6 +11,6 @@ patchesStrategicMerge:
 - redis-service.yaml
 
 images:
-- name: fabcotech/dappy-node
-  newName: paulmusso/dappy-node
-  newTag: '3.10'
+  - name: fabcotech/dappy-node
+    newName: fabcotech/dappy-node
+    newTag: '3.11'
