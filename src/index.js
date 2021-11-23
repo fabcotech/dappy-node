@@ -11,8 +11,12 @@ const Tracing = require('@sentry/tracing');
 // will not override the env variables in docker-compose
 require('dotenv').config();
 
-const { logs } = require("./routes");
-const { initRequestMetrics, incRequestMetricsMiddleware, incRequestMetric } = require('./requestMetrics');
+const { logs } = require('./routes');
+const {
+  initRequestMetrics,
+  incRequestMetricsMiddleware,
+  incRequestMetric,
+} = require('./requestMetrics');
 const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
 const {
   listenForDataAtNameXWsHandler,
@@ -30,6 +34,8 @@ const { health } = require('./jobs/health');
 const { generateMonitor } = require('./jobs/generateMonitor');
 const { getDappyRecordsAndSaveToDb } = require('./jobs/records');
 const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
+const { getPurseZeroPrice } = require('./jobs/purse-zero-price');
+require('./jobs/get-contract-logs');
 
 const { log, getRedisMethod, redisKeys } = require('./utils');
 
@@ -41,7 +47,7 @@ const DAPPY_NODE_VERSION = '0.2.8';
 
 let rnodeVersion = undefined;
 let lastFinalizedBlockNumber = undefined;
-let namePrice = undefined;
+let namePrice = 100000000000000000;
 let nodes = undefined;
 try {
   if (process.env.NODES_FILE) {
@@ -87,15 +93,28 @@ const runRecordsChildProcessJob = async (quarter) => {
 };
 
 const initJobs = () => {
-  process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI && getLastFinalizedBlockNumber(pickRandomReadOnly())
+  getLastFinalizedBlockNumber(pickRandomReadOnly())
     .then((a) => {
       lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
-      namePrice = a.namePrice;
     })
     .catch((err) => {
       log('failed to get last finalized block height');
       console.log(err);
     });
+
+  if (
+    process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI &&
+    process.env.RCHAIN_NAMES_CONTRACT_ID
+  ) {
+    getPurseZeroPrice(pickRandomReadOnly())
+      .then((a) => {
+        namePrice = a.namePrice;
+      })
+      .catch((err) => {
+        log('failed to get purse zero price');
+        console.log(err);
+      });
+  }
   setInterval(() => {
     if (new Date().getMinutes() % 15 === 0) {
       log(
@@ -113,15 +132,28 @@ const initJobs = () => {
   }, 30000);
 
   setInterval(() => {
-    process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI && getLastFinalizedBlockNumber(pickRandomReadOnly())
+    getLastFinalizedBlockNumber(pickRandomReadOnly())
       .then((a) => {
         lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
-        namePrice = a.namePrice;
       })
       .catch((err) => {
-        log('failed to get last finalized block height', 'error');
+        log('failed to get last finalized block height');
         console.log(err);
       });
+
+    if (
+      process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI &&
+      process.env.RCHAIN_NAMES_CONTRACT_ID
+    ) {
+      getPurseZeroPrice(pickRandomReadOnly())
+        .then((a) => {
+          namePrice = a.namePrice;
+        })
+        .catch((err) => {
+          log('failed to get purse zero price');
+          console.log(err);
+        });
+    }
   }, process.env.LAST_BLOCK_JOB_INTERVAL);
 };
 
@@ -265,8 +297,10 @@ app.post('/info', (req, res) => {
     dappyNodeVersion: DAPPY_NODE_VERSION,
     lastFinalizedBlockNumber: lastFinalizedBlockNumber,
     rnodeVersion: rnodeVersion,
-    rchainNamesMasterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
-    rchainNamesContractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
+    rchainNamesMasterRegistryUri:
+      process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI || 'notconfigured',
+    rchainNamesContractId:
+      process.env.RCHAIN_NAMES_CONTRACT_ID || 'notconfigured',
     rchainNetwork: process.env.RCHAIN_NETWORK,
     namePrice: namePrice,
   };
@@ -438,16 +472,11 @@ app.post('/get-nodes', (req, res) => {
 });
 
 app.post('/get-contract-logs', (req, res) => {
-  logs(
-    getRedisMethod(redisClient, 'zrevrange'),
-    log,
-  )(req.body, res);
+  logs(getRedisMethod(redisClient, 'zrevrange'), log)(req.body, res);
 });
 
 const initServers = () => {
-  log(
-    `Listening for HTTP on address 127.0.0.1:${process.env.HTTP_PORT} !`
-  );
+  log(`Listening for HTTP on address 127.0.0.1:${process.env.HTTP_PORT} !`);
   // Unencrypted HTTP endpoint (3001)
   serverHttp = http.createServer(app);
   serverHttp.listen(process.env.HTTP_PORT);
@@ -467,14 +496,16 @@ const initServers = () => {
     serverHttps = https.createServer(options, app);
 
     serverHttps.listen(process.env.HTTPS_PORT);
-    }
+  }
 };
 
 const interval = setInterval(() => {
   const randomOptionsReadOnly = pickRandomReadOnly();
 
-  const req = (randomOptionsReadOnly.url.startsWith('https://') ? https : http).get(
-    `${randomOptionsReadOnly.url}/version`, 
+  const req = (
+    randomOptionsReadOnly.url.startsWith('https://') ? https : http
+  ).get(
+    `${randomOptionsReadOnly.url}/version`,
     randomOptionsReadOnly,
     (resp) => {
       if (resp.statusCode !== 200) {
@@ -493,36 +524,38 @@ const interval = setInterval(() => {
         rnodeVersion = rawData;
         const req2 = (
           randomOptionsReadOnly.url.startsWith('https://') ? https : http
-        ).get(`${randomOptionsReadOnly.url}/api/blocks/1`,
-        randomOptionsReadOnly, 
-        (resp2) => {
-          if (resp2.statusCode !== 200) {
-            log(
-              'rnode observer blocks api not ready (1), will try again in 10s'
-            );
-            return;
-          }
-
-          resp2.setEncoding('utf8');
-          let rawData2 = '';
-          resp2.on('data', (chunk) => {
-            rawData2 += chunk;
-          });
-          resp2.on('end', () => {
-            if (typeof JSON.parse(rawData2)[0].blockHash === 'string') {
-              log(`${rawData}\n`);
+        ).get(
+          `${randomOptionsReadOnly.url}/api/blocks/1`,
+          randomOptionsReadOnly,
+          (resp2) => {
+            if (resp2.statusCode !== 200) {
               log(
-                `RChain node responding at ${randomOptionsReadOnly.url}/version and /api/blocks/1`
+                'rnode observer blocks api not ready (1), will try again in 10s'
               );
-              initServers();
-              initJobs();
-              clearInterval(interval);
+              return;
             }
-          });
-          resp2.on('error', (err) => {
-            throw new Error(err);
-          });
-        });
+
+            resp2.setEncoding('utf8');
+            let rawData2 = '';
+            resp2.on('data', (chunk) => {
+              rawData2 += chunk;
+            });
+            resp2.on('end', () => {
+              if (typeof JSON.parse(rawData2)[0].blockHash === 'string') {
+                log(`${rawData}\n`);
+                log(
+                  `RChain node responding at ${randomOptionsReadOnly.url}/version and /api/blocks/1`
+                );
+                initServers();
+                initJobs();
+                clearInterval(interval);
+              }
+            });
+            resp2.on('error', (err) => {
+              throw new Error(err);
+            });
+          }
+        );
 
         req2.end();
         req2.on('error', (err) => {

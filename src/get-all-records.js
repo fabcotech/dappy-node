@@ -1,18 +1,18 @@
-const redisHgetall = require("./utils").redisHgetall;
-const redisKeys = require("./utils").redisKeys;
+const redisHgetall = require('./utils').redisHgetall;
+const redisKeys = require('./utils').redisKeys;
 
-module.exports.getAllRecordsWsHandler = async redisClient => {
+module.exports.getAllRecordsWsHandler = async (redisClient) => {
   try {
     const keys = await redisKeys(redisClient, `name:*`);
     const records = await Promise.all(
-      keys.map(k => redisHgetall(redisClient, k))
+      keys.map((k) => redisHgetall(redisClient, k))
     );
 
     return records;
   } catch (err) {
     return {
       success: false,
-      error: { message: err }
+      error: { message: err },
     };
   }
 };
