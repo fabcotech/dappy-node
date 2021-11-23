@@ -229,6 +229,22 @@ node stresstest/ping-pong.js
 
 ```
 
+#### Deploy an ip app
+
+Prerequisites:
+- mkcert
+- hosts
+
+```sh
+sudo hosts add 127.0.0.1 ipapp.dev
+mkcert ipapp.dev
+kubectl create secret tls ipapp-tls --key="ipapp.dev-key.pem" --cert="ipapp.dev.pem"
+rm ipapp.dev-key.pem ipapp.dev.pem
+kubectl apply -f kubernetes/envs/minikube/ipApp
+
+curl -I https://ipapp.dev #should return HTTP code 200
+```
+
 ### Run kubernetes (prod)
 #### Generate read only / observer rnode certificate
 
