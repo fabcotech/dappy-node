@@ -232,8 +232,8 @@ node stresstest/ping-pong.js
 #### Deploy an ip app
 
 Prerequisites:
-- mkcert
-- hosts
+- [mkcert](https://github.com/FiloSottile/mkcert)
+- [hosts](https://github.com/xwmx/hosts)
 
 ```sh
 sudo hosts add 127.0.0.1 ipapp.dev
