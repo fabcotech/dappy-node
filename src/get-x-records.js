@@ -348,8 +348,8 @@ module.exports.getXRecordsWsHandler = async (
               }
 
               const buf = Buffer.from(pursesData[k], 'hex');
-              if (buf.length > 1024) {
-                log('ignoring record ' + k + ' : length > 1024', 'warning');
+              if (buf.length > 16184) {
+                log('ignoring record ' + k + ' : length > 16184', 'warning');
                 resolve(null);
                 return;
               }
