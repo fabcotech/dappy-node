@@ -3,11 +3,11 @@ const { blake2b } = require('blakejs');
 
 const { redisKeys } = require('../utils');
 
-module.exports.getDappyRecordsAndSaveToDb = async (redisClient, quarter) => {
-  const nameKeys = await redisKeys(redisClient, `name:*`);
+module.exports.deleteRecords = async (redisClient, quarter) => {
+  const nameKeys = await redisKeys(redisClient, `record:*`);
   const boxesKeys = await redisKeys(redisClient, `box:*`);
   const keysToDelete = nameKeys.concat(boxesKeys).filter((n) => {
-    if (n === `name:0`) {
+    if (n === `record:0`) {
       return false;
     }
     const arr = Buffer.from(n, 'utf8');

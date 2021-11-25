@@ -31,47 +31,58 @@ const recordSchema = {
   schemaId: 'dappy-record',
   type: 'object',
   properties: {
-    name: {
-      type: 'string',
-    },
-    address: {
-      type: 'string',
-    },
-    csp: {
+    // rchain-token properties
+    id: {
       type: 'string',
     },
     publicKey: {
       type: 'string',
     },
-    box: {
+    boxId: {
       type: 'string',
     },
-    badges: {
-      type: 'object',
+    expires: {
+      type: 'number',
     },
-    servers: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          ip: {
-            type: 'string',
-          },
-          host: {
-            type: 'string',
-          },
-          cert: {
-            type: 'string',
-          },
-          primary: {
-            type: 'boolean',
+
+    // not rchain-token properties
+    data: {
+      type: 'object',
+      properties: {
+        address: {
+          type: 'string',
+        },
+        csp: {
+          type: 'string',
+        },
+        badges: {
+          type: 'object',
+        },
+        servers: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              ip: {
+                type: 'string',
+              },
+              host: {
+                type: 'string',
+              },
+              cert: {
+                type: 'string',
+              },
+              primary: {
+                type: 'boolean',
+              },
+            },
+            required: ['ip', 'host', 'cert'],
           },
         },
-        required: ['ip', 'host', 'cert'],
       },
     },
   },
-  required: ['name', 'publicKey', 'box', 'servers'],
+  required: ['id', 'publicKey', 'boxId', 'data'],
 };
 module.exports.schema = schema;
 
@@ -84,27 +95,31 @@ const validate = ajv.compile(schema);
 const storeRecord = async (record, redisClient) => {
   const valid = validateRecord(record);
   if (valid === false) {
-    log('invalid record ' + record.name);
+    log('invalid record ' + record.id);
     console.log(validate.errors);
     throw new Error('');
   }
-  const match = record.name.match(/[a-z]([A-Za-z0-9]*)*/g);
-  if (
-    !match ||
-    (match.length !== 1 && match[0].length !== record.name.length)
-  ) {
-    log('invalid record (regexp) ' + record.name);
+  const match = record.id.match(/[a-z]([A-Za-z0-9]*)*/g);
+  if (!match || (match.length !== 1 && match[0].length !== record.id.length)) {
+    log('invalid record (regexp) ' + record.id);
     throw new Error('');
   }
   const redisSetValues = [];
   for (key of Object.keys(record)) {
-    redisSetValues.push(key);
-    if (key === 'servers') {
-      redisSetValues.push(JSON.stringify(record[key]));
-    } else if (key === 'badges') {
-      redisSetValues.push(JSON.stringify(record[key]));
-    } else {
+    if (
+      typeof record[key] === 'string' ||
+      typeof record[key] === 'number' ||
+      typeof record[key] === 'boolean' ||
+      record[key] === null
+    ) {
+      redisSetValues.push(key);
       redisSetValues.push(record[key]);
+    } else if (!!record[key] && record[key].constructor === Array) {
+      redisSetValues.push(key);
+      redisSetValues.push(JSON.stringify(record[key]));
+    } else if (!!record[key] && record[key].constructor === Object) {
+      redisSetValues.push(key);
+      redisSetValues.push(JSON.stringify(record[key]));
     }
   }
 
@@ -116,7 +131,7 @@ const storeRecord = async (record, redisClient) => {
         rej('redis timeout error 1');
       }
     }, 5000);
-    redisClient.hmset(`name:${record.name}`, ...redisSetValues, (err, resp) => {
+    redisClient.hmset(`record:${record.id}`, ...redisSetValues, (err, resp) => {
       if (!over) {
         over = true;
         if (err) {
@@ -137,7 +152,7 @@ const storeRecord = async (record, redisClient) => {
     }, 5000);
     redisClient.sadd(
       `publicKey:${record.publicKey}`,
-      record.name,
+      record.id,
       (err, resp) => {
         if (!over) {
           over = true;
@@ -150,12 +165,10 @@ const storeRecord = async (record, redisClient) => {
       }
     );
   });
-  // do that before resolving
-  if (record.servers) {
-    record.servers = JSON.stringify(record.servers);
-  }
-  if (record.badges) {
-    record.badges = JSON.stringify(record.badges);
+
+  // just like if it came out from redis
+  if (record.data) {
+    record.data = JSON.stringify(record.data);
   }
   return record;
 };
@@ -190,9 +203,9 @@ module.exports.getXRecordsWsHandler = async (
       body.names.map(
         (n) =>
           new Promise((res, rej) => {
-            redisKeys(redisClient, `name:${n}`)
+            redisKeys(redisClient, `record:${n}`)
               .then((keys) => {
-                const key = keys.find((k) => k === `name:${n}`);
+                const key = keys.find((k) => k === `record:${n}`);
                 if (typeof key === 'string') {
                   redisHgetall(redisClient, key).then((record) => {
                     res(record);
@@ -334,16 +347,22 @@ module.exports.getXRecordsWsHandler = async (
                 });
               }
 
-              record = JSON.parse(
-                Buffer.from(pursesData[k], 'hex').toString('utf8')
-              );
+              const buf = Buffer.from(pursesData[k], 'hex');
+              if (buf.length > 1024) {
+                log('ignoring record ' + k + ' : length > 1024', 'warning');
+                resolve(null);
+                return;
+              }
+              const data = JSON.parse(buf.toString('utf8'));
               const completeRecord = {
-                ...record,
-                name: k,
+                // rchain-token purse
+                id: k,
                 publicKey: boxConfig.publicKey,
-                box: purses[k].boxId,
-              };
+                boxId: purses[k].boxId,
 
+                // rchain-token data
+                data: data,
+              };
               // redis cannot store undefined as value
               // price will be stored in redis, and sent back to client as string
               if (
@@ -352,8 +371,11 @@ module.exports.getXRecordsWsHandler = async (
               ) {
                 completeRecord.price = purses[k].price;
               }
-              if (!completeRecord.address) {
-                delete completeRecord.address;
+              if (
+                typeof purses[k].expires === 'number' &&
+                !isNaN(purses[k].expires)
+              ) {
+                completeRecord.expires = purses[k].expires;
               }
 
               storeRecord(completeRecord, redisClient)

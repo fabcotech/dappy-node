@@ -32,7 +32,7 @@ const {
 } = require('./get-x-records-by-public-key');
 const { health } = require('./jobs/health');
 const { generateMonitor } = require('./jobs/generateMonitor');
-const { getDappyRecordsAndSaveToDb } = require('./jobs/records');
+const { deleteRecords } = require('./jobs/deleteRecords');
 const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 const { getPurseZeroPrice } = require('./jobs/purse-zero-price');
 require('./jobs/get-contract-logs');
@@ -80,7 +80,7 @@ const runRecordsChildProcessJob = async (quarter) => {
   }
   recordsJobRunning = true;
   // remove 1/4 of the names every 15 minutes
-  const result = await getDappyRecordsAndSaveToDb(redisClient, quarter);
+  const result = await deleteRecords(redisClient, quarter);
 
   /* if (result && special) {
     special = {
@@ -485,8 +485,8 @@ const initServers = () => {
     log(
       `Listening for HTTP+TLS on address 127.0.0.1:${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`
     );
-    const key = fs.readFileSync(path.join(__dirname, '../dappynode.key'));
-    const cert = fs.readFileSync(path.join(__dirname, '../dappynode.crt'));
+    const key = fs.readFileSync(path.join(__dirname, '../dappynode5.key'));
+    const cert = fs.readFileSync(path.join(__dirname, '../dappynode5.crt'));
     const options = {
       key: key,
       cert: cert,

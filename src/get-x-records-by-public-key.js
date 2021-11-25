@@ -60,10 +60,10 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
                     Promise.all(
                       names.map((name) => {
                         return new Promise((res2, rej2) => {
-                          redisKeys(redisClient, `name:${name}`)
+                          redisKeys(redisClient, `record:${name}`)
                             .then((keys2) => {
                               const key2 = keys2.find(
-                                (k) => k === `name:${name}`
+                                (k) => k === `record:${name}`
                               );
                               if (typeof key2 === 'string') {
                                 redisHgetall(redisClient, key2).then(
