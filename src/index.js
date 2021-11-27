@@ -297,6 +297,8 @@ app.post('/info', (req, res) => {
     dappyNodeVersion: DAPPY_NODE_VERSION,
     lastFinalizedBlockNumber: lastFinalizedBlockNumber,
     rnodeVersion: rnodeVersion,
+    dappyBrowserMinVersion: process.env.DAPPY_BROWSER_MIN_VERSION,
+    dappyBrowserDownloadLink: process.env.DAPPY_BROWSER_DOWNLOAD_LINK,
     rchainNamesMasterRegistryUri:
       process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI || 'notconfigured',
     rchainNamesContractId:
