@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jsworld 
+spec:
+  selector:
+    matchLabels:
+      app: jsworld
+  template:
+    metadata:
+      labels:
+        app: jsworld
+    spec:
+      containers:
+        - image: paulmusso/jsworld:1.1
+          name: jsworld
+          ports:
+            - containerPort: 8080
