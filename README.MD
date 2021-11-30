@@ -56,7 +56,7 @@ docker push fabcotech/dappy-node:0.1
 
 Have `kubectl` installed
 
-The kubernetes stack includes 4 programs:
+The kubernetes stack includes 2 programs:
 
 - `dappy-node` (`DockerfileNodejs`)
 - `redis` (default redis docker image)
@@ -70,14 +70,25 @@ TLS/SSL security files `dhparams.pem` and `nginx/sslparams.conf` are generated f
 Certificates and private key. A given cluster deployment will use one `dappynode.crt` file and one `dappynode.key` file, they are only used by nginx and must be set as secretes with kubernetes.
 
 ```sh
-# just input US as country name and you can leave the rest blank
-openssl req -x509 -nodes -days 3000 -newkey rsa:2048 -keyout dappynode.key -out dappynode.crt -outform PEM
+openssl req \
+  -x509 \
+  -newkey rsa:2048 \
+  -sha256 \
+  -days 3000 \
+  -nodes \
+  -keyout dappynode.key \
+  -out dappynode.crt \
+  -outform PEM \
+  -subj '/CN=dappynode' \
+  -extensions san \
+  -config <( \
+    echo '[req]'; \
+    echo 'distinguished_name=req'; \
+    echo '[san]'; \
+    echo 'subjectAltName=DNS.1:localhost,DNS.2:dappynode')
 ```
 
-
-
 ### Set the secrets
-
 
 ```sh
 base64 -w 0 dappynode.crt

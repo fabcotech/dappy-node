@@ -487,8 +487,8 @@ const initServers = () => {
     log(
       `Listening for HTTP+TLS on address 127.0.0.1:${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`
     );
-    const key = fs.readFileSync(path.join(__dirname, '../dappynode5.key'));
-    const cert = fs.readFileSync(path.join(__dirname, '../dappynode5.crt'));
+    const key = fs.readFileSync(path.join(__dirname, '../dappynode.key'));
+    const cert = fs.readFileSync(path.join(__dirname, '../dappynode.crt'));
     const options = {
       key: key,
       cert: cert,

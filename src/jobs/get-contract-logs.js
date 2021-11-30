@@ -114,7 +114,12 @@ async function queryLogs(
     }
   );
 
-  return parseLogs(rchainToolkit.utils.rhoValToJs(JSON.parse(result).expr[0]));
+  const parsed = JSON.parse(result);
+  if (!parsed.expr || !parsed.expr[0]) {
+    throw new Error('Logs not found, contract does not exist or no purchases yet')
+  }
+
+  return parseLogs(rchainToolkit.utils.rhoValToJs(parsed.expr[0]));
 }
 
 async function saveToSortedSetsInRedis(zAdd, contract, logs) {
