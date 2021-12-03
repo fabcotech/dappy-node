@@ -10,8 +10,8 @@ spec:
           env:
             - name: MASTER_REGISTRY_URI
               value: 4cd18xb89d4e8sdfb997rzkcoq6mth1xdfcsz6eyi3j6uqkfha7i8a
-            - name: READ_ONLY
-              value: https://rnode
+            - name: CONTRACTS
+              value: "dappynamesystem"
             - name: READ_ONLY_CERTIFICATE_PATH
               value: /ssl/tls.crt
           volumeMounts:

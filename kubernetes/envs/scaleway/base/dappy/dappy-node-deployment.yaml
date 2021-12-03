@@ -31,14 +31,10 @@ spec:
               value: '30'
             - name: CRON_JOBS_NAMES_MODULO
               value: '0'
-            - name: DAPPY_NETWORK
-              value: gamma
-            - name: RCHAIN_NETWORK
-              value: testbm210724
             - name: READ_ONLY
               value: https://rnode
-            - name: VALIDATOR
-              value: https://node0.bm.testnet.rchain.coop
+            - name: READ_ONLY_CERTIFICATE_PATH
+              value: /ssl/tls.crt
           resources:
             limits:
               memory: 128Mi
