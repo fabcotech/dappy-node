@@ -1,6 +1,6 @@
 {
   "name": "dappy-node",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Dappy main nodeJS program, stores the name records and provides a HTTP+TLS interface to interact with rnode",
   "author": "FABCO",
   "repository": "https://github.com/fabcotech/dappy-node.git",
@@ -19,8 +19,8 @@
     "dotenv": "6.2.0",
     "elliptic": "6.5.4",
     "express": "^4.17.1",
-    "rchain-token": "fabcotech/rchain-token#15.0",
-    "rchain-toolkit": "0.3.7",
+    "rchain-token": "fabcotech/rchain-token#15.0.2",
+    "rchain-toolkit": "0.4.1",
     "redis": "3.1.1"
   },
   "devDependencies": {
