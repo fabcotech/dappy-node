@@ -120,6 +120,7 @@ Be sure to have these tools installed:
 - [Git](https://git-scm.com/):  Open source distributed version control system
 - [Docker](https://www.docker.com/get-started) : Docker CLI and container runtime
 - [minikube](https://minikube.sigs.k8s.io/): CLI to create and manage local k8s clusters
+- [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl): CLI to manage kubernetes ressources
 
 ```sh
 # Start k8s cluster
