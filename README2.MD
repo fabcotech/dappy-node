@@ -6,22 +6,18 @@ The main component of this repository is the nodeJS application `/src` and the k
 
 ### Production with kubernetes (gamma, beta or d network)
 
-We have tried to make this repository as cloud agnostic as possible, you should not have to change anything in the `kubernetes/base` folder, those are the general dappy-node (nodeJS) and rnode settings.
-
-The settings in `kubernetes/base` will be overwritten by the settings in `kubernetes/envs` that are namespace and context-specific, you can see that files have the same names.
-
-You may handle one, two or more dappy-node namespaces with this repository. An example:
-- namespace 1 : **gamma**, connected to RChain testnet
-- namespace 2 : **beta**, connected to RChain mainnet
-- namespace 3 : **d**, connected to RChain mainnet (main dappy name system not deployed yet)
-
 #### General architecture
 
-The common/base kubernetes settings are in `kubernetes/base/`, those are the general settings that do not change, whatever the dappy network or RChain network is.
+The common/base kubernetes settings are in `kubernetes/base/`, those are the general settings that do not change, whatever the dappy network or RChain network is. The base settings can be overwritten by those in `kubernetes/envs` that are namespace-specific and context-specific.
 
-Then the specific configurations files are organized into the `kubernetes/envs/scaleway/` folder. We warmly invite you to duplicate this folder and create for example `kubernetes/envs/aws/` folder.
+The specific configurations files are organized on a per-namespace basis, in the `kubernetes/envs/scaleway/` folder. We warmly invite you to duplicate this folder and create for example `kubernetes/envs/aws/` folder.
 
 `kubernetes/envs/<CLOUD_PROVIDER>/` contains one folder per namespace. (see commands)
+
+You may handle one, two or more dappy-node namespaces with this repository. An example:
+- namespace 1 : **gamma**, connected to RChain testnet. Configuration files in `kubernetes/envs/scaleway/gamma`
+- namespace 2 : **beta**, connected to RChain mainnet. Configuration files in `kubernetes/envs/scaleway/beta`
+- namespace 3 : **d**, connected to RChain mainnet. Configuration files in `kubernetes/envs/scaleway/d` (main dappy name system not deployed yet)
 
 #### Cloud specific setting
 
@@ -29,21 +25,24 @@ The dappy-node endpoint does not need exposition to the DNS, but rnode endpoint 
 
 You will have to change this so that it works with your cloud provider.
 
-See `kubernetes/envs/scaleway/gamma/rnode/rnode-statefulset.yaml`.
+See `kubernetes/envs/<CLOUD_PROVIDER>/<NAMESPACE>/rnode/rnode-statefulset.yaml`.
 
 #### Namespace creation
 
 You will need one namespace per dappy network you want to be part of. A typical configuration is two namespaces: gamma and beta.
 
 ```
-kubectl create ns <CURRENT_NAMESPACE>
+kubectl create ns <NAMESPACE>
+??? missing commands ?
 ```
+
+??? Ajouter une précision sur le contexte VS le namespace ??
 
 #### Certificate generation (dappy-node <-> rnode)
 
-Rnode needs to be exposed to the public internet, each rnode will have its own subdomain. When it starts, each rnode instance will generate a TLS certificate and key, so we don't have to generate the public TLS certificate and key for the blockchain network.
+RNode needs to be exposed to the public internet, each rnode will have its own subdomain. When it starts, each rnode instance will generate a TLS certificate and key, so we don't have to generate the public TLS certificate and key for the blockchain network.
 
-Nevertheless we need to generate a key pair for the dappy-node <-> rnode communication to be secure. We advise you to have `CURRENT_NAMESPACE` the same as `CURRENT_K8S_ENV` ??? is it true. `RNODE_PUBLIC_DOMAIN_NAME` is the public URL of your cluster.
+Nevertheless we need to generate a key pair for the dappy-node <-> rnode communication to be secure. `RNODE_PUBLIC_DOMAIN_NAME` is the public URL of your cluster.
 
 ```sh
 openssl req \
@@ -62,8 +61,8 @@ openssl req \
     echo 'distinguished_name=req'; \
     echo '[san]'; \
     echo 'subjectAltName=DNS.1:localhost,DNS.2:rnode,DNS.3:<RNODE_PUBLIC_DOMAIN_NAME>')
-kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" -n=<CURRENT_NAMESPACE>
-kubectl apply -k kubernetes/envs/scaleway/<CURRENT_K8S_ENV>/rnode
+kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" -n=<NAMESPACE>
+kubectl apply -k kubernetes/envs/scaleway/<NAMESPACE>/rnode
 ```
 
 #### Certificate generation (dappy-browser/internet <-> dappy-node)
@@ -89,13 +88,13 @@ openssl req \
     echo 'subjectAltName=DNS.1:localhost,DNS.2:dappynode,DNS.3:<DAPPY_NODE_PUBLIC_DOMAIN_NAME>')
 
 # save as a secret
-kubectl create secret tls dappy-node-tls --key="dappy-node.key" --cert="dappy-node.crt" -n=<CURRENT_NAMESPACE>
-kubectl apply -k kubernetes/envs/scaleway/<CURRENT_K8S_ENV>/dappy
+kubectl create secret tls dappy-node-tls --key="dappy-node.key" --cert="dappy-node.crt" -n=<NAMESPACE>
+kubectl apply -k kubernetes/envs/scaleway/<NAMESPACE>/dappy
 ```
 
 #### Static IP
 
-A dappy node needs one static IP, get it from your cloud provider and reference it in `kubernetes/envs/scaleway/<CURRENT_K8S_ENV>/dappy/dappy-node-service.yaml .loadBalancerIP`. A fixed IP address matters for the (dappy-browser/internet <-> dappy-node) communication because it is a no-DNS communication.
+A dappy node needs one static IP, get it from your cloud provider and reference it in `kubernetes/envs/scaleway/<NAMESPACE>/dappy/dappy-node-service.yaml .loadBalancerIP`. A fixed IP address matters for the (dappy-browser/internet <-> dappy-node) communication because it is a no-DNS communication.
 
 #### RChain network / rnode configuration
 
