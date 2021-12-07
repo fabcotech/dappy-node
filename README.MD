@@ -210,7 +210,7 @@ kubectl create configmap master-uri --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_
 eval $(minikube docker-env)
 
 # Build dappy-node image and push it into minikube docker runtime
-docker build -t fabcotech/dappy-node -f DockerfileNodejs ../../.
+docker build -t fabcotech/dappy-node -f ../../../DockerfileNodejs ../../../
 
 # generate certificate for dappy-node HTTPS endpoint
 mkcert dappy.dev
