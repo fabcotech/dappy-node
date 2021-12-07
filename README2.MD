@@ -19,6 +19,10 @@ You may handle one, two or more dappy-node namespaces with this repository. An e
 - namespace 2 : **beta**, connected to RChain mainnet. Configuration files in `kubernetes/envs/scaleway/beta`
 - namespace 3 : **d**, connected to RChain mainnet. Configuration files in `kubernetes/envs/scaleway/d` (main dappy name system not deployed yet)
 
+Non production dappy-node infrastructure
+
+![Dappy-node non production infrastructure](./docs/infrastructure.png)
+
 #### Cloud specific setting
 
 The dappy-node endpoint does not need exposition to the DNS, but rnode endpoint must be exposed to the internet network and have a DNS. In scaleway we can recover the public URL of the kubernetes cluster with a wget command, and store the value in `/var/lib/config/public-domain` text file.
