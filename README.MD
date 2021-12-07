@@ -1,282 +1,54 @@
 # Dappy node
 
-Kubernetes stack that each dappy network member must run. Inludes a quick start (dev) setup, and a production k8s stack that includes 4 programs.
+This repository includes the necessary softwares and tools to run a validator node of dappy. Dappy is a no-DNS name system and web platform that uses blockchain and a co-resolution system instead of the centralized services of the DNS.
 
-## Quick start (dev)
+The main component of this repository is the nodeJS application `/src` and the kubernetes manifests.
 
-You have to have a RChain node running locally or remotely with regular API exposed ([rchain.coop/developer.html](https://rchain.coop/developer.html)), and a redis server running also. Generate certificates `.crt` and private key `.key` (see below).
+To run dappy-node locally, please refer to the [developer documentation](/DEVELOPER.MD).
 
-You must copy the values in any of the `.env.*.example` files, and rename it to `.env` so environment variables will be read. Of course you must also edit the `.env` variables so it fits with your rnode program and variables.
+### Production with kubernetes (gamma, beta or d network)
 
-```sh
-git clone https://github.com/fabcotech/dappy-node.git
-cd dapppy-node
-npm install
+#### General architecture
 
-node --max-old-space-size=8192 src/index.js --ssl
-```
+The common/base kubernetes settings are in `kubernetes/base/`, those are the general settings that do not change, whatever the dappy network or RChain network is. The base settings can be overwritten by those in `kubernetes/envs` that are namespace-specific and context-specific.
 
-**Note:** Of course set the 8192 value according to the capabilities of your server. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
+The specific configurations files are organized on a per-namespace basis, in the `kubernetes/envs/scaleway/` folder. We warmly invite you to duplicate this folder and create for example `kubernetes/envs/aws/` folder.
 
-## HTTPS/HTTP exposition
+`kubernetes/envs/<CLOUD_PROVIDER>/` contains one folder per namespace. (see commands)
 
-This program must be accessible through HTTP/TLS and also regular HTTP traffic.
+You may handle one, two or more dappy-node namespaces with this repository. An example:
+- namespace 1 : **gamma**, connected to RChain testnet. Configuration files in `kubernetes/envs/scaleway/gamma`
+- namespace 2 : **beta**, connected to RChain mainnet. Configuration files in `kubernetes/envs/scaleway/beta`
+- namespace 3 : **d**, connected to RChain mainnet. Configuration files in `kubernetes/envs/scaleway/d` (main dappy name system not deployed yet)
 
-List of the methods exposed for each kind of traffic :
+Non production dappy-node infrastructure
 
-**Encrypted HTTP/TLS** (only websocket) :
+![Dappy-node non production infrastructure](./docs/infrastructure.png)
 
-- `info` : General node version number and information
-- `get-nodes?network=NETWORK_NAME` : Get the nodes powering this network (expressend in rholang AST format)
-- `get-all-records` : Get all the name records
-- `deploy` : Deploy a rholang term
-- `listen-for-data-at-name` : Get unforgeable name value on the blockchain
-- `listen-for-data-at-name-x` : Get multiple unforgeable names value on the blockchain
-- `preview-private-names` : predict the unforgeable name (unforgeable name) id for a given public key / timestamp.
+#### Cloud specific setting
 
-**Unencrypted HTTP** (regular HTTP GET requests):
+The dappy-node endpoint does not need exposition to the DNS, but rnode endpoint must be publicly avaiable and have a domain name. To be executed, `rnode` needs to know its public domain (argument `--host`).  In scaleway we can recover the public domain name of the kubernetes nodes/virtual machines with a wget command, and store the value in `/var/lib/config/public-domain` text file.
 
-- `/info` : General node version number and information
-- `/get-nodes?network=NETWORK_NAME` : Get the nodes powering this network (expressed in rholang AST format)
+You will have to change this so that it works with your cloud provider.
 
-## Production
+See `kubernetes/envs/<CLOUD_PROVIDER>/<NAMESPACE>/rnode/rnode-statefulset.yaml`.
 
-In production, dappy-node is ran with kubernetes, see `kubernetes/dappy.yml` . The kubernetes application uses 1 custom docker image: `dappy-node` (`DockerFile`). All the `.env` files are ignored and not part of the docker images, everything is in `kubernetes/dappy.yml` file.
+#### Namespace creation
 
-### Build and push to docker hub
-
-If your working on the dappy-node code, `src/`, follow the following to build and update image on docker hub.
-
-```sh
-# dappy-node (nodejs)
-docker build . -f DockerfileNodejs -t fabcotech/dappy-node:0.1
-docker push fabcotech/dappy-node:0.1
-
-### Kubernetes stack
-
-Have `kubectl` installed
-
-The kubernetes stack includes 2 programs:
-
-- `dappy-node` (`DockerfileNodejs`)
-- `redis` (default redis docker image)
-
-### create certificates and private keys
-
-**dappy-node only uses self-signed certificates**
-
-TLS/SSL security files `dhparams.pem` and `nginx/sslparams.conf` are generated following this link https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
-
-Certificates and private key. A given cluster deployment will use one `dappynode.crt` file and one `dappynode.key` file, they are only used by nginx and must be set as secretes with kubernetes.
-
-```sh
-openssl req \
-  -x509 \
-  -newkey rsa:2048 \
-  -sha256 \
-  -days 3000 \
-  -nodes \
-  -keyout dappynode.key \
-  -out dappynode.crt \
-  -outform PEM \
-  -subj '/CN=dappynode' \
-  -extensions san \
-  -config <( \
-    echo '[req]'; \
-    echo 'distinguished_name=req'; \
-    echo '[san]'; \
-    echo 'subjectAltName=DNS.1:localhost,DNS.2:dappynode')
-```
-
-### Set the secrets
-
-```sh
-base64 -w 0 dappynode.crt
-# outputs aabcbdbabbc...
-
-base64 -w 0 dappynode.key
-# outputs cba56fdeadaed...
-
-# generate dhparams.pem
-openssl dhparam -out dhparams.pem 4096
-
-base64 -w 0 dhparams.pem
-# outputs abb56fdeadaed...
-
-cp sslsecret.example.yml sslsecret.yml
-
-# Now replace the 3 values in sslsecret.yml with the base64 generated
-
-# Create or update the secret in kubernetes
-kubectl apply -f sslsecret.yml
-```
-
-### Run dev/local environment on minikube (kubernetes)
-
-#### Install and run minikube cluster
-
-Be sure to have these tools installed:
-- [NodeJS](https://nodejs.org/): Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine.
-- [Git](https://git-scm.com/):  Open source distributed version control system
-- [Docker](https://www.docker.com/get-started) : Docker CLI and container runtime
-- [minikube](https://minikube.sigs.k8s.io/): CLI to create and manage local k8s clusters
-- [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl): CLI to manage kubernetes ressources
-
-```sh
-# Start k8s cluster
-minikube start
-
-# Install ingress controller
-minikube addons enable ingress
-```
-
-#### Deploy read only / observer rnode
-
-Install [mkcert](https://github.com/FiloSottile/mkcert): It enables locally-trusted development certificates. mkcert root CA must be installed with this command `mkcert -install` (chrome/firefox must be restarted)
-
-```sh
-# On macOS run following command in a dedicated terminal 
-sudo minikube tunnel
-
-cd <DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/envs/minikube
-# generate certificate for rnode HTTPS endpoint
-mkcert rnode.dev
-
-# Create secret sslsecret from certificate and key file
-kubectl create secret tls sslsecret --key="rnode.dev-key.pem" --cert="rnode.dev.pem"
-
-# Deploy rnode in devMode on minikube
-kubectl apply -k rnode
-
-# Wait until deployment is done
-kubectl wait --for=condition=available --timeout=600s deployment/aarnode
-
-# For MacOs only, add local entries to HOST file 
-sudo -s
-echo "127.0.0.1    rnode.dev" >> /etc/hosts
-exit
-
-# For Linux only, add local entries to HOST file  
-sudo -s
-echo "`minikube ip`    rnode.dev" >> /etc/hosts
-exit
-
-# Check HTTP and HTTPS endpoints
-curl http://rnode.dev/status
-curl https://rnode.dev/status
-```
-
-#### Deploy dappy-node 
-
-Prerequisites to run dappy-node:
-- Dappy name system master uri is needed and set to `RCHAIN_NAMES_MASTER_REGISTRY_URI` env variable.
-- Dappy name system contract `dappynamesystem` must exists on local rnode network
-
-To create master and deploy dappy name system contract on local rnode network, follow instructions below.
-
-```sh
-git clone https://github.com/fabcotech/rchain-token
-
-cd rchain-token
-
-npm install
-
-cat << EOF > .env
-READ_ONLY_HOST=http://rnode.dev
-VALIDATOR_HOST=http://rnode.dev
-PRIVATE_KEY=28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36
-EOF
-
-# deploy master contract
-node cli deploy-master
-
-# create a box aaa
-node cli deploy-box --box-id aaa
-
-# Deploy name system contract dappynamesystem on box aaa
-npm run dappy:namesystem
-```
-
-Contract is now deployed on your local rnode network, you can get its master URI from stdout, it is the `Master registry URI` value.
-Save it, you will use master URI in next step, referenced as `MASTER_REGISTRY_URI`.
-
-Inside folder `<DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/envs/minikube`
-
-```sh
-# Create configmap that contains master uri
-kubectl create configmap master-uri --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_URI=<MASTER_REGISTRY_URI>
-
-# Use minikube docker runtime
-eval $(minikube docker-env)
-
-# Build dappy-node image and push it into minikube docker runtime
-docker build -t fabcotech/dappy-node -f ../../../DockerfileNodejs ../../../
-
-# generate certificate for dappy-node HTTPS endpoint
-mkcert dappy.dev
-
-# Create secret sslsecret from certificate and key file
-kubectl create secret tls dappy-node-tls --key="dappy.dev-key.pem" --cert="dappy.dev.pem"
-
-# start or update config
-kubectl apply -k dappy
-
-# Wait until deployment is done
-kubectl wait --for=condition=available --timeout=600s deployment/dappy-node
-
-# For MacOs only, add local entries to HOST file 
-sudo -s
-echo "127.0.0.1    dappy.dev" >> /etc/hosts
-exit
-
-# For Linux only, add local entries to HOST file  
-sudo -s
-echo "`minikube ip`    dappy.dev" >> /etc/hosts
-exit
-```
-
-#### Other commands
-
-```sh
-# stop
-kubectl delete -f dappy.local.yml
-
-kubectl get pods
-kubectl logs [pod name]
-
-# Update dappy-node image and run it on kubernetes
-cd <DAPPY_NODE_GIT_ROOT_FOLDER> 
-eval $(minikube docker-env)
-docker build -t fabcotech/dappy-node -f DockerfileNodejs .
-kubectl rollout restart deployment dappy-jobs dappy-node
-
-# update values in file stresstest/ping-pong.js
-# and check ping/pong on http(3001) and https(3002)
-node stresstest/ping-pong.js
+You will need one namespace per dappy network you want to be part of. A typical configuration is two namespaces: gamma and beta.
 
 ```
-
-#### Deploy an ip app
-
-Prerequisites:
-- [mkcert](https://github.com/FiloSottile/mkcert)
-- [hosts](https://github.com/xwmx/hosts)
-
-```sh
-sudo hosts add 127.0.0.1 ipapp.dev
-mkcert ipapp.dev
-kubectl create secret tls ipapp-tls --key="ipapp.dev-key.pem" --cert="ipapp.dev.pem"
-rm ipapp.dev-key.pem ipapp.dev.pem
-kubectl apply -f kubernetes/envs/minikube/ipApp
-
-curl -I https://ipapp.dev #should return HTTP code 200
+kubectl create ns <NAMESPACE>
+??? missing commands ?
 ```
 
-### Run kubernetes (prod)
-#### Generate read only / observer rnode certificate
+??? Ajouter une précision sur le contexte VS le namespace ??
 
-Values required: 
-- <RNODE_PUBLIC_DOMAIN_NAME>: RNode public domain name  (Example: `c9e619b7-cacc-4441-b75a-363dfde1b0fa.pub.instances.scw.cloud`)
+#### Certificate generation (dappy-node <-> rnode)
+
+RNode needs to be exposed to the public internet, each rnode will have its own subdomain. When it starts, each rnode instance will generate a TLS certificate and key, so we don't have to generate the public TLS certificate and key for the blockchain network.
+
+Nevertheless we need to generate a key pair for the dappy-node <-> rnode communication to be secure. `RNODE_PUBLIC_DOMAIN_NAME` is the public URL of your cluster.
 
 ```sh
 openssl req \
@@ -295,11 +67,15 @@ openssl req \
     echo 'distinguished_name=req'; \
     echo '[san]'; \
     echo 'subjectAltName=DNS.1:localhost,DNS.2:rnode,DNS.3:<RNODE_PUBLIC_DOMAIN_NAME>')
+kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" -n=<NAMESPACE>
+kubectl apply -k kubernetes/envs/scaleway/<NAMESPACE>/rnode
+```
 
-kubectl create ns >CURRENT_NAMESPACE> # If namespace not exists
-kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" -n=<CURRENT_NAMESPACE>
-kubectl apply -k kubernetes/envs/scaleway/<CURRENT_K8S_ENV>/rnode
+#### Certificate generation (dappy-browser/internet <-> dappy-node)
 
+Dappy is a no-DNS, encrypted only name system. We need to generate a certificate and key for secure browser to node communication. `DAPPY_NETWORK` may be `gamma`, `beta`, `d` or `local` for development.
+
+```sh
 openssl req \
   -x509 \
   -newkey rsa:2048 \
@@ -309,7 +85,7 @@ openssl req \
   -keyout dappy-node.key \
   -out dappy-node.crt \
   -outform PEM \
-  -subj '/CN=<DAPPY_COMMON_NAME>'\
+  -subj '/CN=<DAPPY_NETWORK>'\
   -extensions san \
   -config <( \
     echo '[req]'; \
@@ -317,28 +93,56 @@ openssl req \
     echo '[san]'; \
     echo 'subjectAltName=DNS.1:localhost,DNS.2:dappynode,DNS.3:<DAPPY_NODE_PUBLIC_DOMAIN_NAME>')
 
-kubectl create ns >CURRENT_NAMESPACE> # If namespace not exists
-kubectl create secret tls dappy-node-tls --key="dappy-node.key" --cert="dappy-node.crt" -n=<CURRENT_NAMESPACE>
-kubectl apply -k kubernetes/envs/scaleway/<CURRENT_K8S_ENV>/dappy
+# save as a secret
+kubectl create secret tls dappy-node-tls --key="dappy-node.key" --cert="dappy-node.crt" -n=<NAMESPACE>
+kubectl apply -k kubernetes/envs/scaleway/<NAMESPACE>/dappy
 ```
 
-Check your `~/.kube/config` file, get one from gcloud / aws / scaleway etc..
+#### Static IP
 
-**(1) static IP** You need to have one static IP, and reference it in `lb-dappy-node service .loadBalancerIP`. A fixed IP address only matters for the [dappy browser] -> [dappy node] communication that is no-DNS.
+A dappy node needs one static IP, get it from your cloud provider and reference it in `kubernetes/envs/scaleway/<NAMESPACE>/dappy/dappy-node-service.yaml .loadBalancerIP`. A fixed IP address matters for the (dappy-browser/internet <-> dappy-node) communication because it is a no-DNS communication.
 
-**(2) rnode** nodejs must know one `VALIDATOR` and one/many `READ_ONLY` (comma separated) read only nodes.
+#### RChain network / rnode configuration
 
-**(3) dappy-node** Set the `DAPPY_NETWORK` (dappy setting, ex: gammanetwork, dnetwork), `RCHAIN_NAMES_REGISTRY_URI` and `RCHAIN_NETWORK` in `kubernetes/dappy.yml nodejs .env`
+Example file `kubernetes/envs/scaleway/gamma/rnode/rnode-statefulset.yaml`.
 
-**(4) nginx** Set the `DAPPY_NETWORK` (dappy setting), and `RCHAIN_NETWORK` in `kubernetes/dappy.yml nginx .env`
+Three settings are critical to run a rnode instance, and have it joining a RChain network.
+- `BOOTSTRAP` is the bootstrap node that you will first connect to. Please ask RChain dev team for a bootstrap node for a given network.
+- `RCHAIN_NETWORK` is the id of the RChain network that you must know prior to connecting, ex: "testbm202107". -
+- `SHARD_NAME` is the shard name ex: "testbm". -
+
+#### Dappy node configuration
+
+Example file `kubernetes/envs/scaleway/gamma/dappy/dappy-node-deployment.yaml`.
+
+- `RCHAIN_NAMES_MASTER_REGISTRY_URI` : A dappy node must be connected to a name system, therefore it must know a registry URI (blockchain address) of a rchain token master deployment. You can run dappy-node without this env. (dappy network with no name system).
+- `DAPPY_NETWORK` may be `gamma`, `beta`, `d` or `local` for development.
+- `READ_ONLY` (url) should point to the local url of rnode service in the k8s cluster, leave it as `https://rnode`.
+- `VALIDATOR` (url) should be a public url for a validator node of the same RChain network.
+- `RCHAIN_NETWORK` same as above.
+- `SHARD_NAME` same as above.
+
+
+#### Dappy jobs configuration
+
+Example file `kubernetes/envs/scaleway/gamma/dappy/dappy-jobs-deployment.yaml`.
+
+Dappy jobs are cron jobs, the main one stores log of some rchain token contracts.
+- `RCHAIN_NAMES_MASTER_REGISTRY_URI` same as above.
+- `CONTRACTS` comma-separated list of contracts you want to keep the logs of. example `dappynamesystem,dappytoken`.
+
+#### Commands for deploying and switching namespace
+
+##### Namespace
 
 ```sh
-# start or update config
-kubectl apply -f kubernetes/dappy.yml
-
-# stop
-kubectl delete -f kubernetes/dappy.yml
-
-kubectl get pods
-kubectl logs [pod name]
+kubectl get namespace
+# switch to gamma namespace
+kubectl config set-context --current --namespace=gamma
+# switch to beta namespace
+kubectl config set-context --current --namespace=beta
 ```
+
+##### Deployment
+
+???
