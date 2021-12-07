@@ -151,9 +151,14 @@ kubectl apply -k rnode
 # Wait until deployment is done
 kubectl wait --for=condition=available --timeout=600s deployment/aarnode
 
-# Add local entries to HOST file
+# For MacOs only, add local entries to HOST file 
 sudo -s
-echo "`minikube ip`   rnode.dev" >> /etc/hosts
+echo "127.0.0.1    rnode.dev" >> /etc/hosts
+exit
+
+# For Linux only, add local entries to HOST file  
+sudo -s
+echo "`minikube ip`    rnode.dev" >> /etc/hosts
 exit
 
 # Check HTTP and HTTPS endpoints
@@ -170,7 +175,7 @@ Prerequisites to run dappy-node:
 To create master and deploy dappy name system contract on local rnode network, follow instructions below.
 
 ```sh
-git clone git@github.com:fabcotech/rchain-token.git
+git clone https://github.com/fabcotech/rchain-token
 
 cd rchain-token
 
@@ -216,11 +221,18 @@ kubectl create secret tls dappy-node-tls --key="dappy.dev-key.pem" --cert="dappy
 # start or update config
 kubectl apply -k dappy
 
-# Add local entries to HOST file
+# Wait until deployment is done
+kubectl wait --for=condition=available --timeout=600s deployment/dappy-node
+
+# For MacOs only, add local entries to HOST file 
 sudo -s
 echo "127.0.0.1    dappy.dev" >> /etc/hosts
 exit
 
+# For Linux only, add local entries to HOST file  
+sudo -s
+echo "`minikube ip`    dappy.dev" >> /etc/hosts
+exit
 ```
 
 #### Other commands
