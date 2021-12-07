@@ -132,7 +132,7 @@ minikube addons enable ingress
 
 #### Deploy read only / observer rnode
 
-Install [mkcert](https://github.com/FiloSottile/mkcert): It enables locally-trusted development certificates
+Install [mkcert](https://github.com/FiloSottile/mkcert): It enables locally-trusted development certificates. mkcert root CA must be installed with this command `mkcert -install` (chrome/firefox must be restarted)
 
 ```sh
 # On macOS run following command in a dedicated terminal 
@@ -148,9 +148,12 @@ kubectl create secret tls sslsecret --key="rnode.dev-key.pem" --cert="rnode.dev.
 # Deploy rnode in devMode on minikube
 kubectl apply -k rnode
 
+# Wait until deployment is done
+kubectl wait --for=condition=available --timeout=600s deployment/aarnode
+
 # Add local entries to HOST file
 sudo -s
-echo "127.0.0.1    rnode.dev" >> /etc/hosts
+echo "`minikube ip`   rnode.dev" >> /etc/hosts
 exit
 
 # Check HTTP and HTTPS endpoints
