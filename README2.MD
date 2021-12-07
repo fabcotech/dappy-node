@@ -25,7 +25,7 @@ Non production dappy-node infrastructure
 
 #### Cloud specific setting
 
-The dappy-node endpoint does not need exposition to the DNS, but rnode endpoint must be exposed to the internet network and have a DNS. In scaleway we can recover the public URL of the kubernetes cluster with a wget command, and store the value in `/var/lib/config/public-domain` text file.
+The dappy-node endpoint does not need exposition to the DNS, but rnode endpoint must be exposed to the internet network and have a DNS. In scaleway we can recover the public URL of the kubernetes nodes/virtual machines with a wget command, and store the value in `/var/lib/config/public-domain` text file.
 
 You will have to change this so that it works with your cloud provider.
 
