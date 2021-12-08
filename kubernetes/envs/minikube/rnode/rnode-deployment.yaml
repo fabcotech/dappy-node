@@ -16,7 +16,7 @@ spec:
         configMap:
           name: rnode-genesis-config       
       - name: rnode-pv
-        hostpath:
+        hostPath:
           path: /root/.rnode
           type: Directory
       containers:
