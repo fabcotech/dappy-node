@@ -15,7 +15,10 @@ spec:
       - name: rnode-genesis-config
         configMap:
           name: rnode-genesis-config       
-
+      - name: rnode-pv
+        hostpath:
+          path: /root/.rnode
+          type: Directory
       containers:
         - image: rchain/rnode:v0.12.1
           name: aarnode-propose
@@ -37,8 +40,10 @@ spec:
                 --validator-private-key 28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36 \
                 --dev-mode
           volumeMounts:
+          - mountPath: /root/.rnode              
+            name: rnode-pv
           - name: rnode-genesis-config
-            mountPath: /root/.rnode/genesis               
+            mountPath: /root/.rnode/genesis
           ports:
             - containerPort: 40400
             - containerPort: 40401
@@ -49,5 +54,4 @@ spec:
             limits:
               cpu: 1000m
               memory: 2Gi
-
       restartPolicy: Always
