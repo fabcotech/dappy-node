@@ -146,3 +146,19 @@ kubectl config set-context --current --namespace=beta
 ##### Deployment
 
 ???
+
+###### Redeploy rnode on scaleway
+
+The idea is to drop existing rnode statefulset and their persistent volume and recreate them.
+
+```sh
+cd <DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/envs/scaleway/<NAMESPACE>
+
+# Delete existing rnode stafulset and associated pvc and pv
+kubectl delete statefulsets.apps rnode --wait
+# Wait until statefulset pods rnodes are deleted, use `kubectl get pods` to know if rnode pods are fully deleted
+# Delete rnode pvc by executing `kubectl get pvc` and `kubectl delete pvc <RNODE_PVC_NAME>`
+
+# Redeploy rnode
+kubectl apply -k rnode
+```
