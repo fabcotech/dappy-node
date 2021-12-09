@@ -13,4 +13,4 @@ patchesStrategicMerge:
 images:
   - name: fabcotech/dappy-node
     newName: fabcotech/dappy-node
-    newTag: '3.11'
+    newTag: '3.12'

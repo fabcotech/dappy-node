@@ -58,15 +58,15 @@ spec:
           resources:
             limits:
               memory: 500Mi
-        - image: rchain/rnode:v0.12.2-rc1
+        - image: rchain/rnode:v0.12.4
           name: rnode
           env:
             - name: BOOTSTRAP
-              value: 'rnode://a383f7404d045e3e3fa4f5ebb200c92fb3fc8e18@node0.bm.testnet.rchain.coop?protocol=40400&discovery=40404'
+              value: rnode://4a92f5d858a9ef9e6bf6e0fc1974f28ee8b067f6@node2.testnet.rchain.coop?protocol=42400&discovery=42404
             - name: RCHAIN_NETWORK
-              value: testbm210724
+              value: testnet210604
             - name: SHARD_NAME
-              value: 'testbm'
+              value: testnet210604
           volumeMounts:
             - name: rnode-tls 
               mountPath: /ssl

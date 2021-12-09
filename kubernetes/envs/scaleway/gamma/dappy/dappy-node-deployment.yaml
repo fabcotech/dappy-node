@@ -9,13 +9,13 @@ spec:
         - name: dappy-node
           env:
             - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
-              value: 4cd18xb89d4e8sdfb997rzkcoq6mth1xdfcsz6eyi3j6uqkfha7i8a
+              value: bwyeb7iiidaowwip6rowz4s645ytcqio34qu9g9qg66t5qjfcugqdo
             - name: DAPPY_NETWORK
               value: gamma
             - name: RCHAIN_NETWORK
-              value: testbm210724
+              value: testnet210604
             - name: VALIDATOR
-              value: https://node0.bm.testnet.rchain.coop
+              value: https://node2.testnet.rchain.coop
           volumeMounts:
           - name: rnode-tls
             mountPath: /ssl
