@@ -11,5 +11,5 @@ spec:
             - name: MASTER_REGISTRY_URI
               valueFrom:
                 configMapKeyRef:
-                  name: master-uri
+                  name: dappy-config 
                   key: RCHAIN_NAMES_MASTER_REGISTRY_URI

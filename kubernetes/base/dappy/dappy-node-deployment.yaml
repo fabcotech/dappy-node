@@ -32,8 +32,6 @@ spec:
               value: '3001'
             - name: LAST_BLOCK_JOB_INTERVAL
               value: '40000'
-            - name: RCHAIN_NAMES_CONTRACT_ID
-              value: dappynamesystem
           ports:
             - containerPort: 3001
             - containerPort: 3002

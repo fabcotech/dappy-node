@@ -11,10 +11,10 @@ spec:
             - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
               valueFrom:
                 configMapKeyRef:
-                  name: master-uri
+                  name: dappy-config
                   key: RCHAIN_NAMES_MASTER_REGISTRY_URI 
             - name: RCHAIN_NAMES_CONTRACT_ID
               valueFrom:
                 configMapKeyRef:
-                  name: master-uri
+                  name: dappy-config
                   key: RCHAIN_NAMES_CONTRACT_ID

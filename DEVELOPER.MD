@@ -182,7 +182,7 @@ Inside folder `<DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/envs/minikube`
 
 ```sh
 # Create configmap that contains master uri
-kubectl create configmap master-uri --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_URI=<MASTER_REGISTRY_URI> --from-literal=RCHAIN_NAMES_CONTRACT_ID=<CONTRACT_ID>
+kubectl create configmap rnode-config --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_URI=<MASTER_REGISTRY_URI> --from-literal=RCHAIN_NAMES_CONTRACT_ID=<CONTRACT_ID>
 
 # Use minikube docker runtime
 eval $(minikube docker-env)
@@ -211,6 +211,32 @@ exit
 sudo -s
 echo "`minikube ip`    dappy.dev" >> /etc/hosts
 exit
+```
+
+## Redeploy Dappy name system
+
+```sh
+# deploy master contract
+node cli deploy-master
+
+# create a box aaa
+node cli deploy-box --box-id aaa
+
+# Deploy name system contract dappynamesystem on box aaa
+npm run dappy:namesystem
+
+# Delete old configmap rnode-config
+kubectl delete cm dappy-config
+
+# <Grab and replace in next command MASTER_REGISTRY_URI> and <CONTRACT_ID> from stdout
+# Create configmap that contains master uri
+kubectl create configmap dappy-config --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_URI=<MASTER_REGISTRY_URI> --from-literal=RCHAIN_NAMES_CONTRACT_ID=<CONTRACT_ID>
+
+# start or update config
+kubectl apply -k dappy
+
+# Wait until deployment is done
+kubectl wait --for=condition=available --timeout=600s deployment/dappy-node
 ```
 
 ## Other commands
