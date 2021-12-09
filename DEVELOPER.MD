@@ -125,7 +125,7 @@ kubectl create secret tls sslsecret --key="rnode.dev-key.pem" --cert="rnode.dev.
 kubectl apply -k rnode
 
 # Wait until deployment is done
-kubectl wait --for=condition=available --timeout=600s deployment/aarnode
+kubectl wait --for=condition=available --timeout=600s deployment/rnode
 
 # For MacOs only, add local entries to HOST file 
 sudo -s

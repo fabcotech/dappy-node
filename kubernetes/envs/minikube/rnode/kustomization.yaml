@@ -1,4 +1,5 @@
 resources:
+- rnode-pv.yaml
 - rnode-deployment.yaml
 - rnode-genesis-configmap.yaml
 - rnode-ingress.yaml

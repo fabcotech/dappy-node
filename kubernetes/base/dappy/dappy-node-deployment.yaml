@@ -17,9 +17,9 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: READ_ONLY
-              value: http://aarnode:40403
+              value: http://rnode:40403
             - name: VALIDATOR
-              value: http://aarnode:40403
+              value: http://rnode:40403
             - name: RCHAIN_NETWORK
               value: local
             - name: DAPPY_NETWORK

@@ -25,7 +25,7 @@ spec:
             - name: START_JOB
               value: 'true'
             - name: READ_ONLY
-              value: http://aarnode:40403
+              value: http://rnode:40403
           command:
           - sh
           - '-c'

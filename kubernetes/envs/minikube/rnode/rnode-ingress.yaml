@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: aarnode
+  name: rnode
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
@@ -17,6 +17,6 @@ spec:
           pathType: Prefix
           backend:
             service:
-              name: aarnode
+              name: rnode
               port:
                 number: 40403

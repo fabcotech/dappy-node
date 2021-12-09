@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: aarnode
+  name: rnode
 spec:
   selector:
     matchLabels:
-      app: aarnode
+      app: rnode
   template:
     metadata:
       labels:
-        app: aarnode
+        app: rnode
     spec:
       volumes:
       - name: rnode-genesis-config
@@ -17,11 +17,11 @@ spec:
           name: rnode-genesis-config       
       - name: rnode-pv
         hostPath:
-          path: /root/.rnode
-          type: Directory
+          path: /root/.rnode/
+          type: DirectoryOrCreate
       containers:
         - image: rchain/rnode:v0.12.1
-          name: aarnode-propose
+          name: rnode-propose
           command:
           - sh
           - '-c'
@@ -31,7 +31,7 @@ spec:
               cpu: 500m
               memory: 500Mi
         - image: rchain/rnode:v0.12.1
-          name: aarnode
+          name: rnode
           command:
             - sh
             - "-c" 
@@ -40,7 +40,7 @@ spec:
                 --validator-private-key 28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36 \
                 --dev-mode
           volumeMounts:
-          - mountPath: /root/.rnode              
+          - mountPath: /root/.rnode/           
             name: rnode-pv
           - name: rnode-genesis-config
             mountPath: /root/.rnode/genesis

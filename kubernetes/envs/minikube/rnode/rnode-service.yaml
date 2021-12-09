@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: aarnode
+  name: rnode
 spec:
   type: NodePort
   selector:
-    app: aarnode
+    app: rnode
   ports:
     - port: 40403
       name: '40403'
