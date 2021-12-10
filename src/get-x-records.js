@@ -44,6 +44,9 @@ const recordSchema = {
     expires: {
       type: 'number',
     },
+    price: {
+      type: 'number',
+    },
 
     // not rchain-token properties
     data: {
@@ -94,7 +97,7 @@ const validate = ajv.compile(schema);
 
 const storeRecord = async (record, redisClient) => {
   const valid = validateRecord(record);
-  if (valid === false) {
+  if (valid === null) {
     log('invalid record ' + record.id);
     console.log(validate.errors);
     throw new Error('');
