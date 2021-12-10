@@ -18,6 +18,10 @@ spec:
               value: testnet210604
             - name: VALIDATOR
               value: https://node2.testnet.rchain.coop
+            - name: READ_ONLY
+              value: https://observer.testnet.rchain.coop
+            - name: READ_ONLY_CERTIFICATE_PATH
+              value: ''
           volumeMounts:
           - name: rnode-tls
             mountPath: /ssl
