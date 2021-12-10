@@ -10,6 +10,8 @@ spec:
           env:
             - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
               value: bwyeb7iiidaowwip6rowz4s645ytcqio34qu9g9qg66t5qjfcugqdo
+            - name: RCHAIN_NAMES_CONTRACT_ID
+              value: bwydappynamesystem
             - name: DAPPY_NETWORK
               value: gamma
             - name: RCHAIN_NETWORK
