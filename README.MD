@@ -2,7 +2,7 @@
 
 This repository includes the necessary softwares and tools to run a validator node of dappy. Dappy is a no-DNS name system and web platform that uses blockchain and a co-resolution system instead of the centralized services of the DNS.
 
-The main component of this repository is the nodeJS application `/src` and the kubernetes manifests.
+The main component of this repository is the nodeJS application `src` and the kubernetes manifests.
 
 To run dappy-node locally, please refer to the [developer documentation](/DEVELOPER.MD).
 
@@ -152,7 +152,7 @@ kubectl config set-context --current --namespace=beta
 The idea is to drop existing rnode statefulset and their persistent volume and recreate them.
 
 ```sh
-cd <DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/envs/scaleway/<NAMESPACE>
+cd kubernetes/envs/scaleway/<NAMESPACE>
 
 # Delete existing rnode stafulset and associated pvc and pv
 kubectl delete statefulsets.apps rnode --wait
