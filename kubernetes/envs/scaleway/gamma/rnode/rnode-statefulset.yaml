@@ -66,7 +66,7 @@ spec:
             - name: RCHAIN_NETWORK
               value: testnet210604
             - name: SHARD_NAME
-              value: testnet210604
+              value: testnet2
           volumeMounts:
             - name: rnode-tls 
               mountPath: /ssl
