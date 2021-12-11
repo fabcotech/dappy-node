@@ -33,16 +33,15 @@ You will have to change this so that it works with your cloud provider.
 
 See `kubernetes/envs/<CLOUD_PROVIDER>/<NAMESPACE>/rnode/rnode-statefulset.yaml`.
 
-#### Namespace creation
+#### Namespace
 
-You will need one namespace per dappy network you want to be part of. A typical configuration is two namespaces: gamma and beta.
-
+```sh
+kubectl get namespace
+# switch to gamma namespace
+kubectl config set-context --current --namespace=gamma
+# switch to beta namespace
+kubectl config set-context --current --namespace=beta
 ```
-kubectl create ns <NAMESPACE>
-??? missing commands ?
-```
-
-??? Ajouter une précision sur le contexte VS le namespace ??
 
 #### Certificate generation (dappy-node <-> rnode)
 
@@ -131,23 +130,8 @@ Dappy jobs are cron jobs, the main one stores log of some rchain token contracts
 - `RCHAIN_NAMES_MASTER_REGISTRY_URI` same as above.
 - `CONTRACTS` comma-separated list of contracts you want to keep the logs of. example `dappynamesystem,dappytoken`.
 
-#### Commands for deploying and switching namespace
 
-##### Namespace
-
-```sh
-kubectl get namespace
-# switch to gamma namespace
-kubectl config set-context --current --namespace=gamma
-# switch to beta namespace
-kubectl config set-context --current --namespace=beta
-```
-
-##### Deployment
-
-???
-
-###### Redeploy rnode on scaleway
+##### Redeploy rnode on scaleway
 
 The idea is to drop existing rnode statefulset and their persistent volume and recreate them.
 

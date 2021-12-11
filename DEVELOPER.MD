@@ -239,6 +239,18 @@ kubectl apply -k dappy
 kubectl wait --for=condition=available --timeout=600s deployment/dappy-node
 ```
 
+## Docker build and push to docker hub
+
+```sh
+# dappy-node (nodejs)
+docker build . -f DockerfileNodejs -t fabcotech/dappy-node:0.1
+docker push fabcotech/dappy-node:0.1
+
+# dappy-nginx (nginx)
+docker build . -f DockerfileNginx -t fabcotech/dappy-nginx:0.1
+docker push fabcotech/dappy-nginx:0.1
+```
+
 ## Other commands
 
 ```sh
@@ -257,7 +269,6 @@ kubectl rollout restart deployment dappy-jobs dappy-node
 # update values in file stresstest/ping-pong.js
 # and check ping/pong on http(3001) and https(3002)
 node stresstest/ping-pong.js
-
 ```
 
 ## Deploy an ip app
