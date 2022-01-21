@@ -216,6 +216,10 @@ exit
 ## Redeploy Dappy name system
 
 ```sh
+
+# Go to rchain-token repository folder
+cd <RCHAIN_TOKEN_REPOSITORY_FOLDER>
+
 # deploy master contract
 node cli deploy-master
 
