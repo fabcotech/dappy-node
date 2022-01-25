@@ -6,8 +6,10 @@ const {
   readBoxTerm,
 } = require('rchain-token');
 
-const redisHgetall = require('./utils').redisHgetall;
-const redisKeys = require('./utils').redisKeys;
+const { 
+  redisHgetall,
+  redisKeys,
+} = require('./utils');
 
 const log = require('./utils').log;
 
@@ -25,7 +27,6 @@ const schema = {
   },
   required: ['names'],
 };
-module.exports.schema = schema;
 
 const recordSchema = {
   schemaId: 'dappy-record',
@@ -87,7 +88,6 @@ const recordSchema = {
   },
   required: ['id', 'publicKey', 'boxId', 'data'],
 };
-module.exports.schema = schema;
 
 ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
 
@@ -176,7 +176,15 @@ const storeRecord = async (record, redisClient) => {
   return record;
 };
 
-module.exports.getXRecordsWsHandler = async (
+const cacheNegativeRecords = hset => async (names) => {
+  return Promise.all(
+    names.map(
+      name => hset(`record:${name}`, 'notfound', 'true')
+    )
+  );
+}
+
+const getXRecordsWsHandler = async (
   body,
   redisClient,
   urlOrOptions
@@ -284,6 +292,10 @@ module.exports.getXRecordsWsHandler = async (
           success: false,
           error: { message: 'parsing rchain-token purses failed' },
         };
+      }
+
+      if (Object.keys(purses).length === 0) {
+        await cacheNegativeRecords(redisClient.hset.bind(redisClient))(body.names);
       }
 
       const completeRecords = await Promise.all(
@@ -421,4 +433,10 @@ module.exports.getXRecordsWsHandler = async (
       error: { message: err },
     };
   }
+}
+
+module.exports = {
+  schema,
+  getXRecordsWsHandler,
+  cacheNegativeRecords,
 };

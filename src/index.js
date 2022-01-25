@@ -37,7 +37,7 @@ const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 const { getPurseZeroPrice } = require('./jobs/purse-zero-price');
 require('./jobs/get-contract-logs');
 
-const { log, getRedisMethod, redisKeys } = require('./utils');
+const { log,  redisKeys } = require('./utils');
 
 if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
   require('dotenv').config();
@@ -442,7 +442,7 @@ app.post('/get-nodes', (req, res) => {
 });
 
 app.post('/get-contract-logs', (req, res) => {
-  logs(getRedisMethod(redisClient, 'zrevrange'), log)(req.body, res);
+  logs(redisClient.zrevrange.bind(redisClient), log)(req.body, res);
 });
 
 const initServers = () => {

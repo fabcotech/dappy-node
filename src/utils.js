@@ -115,14 +115,7 @@ const redisSMembers = (client, pattern) => {
   });
 };
 
-const getRedisMethod = (client, method) => {
-  return args => new Promise((resolve, reject) => {
-    client[method](args, (errors, results) => {
-      if (errors) reject(errors);
-      else resolve(results);
-    });
-  });
-} 
+
 
 const getManyBagsDataTerm = (registryUri, ids) => {
   return `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
@@ -162,7 +155,6 @@ module.exports = {
   log,
   buildUnforgeableNameQuery,
   getManyBagsDataTerm,
-  getRedisMethod,
   redisGet,
   getValueFromCache,
   redisKeys,
