@@ -5,16 +5,246 @@ var expect = chai.expect;
 chai.use(spies);
 
 const {
-  cacheNegativeRecords
+  cacheNegativeRecords,
+  getXRecordsWsHandler,
 } = require('./get-x-records');
 
-describe('get-x-records', () => {
-  it('should save negative records', async () => {
+const createPurseExpr = (purseName) => ({
+  expr: [
+    {
+      ExprMap: {
+        data: {
+          [purseName]: {
+            ExprMap: {
+              data: {
+                boxId: { ExprString: { data: 'bwymybox' } },
+                id: { ExprString: { data: purseName } },
+                quantity: { ExprInt: { data: 1 } },
+                timestamp: { ExprInt: { data: 1639141080529 } },
+              },
+            },
+          },
+        },
+      },
+    },
+  ],
+});
+
+const createPurseDataExpr = (purseName) => ({
+  expr: [
+    {
+      ExprMap: {
+        data: {
+          [purseName]: {
+            ExprString: {
+              data: Buffer.from(JSON.stringify({
+                email: '',
+                csp: "default-src * 'unsafe-inline' 'unsafe-eval'",
+                badges: {},
+                servers: [
+                  { ip: '255.255.255.255', host: `${purseName}.tech`, primary: true },
+                ],
+              })).toString('hex'),
+            },
+          },
+        },
+      },
+    },
+  ],
+});
+
+describe('get-x-records', function () {
+  this.timeout(5000);
+  it('cacheNegativeRecords', async () => {
     const addToRedis = chai.spy(Promise.resolve({}));
     await cacheNegativeRecords(addToRedis)(['foo', 'bar', 'baz']);
     expect(addToRedis).to.have.been.called.exactly(3);
-    expect(addToRedis).to.have.been.first.called.with('record:foo', 'notfound', 'true');
-    expect(addToRedis).to.have.been.second.called.with('record:bar', 'notfound', 'true');
-    expect(addToRedis).to.have.been.third.called.with('record:baz', 'notfound', 'true');
+    expect(addToRedis).to.have.been.first.called.with(
+      'record:foo',
+      'notfound',
+      'true'
+    );
+    expect(addToRedis).to.have.been.second.called.with(
+      'record:bar',
+      'notfound',
+      'true'
+    );
+    expect(addToRedis).to.have.been.third.called.with(
+      'record:baz',
+      'notfound',
+      'true'
+    );
   });
+
+  it('return records in cache', async () => {
+    const args = {
+      names: ['foo', 'bar', 'baz'],
+    };
+    const urlOrOptions = {
+      url: 'https://read_only_node_url',
+      ca: ['CERT_FILE_CONTENT'],
+    };
+
+    const redisClient = {
+      hGetAll: chai.spy((r) =>
+        Promise.resolve({ id: r.replace('record:', '') })
+      ),
+    };
+
+    const log = chai.spy();
+    const exploreDeploy = chai.spy();
+
+    const r = await getXRecordsWsHandler(args, {
+      redisClient,
+      urlOrOptions,
+      log,
+      exploreDeploy,
+    });
+
+    expect(r).to.eql({
+      success: true,
+      records: args.names.map((n) => ({ id: n })),
+    });
+  });
+
+  it('should cache records', async () => {
+    const args = {
+      names: ['foo', 'dappy', 'baz'],
+    };
+    // const urlOrOptions = {
+    //   url: 'https://observer.testnet.rchain.coop',
+    // };
+    // global.process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI =
+    //   'bwyeb7iiidaowwip6rowz4s645ytcqio34qu9g9qg66t5qjfcugqdo';
+    // global.process.env.RCHAIN_NAMES_CONTRACT_ID = 'bwydappynamesystem';
+
+    const urlOrOptions = {};
+    const cachedRecord = {};
+    const redisClient = {
+      keys: chai.spy(Promise.resolve({})),
+      hGetAll: chai.spy((r) => {
+        switch (r) {
+          case 'box:bwymybox':
+            return { values: JSON.stringify({ publiKey: 'publicKey' }) };
+          case 'record:dappy':
+            return Promise.resolve({});
+          case 'record:foo':
+          case 'record:baz':
+            return { notfound: 'true' };
+        }
+      }),
+      hSet: chai.spy((r, k, v) => {
+        cachedRecord[k] = v;
+      }),
+      sAdd: chai.spy(Promise.resolve({})),
+    };
+
+    // const redisClient = require('redis').createClient({
+    //   url: 'redis://localhost:53146/2',
+    // });
+    // await redisClient.connect();
+
+    const log = chai.spy();
+    const exploreDeploy = chai.spy(
+      (() => {
+        let call = 0;
+        return () => {
+          call += 1;
+          if (call === 1) {
+            return JSON.stringify(createPurseExpr('dappy'));
+          }
+          if (call === 2) {
+            return JSON.stringify(createPurseDataExpr('dappy'));
+          }
+        };
+      })()
+    );
+
+    const r = await getXRecordsWsHandler(args, {
+      redisClient,
+      urlOrOptions,
+      log,
+      exploreDeploy,
+    });
+
+    expect(cachedRecord).to.eql({
+      id: 'dappy',
+      publicKey: '{"publiKey":"publicKey"}',
+      boxId: 'bwymybox',
+      data: '{"email":"","csp":"default-src * \'unsafe-inline\' \'unsafe-eval\'","badges":{},"servers":[{"ip":"255.255.255.255","host":"dappy.tech","primary":true}]}',
+    });
+  });
+
+  it('should cache and returns negative records', async () => {
+    const args = {
+      names: ['foo', 'bar'],
+    };
+
+    const urlOrOptions = {};
+    const cachedRecords = {};
+    const redisClient = {
+      keys: chai.spy(Promise.resolve({})),
+      hGetAll: chai.spy((r) => {
+        switch (r) {
+          case 'box:bwymybox':
+            return { values: JSON.stringify({ publiKey: 'publicKey' }) };
+          default:
+            return {};
+        }
+      }),
+      hSet: chai.spy((r, k, v) => {
+        const recordName = r.replace('record:', '')
+        if (!cachedRecords[recordName]) {
+          cachedRecords[recordName] = {};
+        }
+        cachedRecords[recordName][k] = v;
+      }),
+      sAdd: chai.spy(Promise.resolve({})),
+    };
+
+    const exploreDeploy = chai.spy(
+      (() => {
+        let call = 0;
+        return () => {
+          call += 1;
+          if (call === 1) {
+            return JSON.stringify(createPurseExpr('bar'));
+          }
+          if (call === 2) {
+            return JSON.stringify(createPurseDataExpr('bar'));
+          }
+        };
+      })()
+    );
+    const log = chai.spy();
+
+    const r = await getXRecordsWsHandler(args, {
+      redisClient,
+      urlOrOptions,
+      log,
+      exploreDeploy,
+    });
+
+    expect(cachedRecords.foo).to.eql({
+      notfound: 'true',
+    });
+
+    expect(r).to.eql({
+      success: true,
+      records: [{
+        id: 'foo',
+        notfound: 'true',
+      }, {
+        id: 'bar',
+        boxId: "bwymybox",
+        data: "{\"email\":\"\",\"csp\":\"default-src * 'unsafe-inline' 'unsafe-eval'\",\"badges\":{},\"servers\":[{\"ip\":\"255.255.255.255\",\"host\":\"bar.tech\",\"primary\":true}]}",
+        publicKey: {
+          "publiKey": "publicKey"
+        }
+      }]
+    })
+  });
+
+  it('args are not valid', () => {});
+  it('stop processing if args contains more than 5 names', () => {});
 });

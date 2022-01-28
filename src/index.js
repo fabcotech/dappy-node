@@ -61,15 +61,23 @@ try {
   log('could not parse nodes file : ' + process.env.NODES_FILE, 'error');
 }
 
-const redisClient = redis.createClient({
-  db: process.env.REDIS_DB,
-  host: process.env.REDIS_SERVICE_HOST,
-  port: process.env.REDIS_SERVICE_PORT || 6379,
-});
+let redisClient;
 
-redisClient.on('error', (err) => {
-  log('error : redis error ' + err);
-});
+async function initRedisClient() {
+  redisClient = redis.createClient({
+    db: process.env.REDIS_DB,
+    host: process.env.REDIS_SERVICE_HOST,
+    port: process.env.REDIS_SERVICE_PORT || 6379,
+  });
+
+  await redisClient.connect();
+  
+  redisClient.on('error', (err) => {
+    log('error : redis error ' + err);
+  });
+}
+
+initRedisClient();
 
 let recordsJobRunning = false;
 const runRecordsChildProcessJob = async (quarter) => {
@@ -403,9 +411,11 @@ app.post('/get-all-records', async (req, res) => {
 
 app.post('/get-x-records', async (req, res) => {
   const data = await getXRecordsWsHandler(
-    req.body,
-    redisClient,
-    pickRandomReadOnly()
+    req.body, 
+    {
+      redisClient,
+      urlOrOptions: pickRandomReadOnly()
+    }
   );
   if (data.success) {
     res.write(JSON.stringify(data));

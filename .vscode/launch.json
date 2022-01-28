@@ -12,6 +12,21 @@
         "<node_internals>/**"
       ],
       "program": "${workspaceFolder}/src/index.js"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Mocha Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "stopOnEntry": false,
+      "cwd": "${workspaceRoot}",
+      "args": [
+        "--inspect-brk",
+        "${relativeFile}"
+      ],
+      "skipFiles": [
+        "<node_internals>/**"
+      ]      
     }
   ]
 }

@@ -6,13 +6,6 @@ const {
   readBoxTerm,
 } = require('rchain-token');
 
-const { 
-  redisHgetall,
-  redisKeys,
-} = require('./utils');
-
-const log = require('./utils').log;
-
 const ajv = new Ajv();
 const schema = {
   schemaId: 'get-x-records',
@@ -97,7 +90,7 @@ const validate = ajv.compile(schema);
 
 const storeRecord = async (record, redisClient) => {
   const valid = validateRecord(record);
-  if (valid === null) {
+  if (valid ===  null) {
     log('invalid record ' + record.id);
     console.log(validate.errors);
     throw new Error('');
@@ -115,59 +108,18 @@ const storeRecord = async (record, redisClient) => {
       typeof record[key] === 'boolean' ||
       record[key] === null
     ) {
-      redisSetValues.push(key);
-      redisSetValues.push(record[key]);
+      redisSetValues.push([key, record[key]]);
     } else if (!!record[key] && record[key].constructor === Array) {
-      redisSetValues.push(key);
-      redisSetValues.push(JSON.stringify(record[key]));
+      redisSetValues.push([key, JSON.stringify(record[key])]);
     } else if (!!record[key] && record[key].constructor === Object) {
-      redisSetValues.push(key);
-      redisSetValues.push(JSON.stringify(record[key]));
+      redisSetValues.push([key, JSON.stringify(record[key])]);
     }
   }
 
-  await new Promise((res, rej) => {
-    let over = false;
-    setTimeout(() => {
-      if (!over) {
-        over = true;
-        rej('redis timeout error 1');
-      }
-    }, 5000);
-    redisClient.hmset(`record:${record.id}`, ...redisSetValues, (err, resp) => {
-      if (!over) {
-        over = true;
-        if (err) {
-          log(err, 'error');
-          return rej(err);
-        }
-        res();
-      }
-    });
-  });
-  await new Promise((res, rej) => {
-    let over = false;
-    setTimeout(() => {
-      if (!over) {
-        over = true;
-        rej('redis timeout error 2');
-      }
-    }, 5000);
-    redisClient.sadd(
-      `publicKey:${record.publicKey}`,
-      record.id,
-      (err, resp) => {
-        if (!over) {
-          over = true;
-          if (err) {
-            log(err, 'error');
-            return rej(err);
-          }
-          res();
-        }
-      }
-    );
-  });
+  await Promise.all(redisSetValues.map(([k, v]) => 
+    redisClient.hSet(`record:${record.id}`, k, v)));
+
+  await redisClient.sAdd(`publicKey:${record.publicKey.publicKey}`, record.id);
 
   // just like if it came out from redis
   if (record.data) {
@@ -184,248 +136,313 @@ const cacheNegativeRecords = hset => async (names) => {
   );
 }
 
-const getXRecordsWsHandler = async (
-  body,
-  redisClient,
-  urlOrOptions
-) => {
-  log('get-x-records');
-  const valid = validate(body);
+const validateXRecordsArgs = (args) => {
+  const valid = validate(args);
 
   if (!valid) {
     return {
-      success: false,
-      error: {
-        message: validate.errors.map((e) => `body${e.dataPath} ${e.message}`),
-      },
+      message: validate.errors.map((e) => `body${e.dataPath} ${e.message}`),
     };
   }
 
-  if (body.names.length > 5) {
+  if (args.names.length > 5) {
     return {
-      success: false,
-      error: { message: 'max 5 names' },
-    };
+      message: 'max 5 names',
+    }
   }
 
-  const missings = [];
+  return;
+}
+
+const fetchRchainBox = async (boxId, {
+  redisClient,
+  log,
+  urlOrOptions,
+  exploreDeploy
+}) => {
   try {
-    let results = await Promise.all(
-      body.names.map(
-        (n) =>
-          new Promise((res, rej) => {
-            redisKeys(redisClient, `record:${n}`)
-              .then((keys) => {
-                const key = keys.find((k) => k === `record:${n}`);
-                if (typeof key === 'string') {
-                  redisHgetall(redisClient, key).then((record) => {
-                    res(record);
-                  });
-                } else {
-                  missings.push(n);
-                  res(null);
-                }
-              })
-              .catch((err) => {
-                log('redis error get keys for ' + n, 'error');
-              });
-          })
-      )
+    const exploreDeployResponseBox = await exploreDeploy(urlOrOptions, {
+      term: readBoxTerm({
+        masterRegistryUri:
+          process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+        boxId,
+      }),
+    });
+
+    const boxConfig = rchainToolkit.utils.rhoValToJs(
+      JSON.parse(exploreDeployResponseBox).expr[0]
     );
 
-    if (missings.length) {
-      let exploreDeployResponse;
-      let exploreDeployResponseData;
+    await redisClient.hSet(
+      `box:${boxId}`,
+      'values',
+      JSON.stringify(boxConfig)
+    );
+    return boxConfig;
+  } catch (err) {
+    log('could not get box ' + names.join(', ') + '', 'error');
+    // it simply means that none have been found
+    return;
+  }
+}
+
+const parsePurseData = (purseData) => {
+  const buf = Buffer.from(purseData, 'hex');
+  if (buf.length > 16184) {
+    log('ignoring record ' + k + ' : length > 16184', 'warning');
+    return;
+  }
+  return JSON.parse(buf.toString('utf8'));
+}
+
+const getRchainBox = async (boxId, {
+  redisClient,
+  log,
+  urlOrOptions,
+  exploreDeploy 
+}) => {
+  const hg = await redisClient.hGetAll(`box:${boxId}`);
+
+  if (Object.keys(hg).length) {
+    return JSON.parse(hg.values);
+  }
+
+  return fetchRchainBox(boxId, {
+    redisClient,
+    log,
+    urlOrOptions,
+    exploreDeploy 
+  });
+}
+
+const cacheRecords = async (records, redisClient) => {
+  return Promise.all(
+    records.map(
+      record => storeRecord(record, redisClient)));
+}
+
+const makeRecords = async (purses, pursesData, {
+  redisClient,
+  log,
+  urlOrOptions,
+  exploreDeploy
+}) => {
+  return Promise.all(Object.keys(purses).map( 
+    async (k) => {
+      if (!pursesData[k]) {
+        return;
+      }
       try {
-        exploreDeployResponse = await rchainToolkit.http.exploreDeploy(
-          urlOrOptions,
-          {
-            term: readPursesTerm({
-              masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
-              contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
-              pursesIds: missings,
-            }),
-          }
-        );
-        exploreDeployResponseData = await rchainToolkit.http.exploreDeploy(
-          urlOrOptions,
-          {
-            term: readPursesDataTerm({
-              masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
-              contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
-              pursesIds: missings,
-            }),
-          }
-        );
-      } catch (err) {
-        log('Name ' + body.name + ': could not explore-deploy ' + err, 'error');
-        return {
-          success: false,
-          error: { message: 'explore-deploy request to the blockchain failed' },
+        const completeRecord = {
+          // rchain-token purse
+          id: k,
+          publicKey: await getRchainBox(purses[k].boxId, {
+            redisClient,
+            log,
+            urlOrOptions,
+            exploreDeploy              
+          }),
+          boxId: purses[k].boxId,
+
+          // rchain-token data
+          data: parsePurseData(pursesData[k]),
         };
-      }
-
-      let pursesData;
-      try {
-        pursesData = rchainToolkit.utils.rhoValToJs(
-          JSON.parse(exploreDeployResponseData).expr[0]
-        );
-      } catch (err) {
-        log(
-          'did not found records ' +
-            missings.join(', ') +
-            ' a new explore-deploy will be done next request',
-          'warning'
-        );
-        // it simply means that none have been found
-        return { success: true, records: results };
-      }
-
-      let purses;
-      try {
-        purses = rchainToolkit.utils.rhoValToJs(
-          JSON.parse(exploreDeployResponse).expr[0]
-        );
-      } catch (err) {
-        log('get-x-records could not parse purses ' + err, 'error');
-        return {
-          success: false,
-          error: { message: 'parsing rchain-token purses failed' },
-        };
-      }
-
-      if (Object.keys(purses).length === 0) {
-        await cacheNegativeRecords(redisClient.hset.bind(redisClient))(body.names);
-      }
-
-      const completeRecords = await Promise.all(
-        Object.keys(purses).map((k) => {
-          return new Promise(async (resolve) => {
-            if (!pursesData[k]) {
-              resolve(null);
-              return;
-            }
-            let boxConfig;
-            try {
-              const boxKeys = await redisKeys(
-                redisClient,
-                `box:${purses[k].boxId}`
-              );
-              const boxKey = boxKeys.find(
-                (bk) => bk === `box:${purses[k].boxId}`
-              );
-              if (typeof boxKey === 'string') {
-                const hg = await redisHgetall(redisClient, boxKey);
-                boxConfig = JSON.parse(hg.values);
-              } else {
-                const exploreDeployResponseBox =
-                  await rchainToolkit.http.exploreDeploy(urlOrOptions, {
-                    term: readBoxTerm({
-                      masterRegistryUri:
-                        process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
-                      boxId: purses[k].boxId,
-                    }),
-                  });
-                try {
-                  boxConfig = rchainToolkit.utils.rhoValToJs(
-                    JSON.parse(exploreDeployResponseBox).expr[0]
-                  );
-                } catch (err) {
-                  log('could not get box ' + missings.join(', ') + '', 'error');
-                  // it simply means that none have been found
-                  resolve(null);
-                  return;
-                }
-                await new Promise((res, rej) => {
-                  let over = false;
-                  setTimeout(() => {
-                    if (!over) {
-                      over = true;
-                      rej('redis timeout error 1');
-                    }
-                  }, 5000);
-                  redisClient.hmset(
-                    `box:${purses[k].boxId}`,
-                    'values',
-                    JSON.stringify(boxConfig),
-                    (err, resp) => {
-                      if (!over) {
-                        over = true;
-                        if (err) {
-                          log(err, 'error');
-                          return rej(err);
-                        }
-                        res();
-                      }
-                    }
-                  );
-                });
-              }
-
-              const buf = Buffer.from(pursesData[k], 'hex');
-              if (buf.length > 16184) {
-                log('ignoring record ' + k + ' : length > 16184', 'warning');
-                resolve(null);
-                return;
-              }
-              const data = JSON.parse(buf.toString('utf8'));
-              const completeRecord = {
-                // rchain-token purse
-                id: k,
-                publicKey: boxConfig.publicKey,
-                boxId: purses[k].boxId,
-
-                // rchain-token data
-                data: data,
-              };
-              // redis cannot store undefined as value
-              // price will be stored in redis, and sent back to client as string
-              if (
-                typeof purses[k].price === 'number' &&
-                !isNaN(purses[k].price)
-              ) {
-                completeRecord.price = purses[k].price;
-              }
-              if (
-                typeof purses[k].expires === 'number' &&
-                !isNaN(purses[k].expires)
-              ) {
-                completeRecord.expires = purses[k].expires;
-              }
-
-              storeRecord(completeRecord, redisClient)
-                .then((result) => resolve(result))
-                .catch((err) => resolve(null));
-            } catch (err) {
-              console.log(err);
-              log('failed to parse record ' + k, 'warning');
-              resolve(null);
-            }
-          });
-        })
-      );
-
-      results = results.map((r, i) => {
-        if (r === null) {
-          const name = body.names[i];
-          const missingIndex = missings.findIndex((n) => n === name);
-          if (completeRecords[missingIndex]) {
-            return completeRecords[missingIndex];
-          } else {
-            log(
-              'did not found record ' +
-                name +
-                ' a new explore-deploy will be done next request',
-              'warning'
-            );
-          }
-          return r;
+        // redis cannot store undefined as value
+        // price will be stored in redis, and sent back to client as string
+        if (
+          typeof purses[k].price === 'number' &&
+          !isNaN(purses[k].price)
+        ) {
+          completeRecord.price = purses[k].price;
         }
-        return r;
-      });
+        if (
+          typeof purses[k].expires === 'number' &&
+          !isNaN(purses[k].expires)
+        ) {
+          completeRecord.expires = purses[k].expires;
+        }
+
+        return completeRecord;
+      } catch (err) {
+        log(err);
+        log('failed to parse record ' + k, 'warning');
+      }
+    }
+  ));
+}
+
+const fetchRchainPurses = async (names, {
+  log,
+  urlOrOptions,
+  exploreDeploy
+}) => {
+  let exploreDeployResponse; 
+  try {
+    exploreDeployResponse = await exploreDeploy(
+      urlOrOptions,
+      {
+        term: readPursesTerm({
+          masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+          contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
+          pursesIds: names,
+        }),
+      }
+    );
+  }
+  catch (err) {
+    log('Names ' + args.names.join(' ') + ': could not explore-deploy ' + err, 'error');
+    throw new Error('explore-deploy request to the blockchain failed');
+  }
+ 
+  try {
+    return rchainToolkit.utils.rhoValToJs(
+      JSON.parse(exploreDeployResponse).expr[0]
+    );
+  } catch (err) {
+    log('get-x-records could not parse purses ' + err, 'error');
+    throw new Error('parsing rchain-token purses failed')
+  }
+};
+
+const fetchRchainPursesData = async (names, {
+  log,
+  urlOrOptions,
+  exploreDeploy
+}) => {
+  let exploreDeployResponseData;
+  try {
+    exploreDeployResponseData = await exploreDeploy(
+      urlOrOptions,
+      {
+        term: readPursesDataTerm({
+          masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+          contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
+          pursesIds: names,
+        }),
+      }
+    );
+  } catch (err) {
+    log('Names ' + args.names.join(' ') + ': could not explore-deploy ' + err, 'error');
+    throw new Error('explore-deploy request to the blockchain failed');
+  }
+
+  try {
+    return rchainToolkit.utils.rhoValToJs(
+      JSON.parse(exploreDeployResponseData).expr[0]
+    );  
+  } catch (err) {
+    log(
+      'did not found records ' +
+        names.join(', ') +
+        ' a new explore-deploy will be done next request',
+      'warning'
+    );
+    // it simply means that none have been found
+    // return { success: true, records: cacheResults };
+    return [];
+  }
+}
+
+const fetchRchainRecords = async (names, {
+  redisClient,
+  log,
+  urlOrOptions,
+  exploreDeploy
+}) => {
+  if (!names.length) {
+    return [];
+  }
+
+  const purses = await fetchRchainPurses(names, {
+    log,
+    urlOrOptions,
+    exploreDeploy
+  });
+
+  const pursesData = await fetchRchainPursesData(names, {
+    log,
+    urlOrOptions,
+    exploreDeploy
+  });
+
+  const missingRecords = names.filter(name => !Object.keys(purses).includes(name));
+
+  if (missingRecords.length > 0) {
+    const cache = await cacheNegativeRecords(redisClient.hSet.bind(redisClient))(missingRecords);
+    console.log(cache);
+  }
+
+  const records = (await makeRecords(purses, pursesData, {
+    redisClient,
+    log,
+    urlOrOptions,
+    exploreDeploy 
+  })).filter(record => !!record);
+
+  try {
+    await cacheRecords(records, redisClient);
+  }
+  catch (err) {
+    log(err);
+  }
+
+  return [
+    ...records,
+    ...missingRecords.map(r => ({ id: r, 'notfound': 'true' })),
+  ];
+}
+
+const mergeCacheAndRchainRecords = (cacheRecords, rchainRecords) =>
+  Object.entries(cacheRecords)
+        .map(([recordName, record]) => ({
+          ...record || {},
+          ...rchainRecords.find(r => r.id === recordName)
+        }));
+
+const getXRecordsWsHandler = async (
+  args,
+  {
+    redisClient,
+    log = require('./utils').log,
+    urlOrOptions,
+    exploreDeploy = rchainToolkit.http.exploreDeploy
+  }
+) => {
+  try {
+    const validationErrors = validateXRecordsArgs(args);
+
+    if (validationErrors) {
+      return {
+        success: false,
+        error: validationErrors
+      };
     }
 
-    return { success: true, records: results };
+    const cacheRecords = Object.fromEntries(await Promise.all(
+      args.names.map(async (name) => {
+        const recordCache = await redisClient.hGetAll(`record:${name}`);
+        return [name, Object.keys(recordCache).length ? {
+          id: name,
+          ...recordCache,
+        }: undefined];
+      })
+    ));
+
+    const cacheMissingRecords = args.names
+      .filter(name => cacheRecords[name] === undefined);
+
+    const rchainRecords = await fetchRchainRecords(cacheMissingRecords, {
+      redisClient,
+      log,
+      urlOrOptions,
+      exploreDeploy   
+    });
+
+    return {
+      success: true,
+      records: mergeCacheAndRchainRecords(cacheRecords, rchainRecords),
+    };
+
   } catch (err) {
     console.log(err);
     return {

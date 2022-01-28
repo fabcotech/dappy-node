@@ -60,8 +60,10 @@ function initConfig(env = {}) {
   };
 }
 
-function initClientRedis(redisUrl) {
-  return redis.createClient(redisUrl);
+async function initClientRedis(redisUrl) {
+  const redisClient = redis.createClient(redisUrl);
+  await redisClient.connect();
+  return redisClient;
 }
 
 function getZAdd(client) {
@@ -152,7 +154,7 @@ function waitDuration(milliseconds) {
 
 async function startJob() {
   const config = initConfig(process.env);
-  const redisClient = initClientRedis(config.redisUrl);
+  const redisClient = await initClientRedis(config.redisUrl);
   const zAdd = getZAdd(redisClient);
 
   logInfo('get contract logs started');
