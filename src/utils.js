@@ -40,17 +40,6 @@ const log = (a, level = 'info') => {
   }
 };
 
-const redisKeys = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    client.keys(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      resolve(res);
-    });
-  });
-};
-
 const redisGet = (redisClient, pattern) => {
   return redisClient.get(pattern);
 };
@@ -129,8 +118,6 @@ module.exports = {
   buildUnforgeableNameQuery,
   getManyBagsDataTerm,
   redisGet,
-  getValueFromCache,
-  redisKeys,
   redisSmembers,
   redisHgetall,
   redisSMembers,

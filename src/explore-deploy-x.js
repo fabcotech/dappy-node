@@ -71,14 +71,9 @@ module.exports.exploreDeployXWsHandler = async (
 
   // put in cache only if it comes from explore-deploy request
   if (!foundInCache && useCache) {
-    redisClient.set(
+    await redisClient.set(
       cacheId,
-      JSON.stringify({ results: exploreDeployResponses }),
-      (err, resp) => {
-        if (err) {
-          log(err, 'error');
-        }
-      }
+      JSON.stringify({ results: exploreDeployResponses })
     );
   }
 

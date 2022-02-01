@@ -37,7 +37,7 @@ const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 const { getPurseZeroPrice } = require('./jobs/purse-zero-price');
 require('./jobs/get-contract-logs');
 
-const { log,  redisKeys } = require('./utils');
+const { log } = require('./utils');
 
 if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
   require('dotenv').config();
@@ -240,8 +240,8 @@ const useCache = caching && caching !== 0 && typeof caching === 'number';
 if (useCache) {
   setInterval(async () => {
     const cacheEpoch = Math.round(new Date().getTime() / (1000 * caching));
-    const edKeys = await redisKeys(redisClient, `cache:ed:*`);
-    const edxKeys = await redisKeys(redisClient, `cache:edx:*`);
+    const edKeys = await redisClient.keys(`cache:ed:*`);
+    const edxKeys = await redisClient.keys(`cache:edx:*`);
     const old = edKeys.concat(edxKeys).filter((k) => {
       return parseInt(k.split(':')[3]) < cacheEpoch;
     });

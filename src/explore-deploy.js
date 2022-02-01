@@ -70,11 +70,7 @@ module.exports.exploreDeployWsHandler = async (
 
   // put in cache only if it comes from explore-deploy request
   if (!foundInCache && useCache) {
-    redisClient.set(cacheId, exploreDeployResponse, (err, resp) => {
-      if (err) {
-        log(err, 'error');
-      }
-    });
+    await redisClient.set(cacheId, exploreDeployResponse);
   }
 
   if (exploreDeployResponse.startsWith('"Error')) {

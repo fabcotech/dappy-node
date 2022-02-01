@@ -2,7 +2,6 @@ const Ajv = require('ajv');
 
 const redisHgetall = require('./utils').redisHgetall;
 const redisSMembers = require('./utils').redisSMembers;
-const redisKeys = require('./utils').redisKeys;
 
 const log = require('./utils').log;
 
@@ -51,16 +50,16 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
     const results = await Promise.all(
       body.publicKeys.map(
         (n) =>
-          new Promise((res, rej) => {
-            redisKeys(redisClient, `publicKey:${n}`)
+          new Promise((res) => {
+            redisClient.keys(`publicKey:${n}`)
               .then((keys) => {
                 const key = keys.find((k) => k === `publicKey:${n}`);
                 if (typeof key === 'string') {
                   redisSMembers(redisClient, key).then((names) => {
                     Promise.all(
                       names.map((name) => {
-                        return new Promise((res2, rej2) => {
-                          redisKeys(redisClient, `record:${name}`)
+                        return new Promise((res2) => {
+                          redisClient.keys(`record:${name}`)
                             .then((keys2) => {
                               const key2 = keys2.find(
                                 (k) => k === `record:${name}`
