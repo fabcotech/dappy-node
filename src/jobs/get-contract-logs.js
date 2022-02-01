@@ -66,15 +66,6 @@ async function initClientRedis(redisUrl) {
   return redisClient;
 }
 
-function getZAdd(client) {
-  return (args) =>
-    new Promise((resolve, reject) => {
-      client.zadd(args, (errors, results) => {
-        if (errors) reject(errors);
-        else resolve(results);
-      });
-    });
-}
 
 function parseLogTs(l) {
   return parseInt(l.match(/^[^,]+,(\d+),/)[1]);
@@ -127,10 +118,10 @@ async function queryLogs(
 async function saveToSortedSetsInRedis(zAdd, contract, logs) {
   if (!logs.length) return;
 
-  const nbEntries = await zAdd([
+  const nbEntries = await zAdd(
     `logs:${contract}`,
     ...logs.map((l) => [l.ts, l.msg]).flat(),
-  ]);
+  );
 
   if (nbEntries) {
     logInfo(`Added ${nbEntries} entries`);
@@ -155,7 +146,7 @@ function waitDuration(milliseconds) {
 async function startJob() {
   const config = initConfig(process.env);
   const redisClient = await initClientRedis(config.redisUrl);
-  const zAdd = getZAdd(redisClient);
+  const zAdd = redisClient.zAdd.bind(redisClient);
 
   logInfo('get contract logs started');
 
