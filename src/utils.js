@@ -44,30 +44,6 @@ const redisGet = (redisClient, pattern) => {
   return redisClient.get(pattern);
 };
 
-const redisSmembers = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    client.smembers(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      resolve(res);
-    });
-  });
-};
-
-const redisSMembers = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    client.smembers(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      resolve(res);
-    });
-  });
-};
-
-
-
 const getManyBagsDataTerm = (registryUri, ids) => {
   return `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
     lookup!(\`rho:id:${registryUri}\`, *entryCh) |
@@ -107,6 +83,4 @@ module.exports = {
   buildUnforgeableNameQuery,
   getManyBagsDataTerm,
   redisGet,
-  redisSmembers,
-  redisSMembers,
 }

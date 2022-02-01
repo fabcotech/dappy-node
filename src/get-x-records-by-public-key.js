@@ -1,7 +1,5 @@
 const Ajv = require('ajv');
 
-const redisSMembers = require('./utils').redisSMembers;
-
 const log = require('./utils').log;
 
 const ajv = new Ajv();
@@ -54,7 +52,7 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
               .then((keys) => {
                 const key = keys.find((k) => k === `publicKey:${n}`);
                 if (typeof key === 'string') {
-                  redisSMembers(redisClient, key).then((names) => {
+                  redisClient.sMembers(key).then((names) => {
                     Promise.all(
                       names.map((name) => {
                         return new Promise((res2) => {
