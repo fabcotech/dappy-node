@@ -90,7 +90,7 @@ describe('get-contract-logs', () => {
     ];
     await saveToSortedSetsInRedis(zAdd, 'foo', logs);
 
-    expect(zAdd).have.been.called.with(['logs:foo', logs[0].ts, logs[0].msg, logs[1].ts, logs[1].msg]);
+    expect(zAdd).have.been.called.with('logs:foo', logs[0].ts, logs[0].msg, logs[1].ts, logs[1].msg);
   });
   it('should save nothing if no logs', async () => {
     const zAdd = chai.spy();
