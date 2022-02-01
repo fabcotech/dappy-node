@@ -40,10 +40,6 @@ const log = (a, level = 'info') => {
   }
 };
 
-const redisGet = (redisClient, pattern) => {
-  return redisClient.get(pattern);
-};
-
 const getManyBagsDataTerm = (registryUri, ids) => {
   return `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
     lookup!(\`rho:id:${registryUri}\`, *entryCh) |
@@ -82,5 +78,4 @@ module.exports = {
   log,
   buildUnforgeableNameQuery,
   getManyBagsDataTerm,
-  redisGet,
 }
