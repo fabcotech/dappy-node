@@ -1,0 +1,24 @@
+sequenceDiagram
+    client->>+index.js: /get-x-records ({ names: ['DOMAIN_NAME']})
+    participant getxrecords.js as get-x-records.js
+    index.js->>getxrecords.js: getXRecordsWsHandler ({ names: ['DOMAIN_NAME']})
+    getxrecords.js->>getxrecords.js: validate payload (structure, arguments)
+    getxrecords.js->>+getxrecords.js: search records in cache
+    alt record not found in cache
+        getxrecords.js->>getxrecords.js: get purse on rchain (readPursesTerm) {id, publickKey, boxId, price, expires}
+        getxrecords.js->>getxrecords.js: get purse data on rchain (readPursesDataTerm) {address, csp, badges, servers: {ip, host, cert, primary}}
+        getxrecords.js->>getxrecords.js: validate purse and domain response payloads
+        getxrecords.js->>-getxrecords.js: purse + purse data
+        getxrecords.js->>+getxrecords.js: get purse box
+        getxrecords.js->>getxrecords.js: Search purse box in cache
+        alt purse box not found in cache
+            getxrecords.js->>getxrecords.js: get purse box on rchain (readBoxTerm) { publicKey, purses, superKeys }
+            getxrecords.js->>getxrecords.js: validate purse box payload
+            getxrecords.js->>getxrecords.js: save purse box on redis
+        end
+        getxrecords.js->>-getxrecords.js: purse box
+        getxrecords.js->>getxrecords.js: compute record (purse + purse data + purse box public key)
+        getxrecords.js->>getxrecords.js: validate record
+        getxrecords.js->>getxrecords.js: save record in cache
+    end
+    getxrecords.js->>client: record
