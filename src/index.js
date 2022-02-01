@@ -25,7 +25,6 @@ const { deployWsHandler } = require('./deploy');
 const { exploreDeployWsHandler } = require('./explore-deploy');
 const { exploreDeployXWsHandler } = require('./explore-deploy-x');
 const { prepareDeployWsHandler } = require('./prepare-deploy');
-const { getAllRecordsWsHandler } = require('./get-all-records');
 const { getXRecordsWsHandler } = require('./get-x-records');
 const {
   getXRecordsByPublicKeyWsHandler,
@@ -371,14 +370,6 @@ app.post('/listen-for-data-at-name-x', async (req, res) => {
     req.body,
     pickRandomReadOnly()
   );
-  if (data.success) {
-    res.json(data);
-  } else {
-    res.status(400).json(data);
-  }
-});
-app.post('/get-all-records', async (req, res) => {
-  const data = await getAllRecordsWsHandler(redisClient);
   if (data.success) {
     res.json(data);
   } else {
