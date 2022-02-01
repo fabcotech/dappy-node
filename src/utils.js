@@ -55,17 +55,6 @@ const redisSmembers = (client, pattern) => {
   });
 };
 
-const redisHgetall = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    client.hgetall(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      resolve(res);
-    });
-  });
-};
-
 const redisSMembers = (client, pattern) => {
   return new Promise((resolve, reject) => {
     client.smembers(pattern, (err, res) => {
@@ -119,6 +108,5 @@ module.exports = {
   getManyBagsDataTerm,
   redisGet,
   redisSmembers,
-  redisHgetall,
   redisSMembers,
 }

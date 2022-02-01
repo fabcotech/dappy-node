@@ -1,6 +1,5 @@
 const Ajv = require('ajv');
 
-const redisHgetall = require('./utils').redisHgetall;
 const redisSMembers = require('./utils').redisSMembers;
 
 const log = require('./utils').log;
@@ -65,11 +64,9 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
                                 (k) => k === `record:${name}`
                               );
                               if (typeof key2 === 'string') {
-                                redisHgetall(redisClient, key2).then(
-                                  (record) => {
-                                    res2(record);
-                                  }
-                                );
+                                redisClient.hGetAll(key2).then((record) => {
+                                  res2(record);
+                                });
                               } else {
                                 res2(null);
                               }
