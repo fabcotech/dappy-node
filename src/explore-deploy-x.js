@@ -2,8 +2,6 @@ const Ajv = require('ajv');
 const rchainToolkit = require('rchain-toolkit');
 const { blake2b } = require('blakejs');
 
-const { getValueFromCache } = require('./utils');
-
 const log = require('./utils').log;
 
 const ajv = new Ajv();
@@ -53,7 +51,7 @@ module.exports.exploreDeployXWsHandler = async (
       'hex'
     )}:${cacheEpoch}`;
     try {
-      const cached = await getValueFromCache(redisClient, cacheId);
+      const cached = await redisClient.get(cacheId);
       foundInCache = cached;
       if (foundInCache) {
         edxFromCachePlusOne();

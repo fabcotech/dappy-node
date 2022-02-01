@@ -12,7 +12,7 @@ const schema = {
   required: ['contract'],
 };
 
-const logs = (zRevRange, log) => async (params, res) => {
+const logs = (zRange, log) => async (params, res) => {
   const validate = ajv.compile(schema);
 
   if (!validate(params)) {
@@ -31,11 +31,12 @@ const logs = (zRevRange, log) => async (params, res) => {
   if (offset < 0) offset = 0;
 
   try {
-    const contractLogs = await zRevRange([
+    const contractLogs = await zRange(
       `logs:${contract}`,
       offset,
       offset + size - 1,
-    ]);
+      'rev'
+    );
 
     res.send({
       data: contractLogs,

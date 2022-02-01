@@ -3,7 +3,6 @@ const Ajv = require('ajv');
 const { blake2b } = require('blakejs');
 
 const log = require('./utils').log;
-const { getValueFromCache } = require('./utils');
 
 const ajv = new Ajv();
 const schema = {
@@ -53,7 +52,7 @@ module.exports.exploreDeployWsHandler = async (
       'hex'
     )}:${cacheEpoch}`;
     try {
-      const cached = await getValueFromCache(redisClient, cacheId);
+      const cached = await redisClient.get(cacheId);
       foundInCache = cached;
       if (foundInCache) {
         edFromCachePlusOne();

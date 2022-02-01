@@ -40,24 +40,6 @@ const log = (a, level = 'info') => {
   }
 };
 
-const getValueFromCache = (client, cacheId) => {
-  return new Promise((res, rej) => {
-    redisGet(client, cacheId)
-      .then((data) => {
-        if (data === null) {
-          rej(null);
-        } else {
-          res(data);
-        }
-      })
-      .catch((err) => {
-        rej(err);
-        console.log(err);
-        log('redis error get keys for ' + n, 'error');
-      });
-  });
-};
-
 const redisKeys = (client, pattern) => {
   return new Promise((resolve, reject) => {
     client.keys(pattern, (err, res) => {
@@ -69,17 +51,8 @@ const redisKeys = (client, pattern) => {
   });
 };
 
-const redisGet = (client, pattern) => {
-  return new Promise((resolve, reject) => {
-    console.log('get pattern', pattern);
-    client.get(pattern, (err, res) => {
-      if (err) {
-        log('error : ' + err);
-      }
-      console.log('GET', err);
-      resolve(res);
-    });
-  });
+const redisGet = (redisClient, pattern) => {
+  return redisClient.get(pattern);
 };
 
 const redisSmembers = (client, pattern) => {

@@ -368,8 +368,7 @@ const fetchRchainRecords = async (names, {
   const missingRecords = names.filter(name => !Object.keys(purses).includes(name));
 
   if (missingRecords.length > 0) {
-    const cache = await cacheNegativeRecords(redisClient.hSet.bind(redisClient))(missingRecords);
-    console.log(cache);
+    await cacheNegativeRecords(redisClient.hSet.bind(redisClient))(missingRecords);
   }
 
   const records = (await makeRecords(purses, pursesData, {

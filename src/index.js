@@ -65,9 +65,11 @@ let redisClient;
 
 async function initRedisClient() {
   redisClient = redis.createClient({
-    db: process.env.REDIS_DB,
-    host: process.env.REDIS_SERVICE_HOST,
-    port: process.env.REDIS_SERVICE_PORT || 6379,
+    database: process.env.REDIS_DB,
+    socket: {
+      host: process.env.REDIS_SERVICE_HOST,
+      port: process.env.REDIS_SERVICE_PORT || 6379,
+    }
   });
 
   await redisClient.connect();
@@ -452,7 +454,7 @@ app.post('/get-nodes', (req, res) => {
 });
 
 app.post('/get-contract-logs', (req, res) => {
-  logs(redisClient.zrevrange.bind(redisClient), log)(req.body, res);
+  logs(redisClient.zRange.bind(redisClient), log)(req.body, res);
 });
 
 const initServers = () => {
