@@ -73,7 +73,7 @@ const recordSchema = {
                 type: 'boolean',
               },
             },
-            required: ['ip', 'host', 'cert'],
+            required: ['ip', 'host' ],
           },
         },
       },
@@ -89,17 +89,6 @@ const validateRecord = ajv.compile(recordSchema);
 const validate = ajv.compile(schema);
 
 const storeRecord = async (record, redisClient) => {
-  const valid = validateRecord(record);
-  if (valid ===  null) {
-    log('invalid record ' + record.id);
-    console.log(validate.errors);
-    throw new Error('');
-  }
-  const match = record.id.match(/[a-z]([A-Za-z0-9]*)*/g);
-  if (!match || (match.length !== 1 && match[0].length !== record.id.length)) {
-    log('invalid record (regexp) ' + record.id);
-    throw new Error('');
-  }
   const redisSetValues = [];
   for (key of Object.keys(record)) {
     if (
@@ -263,6 +252,18 @@ const makeRecords = async (purses, pursesData, {
           completeRecord.expires = purses[k].expires;
         }
 
+        const valid = validateRecord(completeRecord);
+        if (!valid) {
+          log('invalid record ' + completeRecord.id);
+          console.log(validate.errors);
+          return; 
+        }
+        const match = completeRecord.id.match(/[a-z]([A-Za-z0-9]*)*/g);
+        if (!match || (match.length !== 1 && match[0].length !== completeRecord.id.length)) {
+          log('invalid record (regexp) ' + completeRecord.id);
+          return;
+        }
+
         return completeRecord;
       } catch (err) {
         log(err);
@@ -366,18 +367,18 @@ const fetchRchainRecords = async (names, {
     exploreDeploy
   });
 
-  const missingRecords = names.filter(name => !Object.keys(purses).includes(name));
-
-  if (missingRecords.length > 0) {
-    await cacheNegativeRecords(redisClient.hSet.bind(redisClient))(missingRecords);
-  }
-
   const records = (await makeRecords(purses, pursesData, {
     redisClient,
     log,
     urlOrOptions,
     exploreDeploy 
   })).filter(record => !!record);
+
+  const missingRecords = names.filter(name => !records.map(r => r.id).includes(name));
+
+  if (missingRecords.length > 0) {
+    await cacheNegativeRecords(redisClient.hSet.bind(redisClient))(missingRecords);
+  }
 
   try {
     await cacheRecords(records, redisClient);
