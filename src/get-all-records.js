@@ -2,10 +2,14 @@ module.exports.getAllRecordsWsHandler = async (redisClient) => {
   try {
     const keys = await redisClient.keys(`record:*`);
     const records = await Promise.all(
-      keys.map((k) => redis.hGetAll(k))
+      keys.map((k) => redisClient.hGetAll(k))
     );
 
-    return records;
+    return {
+      success: true,
+      records
+    };
+
   } catch (err) {
     return {
       success: false,
