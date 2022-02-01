@@ -119,7 +119,7 @@ const storeRecord = async (record, redisClient) => {
   await Promise.all(redisSetValues.map(([k, v]) => 
     redisClient.hSet(`record:${record.id}`, k, v)));
 
-  await redisClient.sAdd(`publicKey:${record.publicKey.publicKey}`, record.id);
+  await redisClient.sAdd(`publicKey:${record.publicKey}`, record.id);
 
   // just like if it came out from redis
   if (record.data) {
@@ -233,15 +233,16 @@ const makeRecords = async (purses, pursesData, {
         return;
       }
       try {
+        const rchainBox = await getRchainBox(purses[k].boxId, {
+          redisClient,
+          log,
+          urlOrOptions,
+          exploreDeploy              
+        });
         const completeRecord = {
           // rchain-token purse
           id: k,
-          publicKey: await getRchainBox(purses[k].boxId, {
-            redisClient,
-            log,
-            urlOrOptions,
-            exploreDeploy              
-          }),
+          publicKey: rchainBox.publicKey,
           boxId: purses[k].boxId,
 
           // rchain-token data

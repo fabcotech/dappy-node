@@ -125,7 +125,7 @@ describe('get-x-records', function () {
       hGetAll: chai.spy((r) => {
         switch (r) {
           case 'box:bwymybox':
-            return { values: JSON.stringify({ publiKey: 'publicKey' }) };
+            return { values: JSON.stringify({ publicKey: 'publicKey' }) };
           case 'record:dappy':
             return Promise.resolve({});
           case 'record:foo':
@@ -169,7 +169,7 @@ describe('get-x-records', function () {
 
     expect(cachedRecord).to.eql({
       id: 'dappy',
-      publicKey: '{"publiKey":"publicKey"}',
+      publicKey: 'publicKey',
       boxId: 'bwymybox',
       data: '{"email":"","csp":"default-src * \'unsafe-inline\' \'unsafe-eval\'","badges":{},"servers":[{"ip":"255.255.255.255","host":"dappy.tech","primary":true}]}',
     });
@@ -187,7 +187,7 @@ describe('get-x-records', function () {
       hGetAll: chai.spy((r) => {
         switch (r) {
           case 'box:bwymybox':
-            return { values: JSON.stringify({ publiKey: 'publicKey' }) };
+            return { values: JSON.stringify({ publicKey: 'publicKey' }) };
           default:
             return {};
         }
@@ -238,9 +238,7 @@ describe('get-x-records', function () {
         id: 'bar',
         boxId: "bwymybox",
         data: "{\"email\":\"\",\"csp\":\"default-src * 'unsafe-inline' 'unsafe-eval'\",\"badges\":{},\"servers\":[{\"ip\":\"255.255.255.255\",\"host\":\"bar.tech\",\"primary\":true}]}",
-        publicKey: {
-          "publiKey": "publicKey"
-        }
+        publicKey: 'publicKey',
       }]
     })
   });
