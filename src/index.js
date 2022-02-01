@@ -293,38 +293,28 @@ app.post('/info', (req, res) => {
     namePrice: namePrice,
   };
   res.setHeader('Content-Type', 'application/json');
-  res.write(
-    JSON.stringify({
-      data: data,
-      success: true,
-    })
-  );
-  res.end();
+  res.json({
+    data: data,
+    success: true,
+  });
 });
 app.post('/last-finalized-block-number', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
-  res.write(
-    JSON.stringify({
-      data: lastFinalizedBlockNumber,
-      success: true,
-    })
-  );
-  res.end();
+  res.json({
+    data: lastFinalizedBlockNumber,
+    success: true,
+  });
 });
 app.post('/api/deploy', async (req, res) => {
   const data = await deployWsHandler(req.body, pickRandomValidator());
-  res.write(JSON.stringify(data));
-  res.end();
+  res.json(data);
 });
 app.post('/api/prepare-deploy', async (req, res) => {
   const data = await prepareDeployWsHandler(req.body, pickRandomReadOnly());
   if (data.success) {
-    res.write(JSON.stringify(data));
-    res.end();
+    res.json(data);
   } else {
-    res.write(JSON.stringify(data));
-    res.status(400);
-    res.end();
+    res.status(400).json(data);
   }
 });
 
@@ -341,12 +331,9 @@ app.post('/api/explore-deploy', async (req, res) => {
     edFromCachePlusOne
   );
   if (data.success) {
-    res.write(JSON.stringify(data));
-    res.end();
+    res.json(data);
   } else {
-    res.write(JSON.stringify(data));
-    res.status(400);
-    res.end();
+    res.status(400).json(data);
   }
 });
 
@@ -363,12 +350,9 @@ app.post('/explore-deploy-x', async (req, res) => {
     edxFromCachePlusOne
   );
   if (data.success) {
-    res.write(JSON.stringify(data));
-    res.end();
+    res.json(data);
   } else {
-    res.write(JSON.stringify(data));
-    res.status(400);
-    res.end();
+    res.status(400).json(data);
   }
 });
 app.post('/api/listen-for-data-at-name', async (req, res) => {
@@ -377,12 +361,9 @@ app.post('/api/listen-for-data-at-name', async (req, res) => {
     pickRandomReadOnly()
   );
   if (data.success) {
-    res.write(JSON.stringify(data));
-    res.end();
+    res.json(data);
   } else {
-    res.write(JSON.stringify(data));
-    res.status(400);
-    res.end();
+    res.status(400).json(data);
   }
 });
 app.post('/listen-for-data-at-name-x', async (req, res) => {
@@ -391,23 +372,17 @@ app.post('/listen-for-data-at-name-x', async (req, res) => {
     pickRandomReadOnly()
   );
   if (data.success) {
-    res.write(JSON.stringify(data));
-    res.end();
+    res.json(data);
   } else {
-    res.write(JSON.stringify(data));
-    res.status(400);
-    res.end();
+    res.status(400).json(data);
   }
 });
 app.post('/get-all-records', async (req, res) => {
   const data = await getAllRecordsWsHandler(redisClient);
   if (data.success) {
-    res.write(JSON.stringify(data));
-    res.end();
+    res.json(data);
   } else {
-    res.write(JSON.stringify(data));
-    res.status(400);
-    res.end();
+    res.status(400).json(data);
   }
 });
 
@@ -420,34 +395,25 @@ app.post('/get-x-records', async (req, res) => {
     }
   );
   if (data.success) {
-    res.write(JSON.stringify(data));
-    res.end();
+    res.json(data);
   } else {
-    res.write(JSON.stringify(data));
-    res.status(400);
-    res.end();
+    res.status(400).json(data);
   }
 });
 app.post('/get-x-records-by-public-key', async (req, res) => {
   const data = await getXRecordsByPublicKeyWsHandler(req.body, redisClient);
   if (data.success) {
-    res.write(JSON.stringify(data));
-    res.end();
+    res.json(data);
   } else {
-    res.write(JSON.stringify(data));
-    res.status(400);
-    res.end();
+    res.status(400).json(data);
   }
 });
 
 app.post('/get-nodes', (req, res) => {
   if (nodes) {
-    res.write(
-      JSON.stringify({
-        data: nodes,
-      })
-    );
-    res.end();
+    res.json({
+      data: nodes,
+    });
   } else {
     res.status(404).end();
   }
