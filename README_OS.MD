@@ -17,6 +17,10 @@ Know the variables of the dappy network too:
 - `RCHAIN_NAMES_CONTRACT_ID`: See README.MD
 - `CONTRACTS`: See README.MD
 
+### Prequisites
+
+Have a $USER who is part of sudo group. This tutorial has been written on ubuntu server 20.04.
+
 ### Open ports
 
 ```
@@ -28,6 +32,8 @@ sudo ufw allow 40404
 
 # nginx ports
 sudo ufw allow 443
+
+sudo ufw enable
 
 # check open ports
 sudo ufw status
@@ -94,9 +100,17 @@ sudo apt install nginx
 ```
 # make sure this is the release you need for
 # the network your want to connect to
+# https://github.com/rchain/rchain/releases/
+
+# example with 0.12.4
 wget https://github.com/rchain/rchain/releases/download/v0.12.4/rnode_0.12.4_all.deb
 
-rnode run --bootstrap $BOOTSTRAP --network-id $RCHAIN_NETWORK --shard-name $SHARD_NAME --host $PUBLIC_DOMAIN --protocol-port '40400' --discovery-port '40404' --api-port-grpc-external '40401' --api-port-http '40403' --finalization-rate '1' --max-number-of-parents '1' --fault-tolerance-threshold '-1' --synchrony-constraint-threshold '0.99' --fork-choice-stale-threshold '60 minutes'
+sudo apt install ./rnode_0.12.4_all.deb
+
+# run rnode, replace $BOOTSTRAP $RCHAIN_NETWORK, $SHARD_NAME and
+# $RNODE_PUBLIC_DOMAIN_NAME and with single quotes, example --bootstrap 'rnode://xxx'
+
+rnode run --bootstrap $BOOTSTRAP --network-id $RCHAIN_NETWORK --shard-name $SHARD_NAME --host $RNODE_PUBLIC_DOMAIN_NAME --protocol-port '40400' --discovery-port '40404' --api-port-grpc-external '40401' --api-port-http '40403' --finalization-rate '1' --max-number-of-parents '1' --fault-tolerance-threshold '-1' --synchrony-constraint-threshold '0.99' --fork-choice-stale-threshold '60 minutes' &
 ```
 
 ### Run dappy node
