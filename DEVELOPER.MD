@@ -49,26 +49,15 @@ In `.env` file, `RCHAIN_NAMES_MASTER_REGISTRY_URI=<MASTER_URI_TO_BE_DEFINED>` ha
 You will deploy it in next steps on your rchain local node.
 
 ```sh
-cd ..
-
-git clone https://github.com/fabcotech/rchain-token && cd rchain-token
-
-npm install
-
-cat << EOF > .env
-READ_ONLY_HOST=http://localhost:40403
-VALIDATOR_HOST=http://localhost:40403
+cat << EOF >> .env
+VALIDATOR=http://localhost:40403
 PRIVATE_KEY=28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36
+BOX_ID=nsbox1
+CONTRACT_ID=nscontract1
 EOF
 
-# deploy master contract
-node cli deploy-master
+npx new_name_system
 
-# create a box aaa
-node cli deploy-box --box-id aaa
-
-# Deploy name system contract dappynamesystem on box aaa
-npm run dappy:namesystem
 ```
 
 Contract is now deployed on your local rnode network, you can get `Master registry URI` and `Contract id` values from stdout.
@@ -151,26 +140,14 @@ Prerequisites to run dappy-node:
 To create master and deploy dappy name system contract on local rnode network, follow instructions below.
 
 ```sh
-git clone https://github.com/fabcotech/rchain-token
-
-cd rchain-token
-
-npm install
-
-cat << EOF > .env
-READ_ONLY_HOST=http://rnode.dev
-VALIDATOR_HOST=http://rnode.dev
+cat << EOF >> .env
+VALIDATOR=http://localhost:40403
 PRIVATE_KEY=28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36
+BOX_ID=nsbox1
+CONTRACT_ID=nscontract1
 EOF
 
-# deploy master contract
-node cli deploy-master
-
-# create a box aaa
-node cli deploy-box --box-id aaa
-
-# Deploy name system contract dappynamesystem on box aaa
-npm run dappy:namesystem
+npx new_name_system
 ```
 
 
@@ -217,17 +194,8 @@ exit
 
 ```sh
 
-# Go to rchain-token repository folder
-cd <RCHAIN_TOKEN_REPOSITORY_FOLDER>
-
-# deploy master contract
-node cli deploy-master
-
-# create a box aaa
-node cli deploy-box --box-id aaa
-
-# Deploy name system contract dappynamesystem on box aaa
-npm run dappy:namesystem
+# Create new_name_system 
+npx new_name_system
 
 # Delete old configmap rnode-config
 kubectl delete cm dappy-config

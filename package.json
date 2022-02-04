@@ -8,8 +8,10 @@
   "scripts": {
     "test": "mocha src/*.spec.js src/**/*.spec.js",
     "test:watch": "mocha src/*.spec.js src/**/*.spec.js --watch",
-    "start": "NODE_ENV=development node --max-old-space-size=4096 src/index.js",
-    "new_name_system": "node scripts/new_name_system"
+    "start": "NODE_ENV=development node --max-old-space-size=4096 src/index.js"
+  },
+  "bin": {
+    "new_name_system": "./scripts/new_name_system.js"
   },
   "license": "MIT",
   "dependencies": {

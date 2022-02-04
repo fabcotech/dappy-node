@@ -1,6 +1,10 @@
+#!/usr/bin/env node
+
 const { deployMaster, deployBox, deploy } = require('rchain-token/cli/api');
 
 const { setEnvValue, mustBeUrl, mustBeNotEmptyString} = require('./utils');
+
+require('dotenv').config();
 
 async function deployNameSystem() {
   const validatorHost = mustBeUrl(process.env.VALIDATOR, 'environment variable VALIDATOR must contains a rnode validator url');
