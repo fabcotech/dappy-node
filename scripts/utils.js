@@ -29,7 +29,33 @@ const setEnvValue = (key, value) => {
   fs.writeFileSync(envFilePath, envVars.join(os.EOL));
 };
 
+const mustBeUrl = (value, message) => {
+  if (!value) {
+    throw new Error(message);
+  }
+  const url = new URL(value);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error(`${value} is not a valid url`);
+  }
+  return value;
+}
+
+const mustBeNotEmptyString = (value, message) => {
+  if (!value) {
+    throw new Error(message);
+  }
+  if (typeof value !== 'string') {
+    throw new Error(`${value} is not a valid string`);
+  }
+  if (value.length === 0) {
+    throw new Error(`${value} is not a valid string`);
+  }
+  return value;
+}
+
 module.exports = {
   getEnvValue,
   setEnvValue,
+  mustBeNotEmptyString,
+  mustBeUrl
 }
