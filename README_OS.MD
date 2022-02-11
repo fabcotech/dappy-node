@@ -110,7 +110,14 @@ sudo apt install ./rnode_0.12.4_all.deb
 # run rnode, replace $BOOTSTRAP $RCHAIN_NETWORK, $SHARD_NAME and
 # $RNODE_PUBLIC_DOMAIN_NAME and with single quotes, example --bootstrap 'rnode://xxx'
 
-rnode run --bootstrap $BOOTSTRAP --network-id $RCHAIN_NETWORK --shard-name $SHARD_NAME --host $RNODE_PUBLIC_DOMAIN_NAME --protocol-port '40400' --discovery-port '40404' --api-port-grpc-external '40401' --api-port-http '40403' --finalization-rate '1' --max-number-of-parents '1' --fault-tolerance-threshold '-1' --synchrony-constraint-threshold '0.99' --fork-choice-stale-threshold '60 minutes' &
+# run in the background with nohup
+nohup rnode run --bootstrap $BOOTSTRAP --network-id $RCHAIN_NETWORK --shard-name $SHARD_NAME --host $RNODE_PUBLIC_DOMAIN_NAME --protocol-port '40400' --discovery-port '40404' --api-port-grpc-external '40401' --api-port-http '40403' --finalization-rate '1' --max-number-of-parents '1' --fault-tolerance-threshold '-1' --synchrony-constraint-threshold '0.99' --fork-choice-stale-threshold '60 minutes'
+
+ctrl+z
+bg
+
+# check that process runs in the background
+tail -f ~/.rnode/rnode.log
 ```
 
 ### Run dappy node
