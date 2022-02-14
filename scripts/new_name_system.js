@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { deployMaster, deployBox, deploy } = require('rchain-token/cli/api');
+const { deployMaster, deployBox, deploy, createPurse } = require('rchain-token/cli/api');
 
 const { setEnvValue, mustBeUrl, mustBeNotEmptyString} = require('./utils');
 
@@ -25,6 +25,7 @@ async function deployNameSystem() {
     privateKey,
     boxId,
   });
+  setEnvValue('RCHAIN_NAMES_BOX_ID', rBoxId);
   console.log(`✓ Box ${rBoxId} deployed`);
 
   const rContractId = await deploy({
@@ -35,8 +36,18 @@ async function deployNameSystem() {
     contractId,
     fungible: false
   });
-  setEnvValue('RCHAIN_NAMES_CONTRACT_ID', masterRegistryUri);
+  setEnvValue('RCHAIN_NAMES_CONTRACT_ID', rContractId);
   console.log(`✓ Contract ${rContractId} deployed`);
+
+  await createPurse({
+    validatorHost,
+    masterRegistryUri,
+    privateKey,
+    contractId,
+    purses: { newbag1: { id: 0, price: 50000000, quantity: 100000000, boxId: rBoxId } },
+    pursesData: { newbag1: null }
+  });
+  console.log(`✓ Purse created`);
 }
 
 deployNameSystem();

@@ -56,7 +56,7 @@ BOX_ID=nsbox1
 CONTRACT_ID=nscontract1
 EOF
 
-npx new_name_system
+npm run new_name_system
 
 ```
 
@@ -147,7 +147,7 @@ BOX_ID=nsbox1
 CONTRACT_ID=nscontract1
 EOF
 
-npx new_name_system
+npm run new_name_system
 ```
 
 
@@ -195,7 +195,7 @@ exit
 ```sh
 
 # Create new_name_system 
-npx new_name_system
+npm run new_name_system
 
 # Delete old configmap rnode-config
 kubectl delete cm dappy-config
