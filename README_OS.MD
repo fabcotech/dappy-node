@@ -120,6 +120,8 @@ bg
 tail -f ~/.rnode/rnode.log
 ```
 
+Instantly `$RNODE_PUBLIC_DOMAIN_NAME:40403/status` should output the version. When Last Finalized State is reached (few hours after launch on testnet) `$RNODE_PUBLIC_DOMAIN_NAME:40403/api/blocks/1` should give information about the most recent block.
+
 ### Run dappy node
 
 ```

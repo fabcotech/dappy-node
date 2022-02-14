@@ -47,7 +47,7 @@ const DAPPY_NODE_VERSION = '0.2.8';
 
 let rnodeVersion = undefined;
 let lastFinalizedBlockNumber = undefined;
-let namePrice = 100000000000000000;
+let namePrice = null;
 let nodes = undefined;
 try {
   if (process.env.NODES_FILE) {
@@ -60,8 +60,6 @@ try {
 } catch (err) {
   log('could not parse nodes file : ' + process.env.NODES_FILE, 'error');
 }
-
-let special;
 
 const redisClient = redis.createClient({
   db: process.env.REDIS_DB,
@@ -82,13 +80,6 @@ const runRecordsChildProcessJob = async (quarter) => {
   // remove 1/4 of the names every 15 minutes
   const result = await deleteRecords(redisClient, quarter);
 
-  /* if (result && special) {
-    special = {
-      ...special,
-      current: result[2],
-    };
-  } */
-  //clearTimeout(t);
   recordsJobRunning = false;
 };
 
@@ -156,27 +147,6 @@ const initJobs = () => {
     }
   }, process.env.LAST_BLOCK_JOB_INTERVAL);
 };
-
-if (process.env.SPECIAL) {
-  try {
-    const split = process.env.SPECIAL.split(',');
-    if (
-      typeof split[0] === 'string' &&
-      typeof parseInt(split[1], 10) === 'number'
-    ) {
-      log(
-        'SPECIAL OPERATION ACTIVATED, name: ' + split[0] + ', max: ' + split[1]
-      );
-      special = {
-        name: split[0],
-        current: -1, // -1 so it is invalid until first runRecordsChildProcessJob() execution
-        max: parseInt(split[1], 10),
-      };
-    }
-  } catch (e) {
-    console.log(e);
-  }
-}
 
 if (
   !process.env.VALIDATOR.startsWith('https://') &&
@@ -293,6 +263,11 @@ app.get('/monitor', (req, res) => {
 });
 
 app.post('/info', (req, res) => {
+  const rchainNamesMasterRegistryUri = process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI || 'notconfigured';
+  let wrappedRevContractId = 'notconfigured';
+  if (rchainNamesMasterRegistryUri !== 'notconfigured') {
+    wrappedRevContractId = rchainNamesMasterRegistryUri.slice(0, 3) + 'rev'
+  }
   const data = {
     dappyNodeVersion: DAPPY_NODE_VERSION,
     lastFinalizedBlockNumber: lastFinalizedBlockNumber,
@@ -303,17 +278,10 @@ app.post('/info', (req, res) => {
       process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI || 'notconfigured',
     rchainNamesContractId:
       process.env.RCHAIN_NAMES_CONTRACT_ID || 'notconfigured',
+    wrappedRevContractId: wrappedRevContractId,
     rchainNetwork: process.env.RCHAIN_NETWORK,
     namePrice: namePrice,
   };
-  if (
-    special &&
-    typeof special.current === 'number' &&
-    special.current > -1 &&
-    special.current !== special.max
-  ) {
-    data.special = special;
-  }
   res.setHeader('Content-Type', 'application/json');
   res.write(
     JSON.stringify({

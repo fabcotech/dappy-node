@@ -23,8 +23,21 @@ module.exports.getPurseZeroPrice = async (urlOrOptions) => {
     namePrice = rchainToolkit.utils.rhoValToJs(
       JSON.parse(exploreDeployResult).expr[0]
     )['0'].price;
-    if (typeof namePrice !== 'number') {
-      throw new Error('Not a number');
+    if (namePrice === null) {
+      // do nothing
+    } else if (
+      Array.isArray(namePrice) &&
+      namePrice.length === 2
+    ) {
+      if (typeof namePrice[0] === 'string' && typeof namePrice[1] === 'number') {
+        // do nothing
+      } else if (typeof namePrice[0] === 'string' && typeof namePrice[1] === 'string') {
+        // do nothing
+      } else {
+        throw new Error('Invalid name price');
+      }
+    } else {
+      throw new Error('Invalid name price');
     }
   } catch (err) {
     console.log(exploreDeployResult);
@@ -36,7 +49,7 @@ module.exports.getPurseZeroPrice = async (urlOrOptions) => {
     throw new Error(err);
   }
 
-  log(`Finalized name price : ${namePrice / 100000000} REVs`);
+  log(`Finalized name price : ${namePrice.join(', ')}`);
 
   return {
     namePrice: namePrice,
