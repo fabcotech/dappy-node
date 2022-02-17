@@ -12,14 +12,14 @@ To run dappy-node locally, please refer to the [developer documentation](/DEVELO
 
 The common/base kubernetes settings are in `kubernetes/base/`, those are the general settings that do not change, whatever the dappy network or RChain network is. The base settings can be overwritten by those in `kubernetes/envs` that are namespace-specific and context-specific.
 
-The specific configurations files are organized on a per-namespace basis, in the `kubernetes/envs/scaleway/` folder. We warmly invite you to duplicate this folder and create for example `kubernetes/envs/aws/` folder.
+The specific configurations files are organized on a per-namespace basis, in the `kubernetes/envs/<CLOUD_PROVIDER>/` folder. We warmly invite you to duplicate this folder and create for example `kubernetes/envs/aws/` folder.
 
 `kubernetes/envs/<CLOUD_PROVIDER>/` contains one folder per namespace. (see commands)
 
 You may handle one, two or more dappy-node namespaces with this repository. An example:
-- namespace 1 : **gamma**, connected to RChain testnet. Configuration files in `kubernetes/envs/scaleway/gamma`
-- namespace 2 : **beta**, connected to RChain mainnet. Configuration files in `kubernetes/envs/scaleway/beta`
-- namespace 3 : **d**, connected to RChain mainnet. Configuration files in `kubernetes/envs/scaleway/d` (main dappy name system not deployed yet)
+- namespace 1 : **gamma**, connected to RChain testnet. Configuration files in `kubernetes/envs/<CLOUD_PROVIDER>/gamma`
+- namespace 2 : **beta**, connected to RChain mainnet. Configuration files in `kubernetes/envs/<CLOUD_PROVIDER>/beta`
+- namespace 3 : **d**, connected to RChain mainnet. Configuration files in `kubernetes/envs/<CLOUD_PROVIDER>/d` (main dappy name system not deployed yet)
 
 Non production dappy-node infrastructure
 
@@ -67,7 +67,7 @@ openssl req \
     echo '[san]'; \
     echo 'subjectAltName=DNS.1:localhost,DNS.2:rnode,DNS.3:<RNODE_PUBLIC_DOMAIN_NAME>')
 kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" -n=<NAMESPACE>
-kubectl apply -k kubernetes/envs/scaleway/<NAMESPACE>/rnode
+kubectl apply -k kubernetes/envs/<CLOUD_PROVIDER>/<NAMESPACE>/rnode
 ```
 
 #### Certificate generation (dappy-browser/internet <-> dappy-node)
@@ -136,7 +136,7 @@ Dappy jobs are cron jobs, the main one stores log of some rchain token contracts
 The idea is to drop existing rnode statefulset and their persistent volume and recreate them.
 
 ```sh
-cd kubernetes/envs/scaleway/<NAMESPACE>
+cd kubernetes/envs/<CLOUD_PROVIDER>/<NAMESPACE>
 
 # Delete existing rnode stafulset and associated pvc and pv
 kubectl delete statefulsets.apps rnode --wait
@@ -147,5 +147,5 @@ kubectl delete statefulsets.apps rnode --wait
 kubectl delete pvc csi-vol-scw-rnode-0
 
 # Redeploy rnode
-kubectl apply -k rnode
+kubectl apply -k ./kubernetes/envs/<CLOUD_PROVIDER>/gamma/rnode
 ```

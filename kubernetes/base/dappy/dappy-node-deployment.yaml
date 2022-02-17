@@ -25,7 +25,7 @@ spec:
             - name: DAPPY_NETWORK
               value: local          
             - name: CACHING
-              value: '0'          
+              value: '10'
             - name: REDIS_DB
               value: '1'
             - name: HTTP_PORT
