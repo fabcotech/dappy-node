@@ -1,6 +1,6 @@
 # copied from https://www.digitalocean.com/community/tutorials/how-to-build-a-node-js-application-with-docker
 
-FROM node:14.17.1-alpine3.13
+FROM node:17.5.0-alpine3.14
 
 # needed for the package.json dependencies (rchain-token) that are on github and not on npm
 RUN apk --no-cache add git less openssh && \

@@ -9,9 +9,9 @@ spec:
         - name: get-contract-logs
           env:
             - name: MASTER_REGISTRY_URI
-              value: bwyeb7iiidaowwip6rowz4s645ytcqio34qu9g9qg66t5qjfcugqdo
+              value: iwusrr5g6zdywzh4mg5jydb5p3dh4edonz39jp33cb9eqi4zbehzs4
             - name: CONTRACTS
-              value: "bwydappynamesystem"
+              value: "iwudappynamesystem"
             - name: READ_ONLY_CERTIFICATE_PATH
               value: /ssl/tls.crt
           volumeMounts:

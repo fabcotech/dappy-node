@@ -9,15 +9,15 @@ spec:
         - name: dappy-node
           env:
             - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
-              value: bwyeb7iiidaowwip6rowz4s645ytcqio34qu9g9qg66t5qjfcugqdo
+              value: iwusrr5g6zdywzh4mg5jydb5p3dh4edonz39jp33cb9eqi4zbehzs4
             - name: RCHAIN_NAMES_CONTRACT_ID
-              value: bwydappynamesystem
+              value: iwudappynamesystem
             - name: DAPPY_NETWORK
               value: gamma
             - name: RCHAIN_NETWORK
               value: testnet220210
             - name: VALIDATOR
-              value: https://node2.testnet.rchain.coop
+              value: https://node0.testnet.rchain.coop
             - name: READ_ONLY
               value: https://rnode
             - name: READ_ONLY_CERTIFICATE_PATH
