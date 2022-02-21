@@ -61,7 +61,9 @@ function initConfig(env = {}) {
 }
 
 async function initClientRedis(redisUrl) {
-  const redisClient = redis.createClient(redisUrl);
+  const redisClient = redis.createClient({
+     redisUrl
+  });
   await redisClient.connect();
   return redisClient;
 }
