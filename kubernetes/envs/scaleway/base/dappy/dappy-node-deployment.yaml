@@ -29,8 +29,6 @@ spec:
           env:
             - name: CACHING
               value: '30'
-            - name: CRON_JOBS_NAMES_MODULO
-              value: '0'
             - name: READ_ONLY
               value: https://rnode
             - name: READ_ONLY_CERTIFICATE_PATH

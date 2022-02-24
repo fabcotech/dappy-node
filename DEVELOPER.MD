@@ -217,10 +217,6 @@ kubectl wait --for=condition=available --timeout=600s deployment/dappy-node
 # dappy-node (nodejs)
 docker build . -f DockerfileNodejs -t fabcotech/dappy-node:0.1
 docker push fabcotech/dappy-node:0.1
-
-# dappy-nginx (nginx)
-docker build . -f DockerfileNginx -t fabcotech/dappy-nginx:0.1
-docker push fabcotech/dappy-nginx:0.1
 ```
 
 ## Other commands

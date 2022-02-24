@@ -32,6 +32,7 @@ sudo ufw allow 40404
 
 # nginx ports
 sudo ufw allow 443
+sudo ufw allow 80
 
 sudo ufw enable
 
@@ -124,6 +125,10 @@ Instantly `$RNODE_PUBLIC_DOMAIN_NAME:40403/status` should output the version. Wh
 
 ### Run dappy node
 
+Rnode HTTP API is succesfully running at `$RNODE_PUBLIC_DOMAIN_NAME:40403` and `localhost:40403`. Now we must run dappy-node nodeJS program and expose it on port 443.
+
+Dappy node is not exposed through DNS, but directly with IP address.
+
 ```
 # generate the certificates for dappy-node
 openssl req \
@@ -132,8 +137,8 @@ openssl req \
   -sha256 \
   -days 3000 \
   -nodes \
-  -keyout dappy-node.key \
-  -out dappy-node.crt \
+  -keyout dappynode.key \
+  -out dappynode.crt \
   -outform PEM \
   -subj '/CN=<DAPPY_NETWORK>'\
   -extensions san \
@@ -141,8 +146,54 @@ openssl req \
     echo '[req]'; \
     echo 'distinguished_name=req'; \
     echo '[san]'; \
-    echo 'subjectAltName=DNS.1:localhost,DNS.2:dappynode,DNS.3:<DAPPY_NODE_PUBLIC_DOMAIN_NAME>')
+    echo 'subjectAltName=DNS.1:localhost,DNS.2:dappynode')
 
 git clone https://github.com/fabcotech/dappy-node.git
 ```
 
+Configure dappy-node `.env` file.
+
+```
+REDIS_SERVICE_HOST=127.0.0.1
+REDIS_DB=1
+HTTP_PORT=80
+HTTPS_PORT=443
+
+CACHING=30
+READ_ONLY=http://localhost:40403
+
+# Make sure it is a valid validator
+VALIDATOR=https://node0.testnet.rchain.coop
+
+# Make sure the six following values are accurate
+# with the network you want to plug into
+RCHAIN_NAMES_MASTER_REGISTRY_URI=iwusrr5g6zdywzh4mg5jydb5p3dh4edonz39jp33cb9eqi4zbehzs4
+RCHAIN_NAMES_CONTRACT_ID=iuwdappynamesystem
+
+DAPPY_NETWORK=gamma
+RCHAIN_NETWORK=testnet220210
+DAPPY_BROWSER_MIN_VERSION=0.5.4
+DAPPY_BROWSER_DOWNLOAD_LINK=https://github.com/fabcotech/dappy/releases/tag/0.5.4?warning
+```
+
+The dappy-node program will use `dappynode.crt` and `dappynode.key` for the port 443. And nothing for port 80.
+
+```
+# run dappy-node
+node src/index.js
+
+# check that you have logs that look like the following
+2022-02-24T09:59:55.149Z RChain node responding at http://localhost:40403/version and /api/blocks/1
+2022-02-24T09:59:55.150Z Listening for HTTP on address 127.0.0.1:65000 !
+2022-02-24T09:59:55.155Z Listening for HTTP+TLS on address 127.0.0.1:65001 ! (TLS handled by nodeJS)
+2022-02-24T09:59:55.365Z Finalized block height : 120 (base 12 rounding) REVs
+
+# you can now run in the background and close session
+node src/index.js &
+ctrl+z
+bg
+```
+
+Check that your dappy node is running by openning `[dappy-node public IP address]:80/monitor` in your browser.
+
+You can now communicate the IP address, certificate to the team or admin managing the dappy network.
