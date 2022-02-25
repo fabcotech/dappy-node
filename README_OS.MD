@@ -30,7 +30,7 @@ sudo ufw allow 40401
 sudo ufw allow 40403
 sudo ufw allow 40404
 
-# nginx ports
+# dappy-node (nodeJS) ports
 sudo ufw allow 443
 sudo ufw allow 80
 
@@ -87,13 +87,6 @@ sudo systemctl restart redis.service
 
 # check that it is running on 127.0.0.1:6379
 sudo systemctl status redis
-```
-
-**nginx**
-
-```
-sudo apt update
-sudo apt install nginx
 ```
 
 ### Run rnode
