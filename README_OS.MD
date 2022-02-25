@@ -61,8 +61,9 @@ java -version
 **Node JS**
 
 ```
-sudo apt update
-sudo apt install nodejs
+sudo apt -y update && sudo apt -y upgrade
+curl -sL https://deb.nodesource.com/setup_17.x | sudo bash -
+sudo apt-get install -y nodejs npm
 # check version
 node --version
 ```
@@ -149,6 +150,8 @@ openssl req \
     echo 'subjectAltName=DNS.1:localhost,DNS.2:dappynode')
 
 git clone https://github.com/fabcotech/dappy-node.git
+cd dappy-node
+npm install
 ```
 
 Configure dappy-node `.env` file.
@@ -184,8 +187,8 @@ node src/index.js
 
 # check that you have logs that look like the following
 2022-02-24T09:59:55.149Z RChain node responding at http://localhost:40403/version and /api/blocks/1
-2022-02-24T09:59:55.150Z Listening for HTTP on address 127.0.0.1:65000 !
-2022-02-24T09:59:55.155Z Listening for HTTP+TLS on address 127.0.0.1:65001 ! (TLS handled by nodeJS)
+2022-02-24T09:59:55.150Z Listening for HTTP on address 127.0.0.1:80 !
+2022-02-24T09:59:55.155Z Listening for HTTP+TLS on address 127.0.0.1:443 ! (TLS handled by nodeJS)
 2022-02-24T09:59:55.365Z Finalized block height : 120 (base 12 rounding) REVs
 
 # you can now run in the background and close session

@@ -30,7 +30,6 @@ const {
   getXRecordsByPublicKeyWsHandler,
 } = require('./get-x-records-by-public-key');
 const { health } = require('./jobs/health');
-const { generateMonitor } = require('./jobs/generateMonitor');
 const { deleteRecords } = require('./jobs/deleteRecords');
 const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 const { getPurseZeroPrice } = require('./jobs/purse-zero-price');
@@ -128,7 +127,6 @@ const initJobs = () => {
 
   setInterval(() => {
     health(pickRandomReadOnly());
-    generateMonitor();
   }, 30000);
 
   setInterval(() => {
@@ -259,25 +257,14 @@ app.post('/ping', (req, res) => {
   res.write(JSON.stringify({ data: 'pong' }));
   res.end();
 });
-app.get('/monitor', (req, res) => {
-  try {
-    const html = fs.readFileSync('./www/monitor.html', 'utf8');
-    res.setHeader('Content-Type', 'text/html');
-    res.end(html);
-  } catch (err) {
-    res.statusCode = 404;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('not found');
-  }
-});
 
-app.post('/info', (req, res) => {
+const getInfo = () => {
   const rchainNamesMasterRegistryUri = process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI || 'notconfigured';
   let wrappedRevContractId = 'notconfigured';
   if (rchainNamesMasterRegistryUri !== 'notconfigured') {
     wrappedRevContractId = rchainNamesMasterRegistryUri.slice(0, 3) + 'rev'
   }
-  const data = {
+  return {
     dappyNodeVersion: DAPPY_NODE_VERSION,
     lastFinalizedBlockNumber: lastFinalizedBlockNumber,
     rnodeVersion: rnodeVersion,
@@ -291,9 +278,16 @@ app.post('/info', (req, res) => {
     rchainNetwork: process.env.RCHAIN_NETWORK,
     namePrice: namePrice,
   };
+}
+app.get('/info', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.write(JSON.stringify(getInfo(), null, 2))
+});
+
+app.post('/info', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.json({
-    data: data,
+    data: getInfo(),
     success: true,
   });
 });
@@ -317,17 +311,13 @@ app.post('/api/prepare-deploy', async (req, res) => {
   }
 });
 
-const edFromCachePlusOne = () => {
-  requests['/explore-deploy-from-cache'] += 1;
-};
 app.post('/api/explore-deploy', async (req, res) => {
   const data = await exploreDeployWsHandler(
     req.body,
     pickRandomReadOnly(),
     redisClient,
     useCache,
-    caching,
-    edFromCachePlusOne
+    caching
   );
   if (data.success) {
     res.json(data);
@@ -336,17 +326,13 @@ app.post('/api/explore-deploy', async (req, res) => {
   }
 });
 
-const edxFromCachePlusOne = () => {
-  requests['/explore-deploy-x-from-cache'] += 1;
-};
 app.post('/explore-deploy-x', async (req, res) => {
   const data = await exploreDeployXWsHandler(
     req.body,
     pickRandomReadOnly(),
     redisClient,
     useCache,
-    caching,
-    edxFromCachePlusOne
+    caching
   );
   if (data.success) {
     res.json(data);

@@ -25,8 +25,7 @@ module.exports.exploreDeployWsHandler = async (
   urlOrOptions,
   redisClient,
   useCache,
-  caching,
-  edFromCachePlusOne
+  caching
 ) => {
   log('explore-deploy');
 
@@ -54,9 +53,6 @@ module.exports.exploreDeployWsHandler = async (
     try {
       const cached = await redisClient.get(cacheId);
       foundInCache = cached;
-      if (foundInCache) {
-        edFromCachePlusOne();
-      }
     } catch (err) {
       // not found in cache
     }

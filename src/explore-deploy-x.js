@@ -24,8 +24,7 @@ module.exports.exploreDeployXWsHandler = async (
   urlOrOptions,
   redisClient,
   useCache,
-  caching,
-  edxFromCachePlusOne
+  caching
 ) => {
   log('explore-deploy-x');
 
@@ -53,9 +52,6 @@ module.exports.exploreDeployXWsHandler = async (
     try {
       const cached = await redisClient.get(cacheId);
       foundInCache = cached;
-      if (foundInCache) {
-        edxFromCachePlusOne();
-      }
     } catch (err) {
       // not found in cache
     }
