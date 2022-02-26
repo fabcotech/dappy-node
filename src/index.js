@@ -152,7 +152,7 @@ const initJobs = () => {
           console.log(err);
         });
     }
-  }, process.env.LAST_BLOCK_JOB_INTERVAL);
+  }, process.env.LAST_BLOCK_JOB_INTERVAL || 40000);
 };
 
 if (
