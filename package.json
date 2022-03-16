@@ -8,7 +8,8 @@
   "scripts": {
     "test": "mocha src/*.spec.js src/**/*.spec.js",
     "test:watch": "mocha src/*.spec.js src/**/*.spec.js --watch",
-    "start": "NODE_ENV=development node --max-old-space-size=4096 src/index.js",
+    "start:rchain": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=rchain node --max-old-space-size=4096 src/index.js",
+    "start:memory": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=memory node --max-old-space-size=4096 src/index.js",
     "new_name_system": "new_name_system"
   },
   "bin": {
@@ -19,6 +20,7 @@
     "@sentry/node": "^6.2.3",
     "@sentry/tracing": "^6.2.3",
     "ajv": "^6.10.0",
+    "blakejs": "^1.1.1",
     "body-parser": "^1.19.0",
     "dotenv": "6.2.0",
     "elliptic": "6.5.4",

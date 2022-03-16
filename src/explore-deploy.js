@@ -2,7 +2,7 @@ const rchainToolkit = require('rchain-toolkit');
 const Ajv = require('ajv');
 const { blake2b } = require('blakejs');
 
-const log = require('./utils').log;
+const { log } = require('./utils');
 
 const ajv = new Ajv();
 const schema = {
@@ -18,6 +18,7 @@ const schema = {
 module.exports.schema = schema;
 
 ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
+
 const validate = ajv.compile(schema);
 
 module.exports.exploreDeployWsHandler = async (
@@ -25,7 +26,7 @@ module.exports.exploreDeployWsHandler = async (
   urlOrOptions,
   redisClient,
   useCache,
-  caching
+  caching,
 ) => {
   log('explore-deploy');
 
@@ -48,7 +49,7 @@ module.exports.exploreDeployWsHandler = async (
 
     const cacheEpoch = Math.round(new Date().getTime() / (1000 * caching));
     cacheId = `cache:ed:${Buffer.from(blake2bHash).toString(
-      'hex'
+      'hex',
     )}:${cacheEpoch}`;
     try {
       const cached = await redisClient.get(cacheId);
@@ -58,11 +59,9 @@ module.exports.exploreDeployWsHandler = async (
     }
   }
 
-  const exploreDeployResponse = !!foundInCache
-    ? foundInCache
-    : await rchainToolkit.http.exploreDeploy(urlOrOptions, {
-        term: body.term,
-      });
+  const exploreDeployResponse = foundInCache || await rchainToolkit.http.exploreDeploy(urlOrOptions, {
+    term: body.term,
+  });
 
   // put in cache only if it comes from explore-deploy request
   if (!foundInCache && useCache) {
@@ -74,10 +73,9 @@ module.exports.exploreDeployWsHandler = async (
       success: false,
       error: { message: exploreDeployResponse },
     };
-  } else {
-    return {
-      success: true,
-      data: exploreDeployResponse,
-    };
   }
+  return {
+    success: true,
+    data: exploreDeployResponse,
+  };
 };

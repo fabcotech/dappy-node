@@ -1,4 +1,5 @@
 const Ajv = require('ajv');
+
 const ajv = new Ajv();
 
 const schema = {
@@ -35,7 +36,7 @@ const logs = (zRange, log) => async (params, res) => {
       `logs:${contract}`,
       offset,
       offset + size - 1,
-      'rev'
+      'rev',
     );
 
     res.send({

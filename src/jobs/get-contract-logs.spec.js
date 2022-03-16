@@ -1,7 +1,7 @@
-var chai = require('chai');
-var spies = require('chai-spies');
+const chai = require('chai');
+const spies = require('chai-spies');
 
-var expect = chai.expect;
+const { expect } = chai;
 chai.use(spies);
 
 const {
@@ -14,21 +14,20 @@ const {
   queryLogs,
 } = require('./get-contract-logs');
 
-const createPurchaseLog = (date, toBox, fromBox, amount, price, fromToken, token) =>
-  `p,${date.getTime()},${toBox},${fromBox},${amount},${price},${fromToken},${token}`;
+const createPurchaseLog = (date, toBox, fromBox, amount, price, fromToken, token) => `p,${date.getTime()},${toBox},${fromBox},${amount},${price},${fromToken},${token}`;
 
 describe('get-contract-logs', () => {
   it('should parse contract name', () => {
     expect(
-      parseArray("FOO ,BAR, BAZ FOO ")
-    ).to.eql(['FOO','BAR','BAZ FOO']);
+      parseArray('FOO ,BAR, BAZ FOO '),
+    ).to.eql(['FOO', 'BAR', 'BAZ FOO']);
     expect(parseArray(undefined)).to.eql([]);
-    expect(parseArray(",foo,,")).to.eql(['foo']);
+    expect(parseArray(',foo,,')).to.eql(['foo']);
   });
   it('should parseBool', () => {
     expect(parseBool(undefined)).to.eql(false);
-    expect(parseBool("True")).to.be.true;
-    expect(parseBool("FalsE")).to.be.false;
+    expect(parseBool('True')).to.be.true;
+    expect(parseBool('FalsE')).to.be.false;
   });
   it('should parse parseRedisUrl', () => {
     expect(() => parseRedisUrl('redis://1.2.3.4/1')).to.not.throw();
@@ -44,31 +43,32 @@ describe('get-contract-logs', () => {
       MASTER_REGISTRY_URI: 'foo',
       READ_ONLY: 'http://foo',
       CONTRACTS: 'foo,bar',
-      REDIS_URL: 'redis://redis_host:1234/4'
+      REDIS_URL: 'redis://redis_host:1234/4',
     });
     expect(config.logsInteval).to.eql(10 * 1000);
-    expect(config.contracts).to.eql(['foo','bar']);
+    expect(config.contracts).to.eql(['foo', 'bar']);
   });
   it('should queryLogs', async () => {
     const exploreDeploy = () => Promise.resolve(`{
       "expr": [
         { "ExprString": { "data": "${
-          createPurchaseLog(new Date('2021-11-02T14:59+00:00'),'aaa','aaa',1,50000000,0,'foo')
-        };${
-          createPurchaseLog(new Date('2021-11-02T15:05+00:00'),'aaa','aaa',1,10000,0,'bar')
-        }" }}
+  createPurchaseLog(new Date('2021-11-02T14:59+00:00'), 'aaa', 'aaa', 1, 50000000, 0, 'foo')
+};${
+  createPurchaseLog(new Date('2021-11-02T15:05+00:00'), 'aaa', 'aaa', 1, 10000, 0, 'bar')
+}" }}
       ]
     }`);
     // const exploreDeploy = require('rchain-toolkit').http.exploreDeploy;
-    const logs = await queryLogs(exploreDeploy,
+    const logs = await queryLogs(
+      exploreDeploy,
       'pridt69gz6tnsux888afui7wegoq4fcywoze5bm6rt3cbnne5kn1sk',
       'http://rnode.http.dev',
-      'dappynamesystem'
+      'dappynamesystem',
     );
 
     expect(logs).to.eql([
-      { ts: 1635865140000, msg: "p,1635865140000,aaa,aaa,1,50000000,0,foo" },
-      { ts: 1635865500000, msg: "p,1635865500000,aaa,aaa,1,10000,0,bar" }
+      { ts: 1635865140000, msg: 'p,1635865140000,aaa,aaa,1,50000000,0,foo' },
+      { ts: 1635865500000, msg: 'p,1635865500000,aaa,aaa,1,10000,0,bar' },
     ]);
   });
 
@@ -85,8 +85,8 @@ describe('get-contract-logs', () => {
   it('should save to sorted sets', async () => {
     const zAdd = chai.spy();
     const logs = [
-      { ts: 1635956492287, msg: "msg 1" },
-      { ts: 1635952883276 , msg: "msg 2" },
+      { ts: 1635956492287, msg: 'msg 1' },
+      { ts: 1635952883276, msg: 'msg 2' },
     ];
     await saveToSortedSetsInRedis(zAdd, 'foo', logs);
 

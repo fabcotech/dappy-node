@@ -1,7 +1,7 @@
-var chai = require('chai');
-var spies = require('chai-spies');
+const chai = require('chai');
+const spies = require('chai-spies');
 
-var expect = chai.expect;
+const { expect } = chai;
 chai.use(spies);
 
 const {
@@ -63,17 +63,17 @@ describe('get-x-records', function () {
     expect(addToRedis).to.have.been.first.called.with(
       'record:foo',
       'notfound',
-      'true'
+      'true',
     );
     expect(addToRedis).to.have.been.second.called.with(
       'record:bar',
       'notfound',
-      'true'
+      'true',
     );
     expect(addToRedis).to.have.been.third.called.with(
       'record:baz',
       'notfound',
-      'true'
+      'true',
     );
   });
 
@@ -87,9 +87,7 @@ describe('get-x-records', function () {
     };
 
     const redisClient = {
-      hGetAll: chai.spy((r) =>
-        Promise.resolve({ id: r.replace('record:', '') })
-      ),
+      hGetAll: chai.spy((r) => Promise.resolve({ id: r.replace('record:', '') })),
     };
 
     const log = chai.spy();
@@ -158,7 +156,7 @@ describe('get-x-records', function () {
             return JSON.stringify(createPurseDataExpr('dappy'));
           }
         };
-      })()
+      })(),
     );
 
     const r = await getXRecordsWsHandler(args, {
@@ -194,7 +192,7 @@ describe('get-x-records', function () {
         }
       }),
       hSet: chai.spy((r, k, v) => {
-        const recordName = r.replace('record:', '')
+        const recordName = r.replace('record:', '');
         if (!cachedRecords[recordName]) {
           cachedRecords[recordName] = {};
         }
@@ -215,7 +213,7 @@ describe('get-x-records', function () {
             return JSON.stringify(createPurseDataExpr('bar'));
           }
         };
-      })()
+      })(),
     );
     const log = chai.spy();
 
@@ -237,13 +235,12 @@ describe('get-x-records', function () {
         notfound: 'true',
       }, {
         id: 'bar',
-        boxId: "bwymybox",
+        boxId: 'bwymybox',
         data: "{\"email\":\"\",\"csp\":\"default-src * 'unsafe-inline' 'unsafe-eval'\",\"badges\":{},\"servers\":[{\"ip\":\"255.255.255.255\",\"host\":\"bar.tech\",\"primary\":true}]}",
         publicKey: 'publicKey',
-      }]
-    })
+      }],
+    });
   });
-
 
   it('should cache invalid records as negative', async () => {
     const args = {
@@ -263,7 +260,7 @@ describe('get-x-records', function () {
         }
       }),
       hSet: chai.spy((r, k, v) => {
-        const recordName = r.replace('record:', '')
+        const recordName = r.replace('record:', '');
         if (!cachedRecords[recordName]) {
           cachedRecords[recordName] = {};
         }
@@ -282,11 +279,11 @@ describe('get-x-records', function () {
           }
           if (call === 2) {
             return JSON.stringify(createPurseDataExpr('bar', {
-              badges: 'badges' // mismatch with record schema 
+              badges: 'badges', // mismatch with record schema
             }));
           }
         };
-      })()
+      })(),
     );
     const log = chai.spy();
 
@@ -299,13 +296,12 @@ describe('get-x-records', function () {
 
     expect(cachedRecords).to.eql({
       foo: {
-        notfound: 'true',  
+        notfound: 'true',
       },
       bar: {
-        notfound: 'true',  
-      }
+        notfound: 'true',
+      },
     });
-    
 
     expect(r).to.eql({
       success: true,
@@ -315,8 +311,8 @@ describe('get-x-records', function () {
       }, {
         id: 'bar',
         notfound: 'true',
-      }]
-    })
+      }],
+    });
   });
 
   it('args are not valid', () => {});

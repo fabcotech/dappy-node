@@ -1,12 +1,11 @@
 require('dotenv').config();
 const { blake2b } = require('blakejs');
 
-
 module.exports.deleteRecords = async (redisClient, quarter) => {
-  const nameKeys = await redisClient.keys(`record:*`);
-  const boxesKeys = await redisClient.keys(`box:*`);
+  const nameKeys = await redisClient.keys('record:*');
+  const boxesKeys = await redisClient.keys('box:*');
   const keysToDelete = nameKeys.concat(boxesKeys).filter((n) => {
-    if (n === `record:0`) {
+    if (n === 'record:0') {
       return false;
     }
     const arr = Buffer.from(n, 'utf8');

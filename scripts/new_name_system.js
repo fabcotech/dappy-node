@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
-const { deployMaster, deployBox, deploy, createPurse, updatePursePrice } = require('rchain-token/cli/api');
+/* eslint-disable no-console */
+const {
+  deployMaster, deployBox, deploy, createPurse, updatePursePrice,
+} = require('rchain-token/cli/api');
 
-const { setEnvValue, mustBeUrl, mustBeNotEmptyString} = require('./utils');
+const { setEnvValue, mustBeUrl, mustBeNotEmptyString } = require('./utils');
 
 require('dotenv').config();
 
@@ -34,7 +37,7 @@ async function deployNameSystem() {
     privateKey,
     boxId: rBoxId,
     contractId,
-    fungible: false
+    fungible: false,
   });
   setEnvValue('RCHAIN_NAMES_CONTRACT_ID', rContractId);
   console.log(`✓ Contract ${rContractId} deployed`);
@@ -44,10 +47,14 @@ async function deployNameSystem() {
     masterRegistryUri,
     privateKey,
     contractId: rContractId,
-    purses: { purse1: { id: "0", price: null, boxId: rBoxId, quantity: 100000000 } },
-    pursesData: { purse1: null }
+    purses: {
+      purse1: {
+        id: '0', price: null, boxId: rBoxId, quantity: 100000000,
+      },
+    },
+    pursesData: { purse1: null },
   });
-  console.log(`✓ Purse 0 created`);
+  console.log('✓ Purse 0 created');
 
   await updatePursePrice({
     masterRegistryUri,
@@ -55,10 +62,10 @@ async function deployNameSystem() {
     privateKey,
     contractId: rContractId,
     boxId: rBoxId,
-    purseId: "0",
-    price: ['rev', 50000000]
+    purseId: '0',
+    price: ['rev', 50000000],
   });
-  console.log(`✓ Purse 0 price updated to 50000000`);
+  console.log('✓ Purse 0 price updated to 50000000');
 }
 
 deployNameSystem();

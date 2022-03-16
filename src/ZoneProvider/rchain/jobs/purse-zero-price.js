@@ -1,7 +1,7 @@
 const rchainToolkit = require('rchain-toolkit');
 
 const { readPursesTerm } = require('rchain-token');
-const log = require('../utils').log;
+const { log } = require('../../../utils');
 
 module.exports.getPurseZeroPrice = async (urlOrOptions) => {
   let exploreDeployResult;
@@ -18,16 +18,16 @@ module.exports.getPurseZeroPrice = async (urlOrOptions) => {
     throw new Error(err);
   }
 
-  let namePrice = undefined;
+  let namePrice;
   try {
     namePrice = rchainToolkit.utils.rhoValToJs(
-      JSON.parse(exploreDeployResult).expr[0]
+      JSON.parse(exploreDeployResult).expr[0],
     )['0'].price;
     if (namePrice === null) {
       // do nothing
     } else if (
-      Array.isArray(namePrice) &&
-      namePrice.length === 2
+      Array.isArray(namePrice)
+      && namePrice.length === 2
     ) {
       if (typeof namePrice[0] === 'string' && typeof namePrice[1] === 'number') {
         // do nothing
@@ -44,7 +44,7 @@ module.exports.getPurseZeroPrice = async (urlOrOptions) => {
     console.log(err);
     log(
       'Unable to parse explore-deploy result as JSON for name price',
-      'error'
+      'error',
     );
     throw new Error(err);
   }
@@ -52,6 +52,6 @@ module.exports.getPurseZeroPrice = async (urlOrOptions) => {
   log(`Finalized name price : ${namePrice.join(', ')}`);
 
   return {
-    namePrice: namePrice,
+    namePrice,
   };
 };

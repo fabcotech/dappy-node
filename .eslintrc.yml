@@ -7,4 +7,9 @@ extends:
   - airbnb-base
 parserOptions:
   ecmaVersion: latest
-rules: {}
+rules:
+  no-restricted-syntax: 
+    - error
+    - ForInStatement
+    - LabeledStatement
+    - WithStatement

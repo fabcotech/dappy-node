@@ -6,8 +6,7 @@ const {
   waitForUnforgeable,
 } = require('./utils');
 
-const PRIVATE_KEY =
-  'a2803d16030f83757a5043e5c0e28573685f6d8bf4e358bf1385d82bffa8e698';
+const PRIVATE_KEY = 'a2803d16030f83757a5043e5c0e28573685f6d8bf4e358bf1385d82bffa8e698';
 const PUBLIC_KEY = rchainToolkit.utils.publicKeyFromPrivateKey(PRIVATE_KEY);
 const validators = [
   'https://node0.testnet.rchain-dev.tk',
@@ -19,9 +18,7 @@ const readOnly = 'https://observer.testnet.rchain.coop';
 // n is the number of deploys you want to do each time
 const n = 6;
 
-const pickRandomValidator = () => {
-  return validators[Math.floor(Math.random() * validators.length)];
-};
+const pickRandomValidator = () => validators[Math.floor(Math.random() * validators.length)];
 
 let s = 0;
 
@@ -33,17 +30,17 @@ const deployAndWaitForValue = async (timestamp) => {
   const deployOptions = await rchainToolkit.utils.getDeployOptions(
     'secp256k1',
     timestamp,
-    `new hello in { hello!("world") }`,
+    'new hello in { hello!("world") }',
     PRIVATE_KEY,
     PUBLIC_KEY,
     1,
     1000000,
-    vab || -1
+    vab || -1,
   );
   try {
     const deployResponse = await rchainToolkit.http.deploy(
       validator,
-      deployOptions
+      deployOptions,
     );
     if (!deployResponse.startsWith('"Success!')) {
       console.log(deployResponse);
@@ -62,7 +59,7 @@ const deployAndWaitForValue = async (timestamp) => {
   try {
     const stringAtUnforgeable = await waitForUnforgeable(
       validator,
-      JSON.parse(pd).names[0]
+      JSON.parse(pd).names[0],
     );
     if (stringAtUnforgeable !== 'world') {
       console.log(stringAtUnforgeable);
@@ -79,28 +76,28 @@ const deployAndWaitForValue = async (timestamp) => {
 const main = async () => {
   let round = 1;
   const performNRequests = async () => {
-    let d = new Date().getTime();
-    let a = [];
+    const d = new Date().getTime();
+    const a = [];
     for (let i = 0; i < n; i += 1) {
       a.push(i);
     }
     const timestamp = new Date().valueOf();
     s = 0;
     const resp = await Promise.all(
-      a.map((i) => deployAndWaitForValue(timestamp + i))
+      a.map((i) => deployAndWaitForValue(timestamp + i)),
     );
 
     console.log(
-      '== round ' +
-        round +
-        ': it took ' +
-        Math.round((new Date().getTime() - d) / 1000) +
-        ' seconds to deploy ' +
-        n +
-        ' times (and wait for value onchain) ' +
-        'among ' +
-        validators.length +
-        ' validator nodes\n'
+      `== round ${
+        round
+      }: it took ${
+        Math.round((new Date().getTime() - d) / 1000)
+      } seconds to deploy ${
+        n
+      } times (and wait for value onchain) `
+        + `among ${
+          validators.length
+        } validator nodes\n`,
     );
     round += 1;
     await performNRequests();

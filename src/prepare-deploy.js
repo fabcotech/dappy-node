@@ -1,7 +1,7 @@
 const rchainToolkit = require('rchain-toolkit');
 const Ajv = require('ajv');
 
-const log = require('./utils').log;
+const { log } = require('./utils');
 
 const ajv = new Ajv();
 const schema = {
@@ -22,6 +22,7 @@ const schema = {
 };
 
 ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
+
 const validate = ajv.compile(schema);
 
 module.exports.prepareDeployWsHandler = async (body, urlOrOptions) => {
@@ -40,7 +41,7 @@ module.exports.prepareDeployWsHandler = async (body, urlOrOptions) => {
 
   const prepareDeployResponse = await rchainToolkit.http.prepareDeploy(
     urlOrOptions,
-    body
+    body,
   );
 
   return {

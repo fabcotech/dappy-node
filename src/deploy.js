@@ -1,7 +1,7 @@
 const rchainToolkit = require('rchain-toolkit');
 const Ajv = require('ajv');
 
-const log = require('./utils').log;
+const { log } = require('./utils');
 
 const ajv = new Ajv();
 const schema = {
@@ -50,6 +50,7 @@ const schema = {
 };
 
 ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
+
 const validate = ajv.compile(schema);
 
 module.exports.deployWsHandler = async (body, urlOrOptions) => {
@@ -72,10 +73,9 @@ module.exports.deployWsHandler = async (body, urlOrOptions) => {
       success: false,
       error: { message: deployResponse },
     };
-  } else {
-    return {
-      success: true,
-      data: deployResponse,
-    };
   }
+  return {
+    success: true,
+    data: deployResponse,
+  };
 };

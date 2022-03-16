@@ -1,6 +1,6 @@
 const rchainToolkit = require('rchain-toolkit');
 
-const log = require('../utils').log;
+const { log } = require('../../../utils');
 
 module.exports.getLastFinalizedBlockNumber = async (urlOrOptions) => {
   let validAfterBlockNumber;
@@ -8,7 +8,7 @@ module.exports.getLastFinalizedBlockNumber = async (urlOrOptions) => {
     validAfterBlockNumber = JSON.parse(
       await rchainToolkit.http.blocks(urlOrOptions, {
         position: 1,
-      })
+      }),
     )[0].blockNumber;
   } catch (err) {
     log('Unable to get last finalized block', 'error');

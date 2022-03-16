@@ -1,6 +1,6 @@
 const Ajv = require('ajv');
 
-const log = require('./utils').log;
+const { log } = require('./utils');
 
 const ajv = new Ajv();
 const schema = {
@@ -19,6 +19,7 @@ const schema = {
 module.exports.schema = schema;
 
 ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'));
+
 const validate = ajv.compile(schema);
 
 module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
@@ -46,47 +47,44 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
   try {
     const results = await Promise.all(
       body.publicKeys.map(
-        (n) =>
-          new Promise((res) => {
-            redisClient.keys(`publicKey:${n}`)
-              .then((keys) => {
-                const key = keys.find((k) => k === `publicKey:${n}`);
-                if (typeof key === 'string') {
-                  redisClient.sMembers(key).then((names) => {
-                    Promise.all(
-                      names.map((name) => {
-                        return new Promise((res2) => {
-                          redisClient.keys(`record:${name}`)
-                            .then((keys2) => {
-                              const key2 = keys2.find(
-                                (k) => k === `record:${name}`
-                              );
-                              if (typeof key2 === 'string') {
-                                redisClient.hGetAll(key2).then((record) => {
-                                  res2(record);
-                                });
-                              } else {
-                                res2(null);
-                              }
-                            })
-                            .catch((err) => {
-                              log('redis error get keys for ' + n, 'error');
+        (n) => new Promise((res) => {
+          redisClient.keys(`publicKey:${n}`)
+            .then((keys) => {
+              const key = keys.find((k) => k === `publicKey:${n}`);
+              if (typeof key === 'string') {
+                redisClient.sMembers(key).then((names) => {
+                  Promise.all(
+                    names.map((name) => new Promise((res2) => {
+                      redisClient.keys(`record:${name}`)
+                        .then((keys2) => {
+                          const key2 = keys2.find(
+                            (k) => k === `record:${name}`,
+                          );
+                          if (typeof key2 === 'string') {
+                            redisClient.hGetAll(key2).then((record) => {
+                              res2(record);
                             });
+                          } else {
+                            res2(null);
+                          }
+                        })
+                        .catch((err) => {
+                          log(`redis error get keys for ${n}`, 'error');
                         });
-                      })
-                    ).then((a) => {
-                      res(a);
-                    });
+                    })),
+                  ).then((a) => {
+                    res(a);
                   });
-                } else {
-                  res([]);
-                }
-              })
-              .catch((err) => {
-                log('redis error get keys for ' + n, 'error');
-              });
-          })
-      )
+                });
+              } else {
+                res([]);
+              }
+            })
+            .catch(() => {
+              log(`redis error get keys for ${n}`, 'error');
+            });
+        }),
+      ),
     );
 
     let records = [];
@@ -94,7 +92,7 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
       records = records.concat(r.filter((a) => !!a));
     });
 
-    return { records: records, success: true };
+    return { records, success: true };
   } catch (err) {
     console.log(err);
     return {

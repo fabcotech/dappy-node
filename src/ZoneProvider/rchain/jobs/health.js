@@ -5,7 +5,7 @@ module.exports.health = async (httpUrlReadOnly) => {
   const results = {};
   const writeToLogs = () => {
     if (Object.keys(results).length === httpUrlReadOnly.length) {
-      let day = new Date().toISOString().slice(0, 10);
+      const day = new Date().toISOString().slice(0, 10);
       let logs = {};
       try {
         logs = JSON.parse(fs.readFileSync(`./logs/dappy-network-${day}.json`));
@@ -14,7 +14,7 @@ module.exports.health = async (httpUrlReadOnly) => {
       fs.writeFileSync(
         `./logs/dappy-network-${day}.json`,
         JSON.stringify(logs, null, 2),
-        'utf8'
+        'utf8',
       );
     }
   };
@@ -24,7 +24,7 @@ module.exports.health = async (httpUrlReadOnly) => {
     lastblock = JSON.parse(
       await rchainToolkit.http.blocks(httpUrlReadOnly, {
         position: 1,
-      })
+      }),
     )[0].blockNumber;
     results[httpUrlReadOnly] = {
       status: 'success',

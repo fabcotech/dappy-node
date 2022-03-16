@@ -48,10 +48,10 @@ function getFileContent(path) {
 
 function initConfig(env = {}) {
   return {
-    logsInteval: 10000, //parseInt(env.LOGS_INTERVAL) || 10 * 1000,
+    logsInteval: 10000, // parseInt(env.LOGS_INTERVAL) || 10 * 1000,
     masterRegistryUri: mandatory(
       'MASTER_REGISTRY_URI',
-      env.MASTER_REGISTRY_URI
+      env.MASTER_REGISTRY_URI,
     ),
     contracts: parseArray(mandatory('CONTRACTS', env.CONTRACTS)),
     rnodeUri: mandatory('READ_ONLY', env.READ_ONLY),
@@ -62,12 +62,11 @@ function initConfig(env = {}) {
 
 async function initClientRedis(redisUrl) {
   const redisClient = redis.createClient({
-     url: redisUrl
+    url: redisUrl,
   });
   await redisClient.connect();
   return redisClient;
 }
-
 
 function parseLogTs(l) {
   return parseInt(l.match(/^[^,]+,(\d+),/)[1]);
@@ -94,7 +93,7 @@ function parseLogs(rawLogs) {
 async function queryLogs(
   exploreDeploy,
   contract,
-  { masterRegistryUri, rnodeUri, caCertificate }
+  { masterRegistryUri, rnodeUri, caCertificate },
 ) {
   const result = await exploreDeploy(
     {
@@ -103,15 +102,15 @@ async function queryLogs(
     },
     {
       term: readLogsTerm({
-        masterRegistryUri: masterRegistryUri,
+        masterRegistryUri,
         contractId: contract,
       }),
-    }
+    },
   );
 
   const parsed = JSON.parse(result);
   if (!parsed.expr || !parsed.expr[0]) {
-    throw new Error('Logs not found, contract does not exist or no purchases yet')
+    throw new Error('Logs not found, contract does not exist or no purchases yet');
   }
 
   return parseLogs(rchainToolkit.utils.rhoValToJs(parsed.expr[0]));
@@ -131,7 +130,7 @@ async function saveToSortedSetsInRedis(zAdd, contract, logs) {
 }
 
 async function saveContractLogs(exploreDeploy, zAdd, config) {
-  for (let contract of config.contracts) {
+  for (const contract of config.contracts) {
     try {
       const logs = await queryLogs(exploreDeploy, contract, config);
       await saveToSortedSetsInRedis(zAdd, contract, logs);
