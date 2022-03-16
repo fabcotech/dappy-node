@@ -1,0 +1,10 @@
+env:
+  commonjs: true
+  node: true
+  mocha: true
+extends:
+  - eslint:recommended
+  - airbnb-base
+parserOptions:
+  ecmaVersion: latest
+rules: {}
