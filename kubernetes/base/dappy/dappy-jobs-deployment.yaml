@@ -27,5 +27,5 @@ spec:
           command:
           - sh
           - '-c'
-          - node src/ZoneProvider/rchain/jobs/cache-contract-logs.js
+          - node src/ZoneProviders/rchain/jobs/cache-contract-logs.js
       restartPolicy: Always
