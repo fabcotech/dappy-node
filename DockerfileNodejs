@@ -15,7 +15,6 @@ USER node
 RUN mkdir ./logs
 RUN mkdir ./www
 COPY --chown=node:node package*.json ./
-COPY --chown=node:node monitorexample.html ./
 COPY --chown=node:node src ./src/
 
 RUN npm install --only=production

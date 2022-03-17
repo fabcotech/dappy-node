@@ -18,3 +18,8 @@ spec:
                 configMapKeyRef:
                   name: dappy-config
                   key: RCHAIN_NAMES_CONTRACT_ID
+            - name: RCHAIN_NAMES_LOGS_CONTRACTS
+              valueFrom:
+                configMapKeyRef:
+                  name: dappy-config
+                  key: RCHAIN_NAMES_LOGS_CONTRACTS                  

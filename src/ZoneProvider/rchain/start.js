@@ -164,7 +164,9 @@ function initRChainConfiguration(store) {
 async function start(store) {
   initRChainConfiguration(store);
   await startWhenRNodeIsReady(store);
-  startJobCacheContractLogs();
+  if (/^true$/i.test(process.env.START_JOB)) {
+    startJobCacheContractLogs();
+  }
 }
 
 module.exports = {
