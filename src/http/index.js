@@ -5,7 +5,7 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const express = require('express');
 
-const { getNodes, ping } = require('./routes');
+const { getNodes, ping, dnsQuery } = require('./routes');
 const { initSentry } = require('./sentry');
 const { addZoneProviderRoutes } = require('../ZoneProviders');
 const { incRequestMetricsMiddleware } = require('../requestMetrics');
@@ -16,7 +16,8 @@ const initRoutes = (app, store) => {
   initSentry(app);
 
   app.post('/ping', ping);
-  app.post('/get-nodes', getNodes);
+  app.post('/get-nodes', getNodes(store));
+  app.post('/dns-query', dnsQuery);
 
   addZoneProviderRoutes(app, store);
 };
@@ -36,8 +37,8 @@ const startHttpServers = (store) => {
     log(
       `Listening for HTTP+TLS on address 127.0.0.1:${process.env.HTTPS_PORT} ! (TLS handled by nodeJS)`,
     );
-    const key = fs.readFileSync(path.join(__dirname, '../dappynode.key'));
-    const cert = fs.readFileSync(path.join(__dirname, '../dappynode.crt'));
+    const key = fs.readFileSync(path.join(process.cwd(), './dappynode.key'));
+    const cert = fs.readFileSync(path.join(process.cwd(), './dappynode.crt'));
     const options = {
       key,
       cert,
