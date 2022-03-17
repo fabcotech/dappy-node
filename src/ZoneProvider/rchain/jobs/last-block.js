@@ -1,6 +1,6 @@
 const rchainToolkit = require('rchain-toolkit');
 
-const { log } = require('../../../utils');
+const { log } = require('../../../log');
 
 module.exports.getLastFinalizedBlockNumber = async (urlOrOptions) => {
   let validAfterBlockNumber;

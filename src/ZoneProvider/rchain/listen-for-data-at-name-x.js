@@ -3,7 +3,7 @@ const rchainToolkit = require('rchain-toolkit');
 
 const listenDataAtNameBodySchema = require('./listen-for-data-at-name').schema;
 
-const { log } = require('../../utils');
+const { log } = require('../../log');
 
 const ajv = new Ajv();
 const schema = {

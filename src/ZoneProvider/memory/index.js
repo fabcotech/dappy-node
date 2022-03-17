@@ -1,4 +1,4 @@
-const { log } = require('../../utils');
+const { log } = require('../../log');
 const { getRoutes } = require('./routes');
 
 function start() {

@@ -3,7 +3,7 @@ const rchainToolkit = require('rchain-toolkit');
 const { readLogsTerm, logs } = require('rchain-token');
 const redis = require('redis');
 
-const { log } = require('../../../utils');
+const { log } = require('../../../log');
 
 function formatLogMessage(msg) {
   return `${new Date().toISOString()} - ${msg}`;

@@ -1,7 +1,7 @@
 const rchainToolkit = require('rchain-toolkit');
 
 const { readPursesTerm } = require('rchain-token');
-const { log } = require('../../../utils');
+const { log } = require('../../../log');
 
 module.exports.getPurseZeroPrice = async (urlOrOptions) => {
   let exploreDeployResult;

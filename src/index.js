@@ -21,7 +21,7 @@ const {
   incRequestMetricsMiddleware,
 } = require('./requestMetrics');
 
-const { log } = require('./utils');
+const { log } = require('./log');
 
 const providers = {
   rchain: RChainZoneProvider,

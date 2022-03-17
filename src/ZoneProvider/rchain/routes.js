@@ -12,7 +12,7 @@ const {
 } = require('./get-x-records-by-public-key');
 const { pickRandomReadOnly } = require('./pickRandomReadOnly');
 const { getContractLogsHandler } = require('./get-contract-logs');
-const { log } = require('../../utils');
+const { log } = require('../../log');
 
 const getInfo = (store) => (req, res) => {
   res.setHeader('Content-Type', 'application/json');

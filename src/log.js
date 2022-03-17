@@ -46,36 +46,6 @@ const log = (a, level = 'info') => {
   }
 };
 
-const getManyBagsDataTerm = (registryUri, ids) => `new return, entryCh, readCh, lookup(\`rho:registry:lookup\`) in {
-    lookup!(\`rho:id:${registryUri}\`, *entryCh) |
-    for(entry <- entryCh) {
-      new x in {
-        entry!({ "type": "READ_BAGS_DATA" }, *x) |
-        for (y <- x) {
-          return!([
-            ${ids
-    .map((b) => `*y.get("${b}")`)
-    .join(',\n')}
-          ])
-        }
-      }
-    }
-  }`;
-
-// Careful, it is different than the function that build
-// the unforgeable query for dappy-node
-const buildUnforgeableNameQuery = (unforgeableName) => ({
-  unforgeables: [
-    {
-      g_private_body: {
-        id: Buffer.from(unforgeableName, 'hex'),
-      },
-    },
-  ],
-});
-
 module.exports = {
   log,
-  buildUnforgeableNameQuery,
-  getManyBagsDataTerm,
 };

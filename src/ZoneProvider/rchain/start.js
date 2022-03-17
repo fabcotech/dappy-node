@@ -7,7 +7,7 @@ const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 const { getPurseZeroPrice } = require('./jobs/purse-zero-price');
 const { start: startJobCacheContractLogs } = require('./jobs/cache-contract-logs');
 
-const { log } = require('../../utils');
+const { log } = require('../../log');
 
 const initJobs = async (store) => {
   try {

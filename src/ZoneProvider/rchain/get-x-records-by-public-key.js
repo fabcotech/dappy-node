@@ -1,6 +1,6 @@
 const Ajv = require('ajv');
 
-const { log } = require('../../utils');
+const { log } = require('../../log');
 
 const ajv = new Ajv();
 const schema = {

@@ -1,5 +1,5 @@
 const { blake2b } = require('blakejs');
-const { log } = require('../utils');
+const { log } = require('../log');
 
 const deleteRecords = async (redisClient, quarter) => {
   const nameKeys = await redisClient.keys('record:*');
