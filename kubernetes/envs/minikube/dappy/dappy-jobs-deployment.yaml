@@ -8,7 +8,7 @@ spec:
       containers:
         - name: get-contract-logs
           env:
-            - name: MASTER_REGISTRY_URI
+            - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
               valueFrom:
                 configMapKeyRef:
                   name: dappy-config 

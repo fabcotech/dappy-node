@@ -54,7 +54,7 @@ const createPurseDataExpr = (purseName, data = {}) => ({
   ],
 });
 
-describe('get-x-records', function () {
+describe('get-x-records', function test() {
   this.timeout(5000);
   it('cacheNegativeRecords method', async () => {
     const addToRedis = chai.spy(Promise.resolve({}));
@@ -129,6 +129,7 @@ describe('get-x-records', function () {
             return Promise.resolve({});
           case 'record:foo':
           case 'record:baz':
+          default:
             return { notfound: 'true' };
         }
       }),
@@ -155,11 +156,12 @@ describe('get-x-records', function () {
           if (call === 2) {
             return JSON.stringify(createPurseDataExpr('dappy'));
           }
+          return '';
         };
       })(),
     );
 
-    const r = await getXRecordsWsHandler(args, {
+    await getXRecordsWsHandler(args, {
       redisClient,
       urlOrOptions,
       log,
@@ -212,6 +214,7 @@ describe('get-x-records', function () {
           if (call === 2) {
             return JSON.stringify(createPurseDataExpr('bar'));
           }
+          return '';
         };
       })(),
     );
@@ -282,6 +285,7 @@ describe('get-x-records', function () {
               badges: 'badges', // mismatch with record schema
             }));
           }
+          return '';
         };
       })(),
     );

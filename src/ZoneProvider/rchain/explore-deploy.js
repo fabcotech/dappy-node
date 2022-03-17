@@ -2,7 +2,7 @@ const rchainToolkit = require('rchain-toolkit');
 const Ajv = require('ajv');
 const { blake2b } = require('blakejs');
 
-const { log } = require('./utils');
+const { log } = require('../../utils');
 
 const ajv = new Ajv();
 const schema = {
@@ -59,7 +59,8 @@ module.exports.exploreDeployWsHandler = async (
     }
   }
 
-  const exploreDeployResponse = foundInCache || await rchainToolkit.http.exploreDeploy(urlOrOptions, {
+  const exploreDeployResponse = foundInCache
+  || await rchainToolkit.http.exploreDeploy(urlOrOptions, {
     term: body.term,
   });
 

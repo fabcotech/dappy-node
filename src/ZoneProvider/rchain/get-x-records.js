@@ -1,5 +1,6 @@
 const Ajv = require('ajv');
 const rchainToolkit = require('rchain-toolkit');
+
 const {
   readPursesDataTerm,
   readPursesTerm,
@@ -90,7 +91,7 @@ const validate = ajv.compile(schema);
 
 const storeRecord = async (record, redisClient) => {
   const redisSetValues = [];
-  for (key of Object.keys(record)) {
+  for (const key of Object.keys(record)) {
     if (
       typeof record[key] === 'string'
       || typeof record[key] === 'number'
@@ -122,7 +123,7 @@ const cacheNegativeRecords = (hset) => async (names) => Promise.all(
   ),
 );
 
-const validateXRecordsArgs = (args) => {
+function validateXRecordsArgs(args) {
   const valid = validate(args);
 
   if (!valid) {
@@ -136,7 +137,8 @@ const validateXRecordsArgs = (args) => {
       message: 'max 5 names',
     };
   }
-};
+  return undefined;
+}
 
 const fetchRchainBox = async (boxId, {
   redisClient,
@@ -164,16 +166,17 @@ const fetchRchainBox = async (boxId, {
     );
     return boxConfig;
   } catch (err) {
-    log(`could not get box ${names.join(', ')}`, 'error');
+    log(`could not get box ${boxId}`, 'error');
+    throw err;
     // it simply means that none have been found
   }
 };
 
-const parsePurseData = (purseData) => {
+const parsePurseData = (purseData, log) => {
   const buf = Buffer.from(purseData, 'hex');
   if (buf.length > 16184) {
-    log(`ignoring record ${k} : length > 16184`, 'warning');
-    return;
+    log('ignoring record: length > 16184', 'warning');
+    throw new Error('record too long');
   }
   return JSON.parse(buf.toString('utf8'));
 };
@@ -212,7 +215,7 @@ const makeRecords = async (purses, pursesData, {
 }) => Promise.all(Object.keys(purses).map(
   async (k) => {
     if (!pursesData[k]) {
-      return;
+      return undefined;
     }
     try {
       const rchainBox = await getRchainBox(purses[k].boxId, {
@@ -228,19 +231,19 @@ const makeRecords = async (purses, pursesData, {
         boxId: purses[k].boxId,
 
         // rchain-token data
-        data: parsePurseData(pursesData[k]),
+        data: parsePurseData(pursesData[k], log),
       };
         // redis cannot store undefined as value
         // price will be stored in redis, and sent back to client as string
       if (
         typeof purses[k].price === 'number'
-          && !isNaN(purses[k].price)
+          && !Number.isNaN(purses[k].price)
       ) {
         completeRecord.price = purses[k].price;
       }
       if (
         typeof purses[k].expires === 'number'
-          && !isNaN(purses[k].expires)
+          && !Number.isNaN(purses[k].expires)
       ) {
         completeRecord.expires = purses[k].expires;
       }
@@ -248,19 +251,20 @@ const makeRecords = async (purses, pursesData, {
       const valid = validateRecord(completeRecord);
       if (!valid) {
         log(`invalid record ${completeRecord.id}`);
-        console.log(validate.errors);
-        return;
+        log(validate.errors);
+        return undefined;
       }
       const match = completeRecord.id.match(/[a-z]([A-Za-z0-9]*)*/g);
       if (!match || (match.length !== 1 && match[0].length !== completeRecord.id.length)) {
         log(`invalid record (regexp) ${completeRecord.id}`);
-        return;
+        return undefined;
       }
 
       return completeRecord;
     } catch (err) {
       log(err);
       log(`failed to parse record ${k}`, 'warning');
+      throw err;
     }
   },
 ));
@@ -283,7 +287,7 @@ const fetchRchainPurses = async (names, {
       },
     );
   } catch (err) {
-    log(`Names ${args.names.join(' ')}: could not explore-deploy ${err}`, 'error');
+    log(`Names ${names.join(' ')}: could not explore-deploy ${err}`, 'error');
     throw new Error('explore-deploy request to the blockchain failed');
   }
 
@@ -315,7 +319,7 @@ const fetchRchainPursesData = async (names, {
       },
     );
   } catch (err) {
-    log(`Names ${args.names.join(' ')}: could not explore-deploy ${err}`, 'error');
+    log(`Names ${names.join(' ')}: could not explore-deploy ${err}`, 'error');
     throw new Error('explore-deploy request to the blockchain failed');
   }
 
@@ -383,7 +387,7 @@ const fetchRchainRecords = async (names, {
   ];
 };
 
-const mergeCacheAndRchainRecords = (cacheRecords, rchainRecords) => Object.entries(cacheRecords)
+const mergeCacheAndRchainRecords = (cachedRecords, rchainRecords) => Object.entries(cachedRecords)
   .map(([recordName, record]) => ({
     ...record || {},
     ...rchainRecords.find((r) => r.id === recordName),
@@ -393,7 +397,7 @@ const getXRecordsWsHandler = async (
   args,
   {
     redisClient,
-    log = require('./utils').log,
+    log,
     urlOrOptions,
     exploreDeploy = rchainToolkit.http.exploreDeploy,
   },
@@ -408,7 +412,7 @@ const getXRecordsWsHandler = async (
       };
     }
 
-    const cacheRecords = Object.fromEntries(await Promise.all(
+    const cachedRecords = Object.fromEntries(await Promise.all(
       args.names.map(async (name) => {
         const recordCache = await redisClient.hGetAll(`record:${name}`);
         return [name, Object.keys(recordCache).length ? {
@@ -419,7 +423,7 @@ const getXRecordsWsHandler = async (
     ));
 
     const cacheMissingRecords = args.names
-      .filter((name) => cacheRecords[name] === undefined);
+      .filter((name) => cachedRecords[name] === undefined);
 
     const rchainRecords = await fetchRchainRecords(cacheMissingRecords, {
       redisClient,
@@ -430,10 +434,10 @@ const getXRecordsWsHandler = async (
 
     return {
       success: true,
-      records: mergeCacheAndRchainRecords(cacheRecords, rchainRecords),
+      records: mergeCacheAndRchainRecords(cachedRecords, rchainRecords),
     };
   } catch (err) {
-    console.log(err);
+    log(err);
     return {
       success: false,
       error: { message: err },

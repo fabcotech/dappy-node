@@ -113,18 +113,6 @@ const main = async () => {
   };
 
   await performNRequests();
-  return;
-
-  if (data.body) {
-    req.end(JSON.stringify(data.body));
-  } else {
-    req.end();
-  }
-
-  req.on('error', (err) => {
-    console.log(err);
-    reject(err);
-  });
 };
 
 main();

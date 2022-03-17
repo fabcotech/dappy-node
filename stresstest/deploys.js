@@ -83,7 +83,7 @@ const main = async () => {
     }
     const timestamp = new Date().valueOf();
     s = 0;
-    const resp = await Promise.all(
+    await Promise.all(
       a.map((i) => deployAndWaitForValue(timestamp + i)),
     );
 

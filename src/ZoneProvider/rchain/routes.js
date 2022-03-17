@@ -1,27 +1,40 @@
+const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
+const {
+  listenForDataAtNameXWsHandler,
+} = require('./listen-for-data-at-name-x');
+const { deployWsHandler } = require('./deploy');
+const { exploreDeployWsHandler } = require('./explore-deploy');
+const { exploreDeployXWsHandler } = require('./explore-deploy-x');
+const { prepareDeployWsHandler } = require('./prepare-deploy');
+const { getXRecordsWsHandler } = require('./get-x-records');
+const {
+  getXRecordsByPublicKeyWsHandler,
+} = require('./get-x-records-by-public-key');
+const { pickRandomReadOnly } = require('./pickRandomReadOnly');
+const { getContractLogsHandler } = require('./get-contract-logs');
+const { log } = require('../../utils');
+
 const getInfo = (store) => (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
-  const rchainNamesMasterRegistryUri = process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI || 'notconfigured';
   let wrappedRevContractId = 'notconfigured';
-  if (rchainNamesMasterRegistryUri !== 'notconfigured') {
-    wrappedRevContractId = `${rchainNamesMasterRegistryUri.slice(0, 3)}rev`;
+  if (store.rchainNamesMasterRegistryUri !== 'notconfigured') {
+    wrappedRevContractId = `${store.rchainNamesMasterRegistryUri.slice(0, 3)}rev`;
   }
 
   res.json({
     success: true,
     data: {
-      dappyNodeVersion: DAPPY_NODE_VERSION,
-      lastFinalizedBlockNumber,
-      rnodeVersion,
-      dappyBrowserMinVersion: process.env.DAPPY_BROWSER_MIN_VERSION,
-      dappyBrowserDownloadLink: process.env.DAPPY_BROWSER_DOWNLOAD_LINK,
-      rchainNamesMasterRegistryUri:
-        process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI || 'notconfigured',
-      rchainNamesContractId:
-        process.env.RCHAIN_NAMES_CONTRACT_ID || 'notconfigured',
+      dappyNodeVersion: store.dappyNodeVersion,
+      dappyBrowserMinVersion: store.dappyBrowserMinVersion,
+      dappyBrowserDownloadLink: store.dappyBrowserDownloadLink,
+      lastFinalizedBlockNumber: store.lastFinalizedBlockNumber,
+      rnodeVersion: store.rnodeVersion,
+      rchainNamesMasterRegistryUri: store.rchainNamesMasterRegistryUri,
+      rchainNamesContractId: store.rchainNamesContractId,
       wrappedRevContractId,
-      rchainNetwork: process.env.RCHAIN_NETWORK,
-      namePrice,
+      rchainNetwork: store.rchainNetwork,
+      namePrice: store.namePrice,
     },
   });
 };
@@ -29,18 +42,22 @@ const getInfo = (store) => (req, res) => {
 const getLastFinalizedBlockNumber = (store) => (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.json({
-    data: lastFinalizedBlockNumber,
+    data: store.lastFinalizedBlockNumber,
     success: true,
   });
 };
 
-const deploy = () => async (req, res) => {
-  const data = await deployWsHandler(req.body, pickRandomValidator());
+const pickRandomValidator = (store) => ({
+  url: store.httpUrlValidator[Math.floor(Math.random() * store.httpUrlValidator.length)],
+});
+
+const deploy = (store) => async (req, res) => {
+  const data = await deployWsHandler(req.body, pickRandomValidator(store));
   res.json(data);
 };
 
-const prepareDeploy = () => async (req, res) => {
-  const data = await prepareDeployWsHandler(req.body, pickRandomReadOnly());
+const prepareDeploy = (store) => async (req, res) => {
+  const data = await prepareDeployWsHandler(req.body, pickRandomReadOnly(store));
   if (data.success) {
     res.json(data);
   } else {
@@ -48,13 +65,13 @@ const prepareDeploy = () => async (req, res) => {
   }
 };
 
-const exploreDeploy = () => async (req, res) => {
+const exploreDeploy = (store) => async (req, res) => {
   const data = await exploreDeployWsHandler(
     req.body,
-    pickRandomReadOnly(),
-    redisClient,
-    useCache,
-    caching,
+    pickRandomReadOnly(store),
+    store.redisClient,
+    store.useCache,
+    store.caching,
   );
   if (data.success) {
     res.json(data);
@@ -63,13 +80,13 @@ const exploreDeploy = () => async (req, res) => {
   }
 };
 
-const exploreDeployX = () => async (req, res) => {
+const exploreDeployX = (store) => async (req, res) => {
   const data = await exploreDeployXWsHandler(
     req.body,
-    pickRandomReadOnly(),
-    redisClient,
-    useCache,
-    caching,
+    pickRandomReadOnly(store),
+    store.redisClient,
+    store.useCache,
+    store.caching,
   );
   if (data.success) {
     res.json(data);
@@ -78,10 +95,10 @@ const exploreDeployX = () => async (req, res) => {
   }
 };
 
-const listenForDataAtName = () => async (req, res) => {
+const listenForDataAtName = (store) => async (req, res) => {
   const data = await listenForDataAtNameWsHandler(
     req.body,
-    pickRandomReadOnly(),
+    pickRandomReadOnly(store),
   );
   if (data.success) {
     res.json(data);
@@ -90,10 +107,10 @@ const listenForDataAtName = () => async (req, res) => {
   }
 };
 
-const listenForDataAtNameX = () => async (req, res) => {
+const listenForDataAtNameX = (store) => async (req, res) => {
   const data = await listenForDataAtNameXWsHandler(
     req.body,
-    pickRandomReadOnly(),
+    pickRandomReadOnly(store),
   );
   if (data.success) {
     res.json(data);
@@ -102,10 +119,11 @@ const listenForDataAtNameX = () => async (req, res) => {
   }
 };
 
-const getXRecords = () => async (req, res) => {
+const getXRecords = (store) => async (req, res) => {
   const data = await getXRecordsWsHandler(req.body, {
-    redisClient,
-    urlOrOptions: pickRandomReadOnly(),
+    redisClient: store.redisClient,
+    log,
+    urlOrOptions: pickRandomReadOnly(store),
   });
   if (data.success) {
     res.json(data);
@@ -114,8 +132,8 @@ const getXRecords = () => async (req, res) => {
   }
 };
 
-const getXRecordsByPublicKey = () => async (req, res) => {
-  const data = await getXRecordsByPublicKeyWsHandler(req.body, redisClient);
+const getXRecordsByPublicKey = (store) => async (req, res) => {
+  const data = await getXRecordsByPublicKeyWsHandler(req.body, store.redisClient);
   if (data.success) {
     res.json(data);
   } else {
@@ -123,22 +141,12 @@ const getXRecordsByPublicKey = () => async (req, res) => {
   }
 };
 
-const getNodes = () => (req, res) => {
-  if (nodes) {
-    res.json({
-      data: nodes,
-    });
-  } else {
-    res.status(404).end();
-  }
-};
-
-const getContractLogs = () => (req, res) => {
-  logs(redisClient.zRange.bind(redisClient), log)(req.body, res);
+const getContractLogs = (store) => (req, res) => {
+  getContractLogsHandler(store.redisClient.zRange.bind(store.redisClient), log)(req.body, res);
 };
 
 function getRoutes() {
-  return () => [
+  return [
     ['get', '/info', getInfo],
     ['post', '/info', getInfo],
     ['post', '/last-finalized-block-number', getLastFinalizedBlockNumber],
@@ -146,7 +154,6 @@ function getRoutes() {
     ['post', '/listen-for-data-at-name-x', listenForDataAtNameX],
     ['post', '/get-x-records', getXRecords],
     ['post', '/get-x-records-by-public-key', getXRecordsByPublicKey],
-    ['post', '/get-nodes', getNodes],
     ['post', '/get-contract-logs', getContractLogs],
     ['post', '/api/deploy', deploy],
     ['post', '/api/prepare-deploy', prepareDeploy],

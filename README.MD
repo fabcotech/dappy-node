@@ -128,7 +128,7 @@ Example file `kubernetes/envs/scaleway/gamma/dappy/dappy-jobs-deployment.yaml`.
 
 Dappy jobs are cron jobs, the main one stores log of some rchain token contracts.
 - `RCHAIN_NAMES_MASTER_REGISTRY_URI` same as above.
-- `CONTRACTS` comma-separated list of contracts you want to keep the logs of. example `dappynamesystem,dappytoken`.
+- `RCHAIN_NAMES_LOGS_CONTRACTS` comma-separated list of contracts you want to keep the logs of. example `dappynamesystem,dappytoken`.
 
 
 ##### Redeploy rnode on scaleway

@@ -1,94 +1,65 @@
 const http = require('http');
 const https = require('https');
-const path = require('path');
-const fs = require('fs');
 
-const { deleteRecords } = require('./jobs/deleteRecords');
+const { pickRandomReadOnly } = require('./pickRandomReadOnly');
 const { health } = require('./jobs/health');
 const { getLastFinalizedBlockNumber } = require('./jobs/last-block');
 const { getPurseZeroPrice } = require('./jobs/purse-zero-price');
+const { start: startJobCacheContractLogs } = require('./jobs/cache-contract-logs');
 
 const { log } = require('../../utils');
 
-let recordsJobRunning = false;
-const runRecordsChildProcessJob = async (quarter) => {
-  if (recordsJobRunning) {
-    return;
+const initJobs = async (store) => {
+  try {
+    const blockNumber = getLastFinalizedBlockNumber(pickRandomReadOnly(store));
+    store.lastFinalizedBlockNumber = blockNumber.lastFinalizedBlockNumber;
+  } catch (err) {
+    log('failed to get last finalized block height');
+    log(err);
   }
-  recordsJobRunning = true;
-  // remove 1/4 of the names every 15 minutes
-  await deleteRecords(redisClient, quarter);
-
-  recordsJobRunning = false;
-};
-
-const initJobs = () => {
-  getLastFinalizedBlockNumber(pickRandomReadOnly())
-    .then((a) => {
-      lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
-    })
-    .catch((err) => {
-      log('failed to get last finalized block height');
-      console.log(err);
-    });
-
   if (
     process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI
     && process.env.RCHAIN_NAMES_CONTRACT_ID
   ) {
-    getPurseZeroPrice(pickRandomReadOnly())
-      .then((a) => {
-        namePrice = a.namePrice;
-      })
-      .catch((err) => {
-        log('failed to get purse zero price');
-        console.log(err);
-      });
-  }
-  setInterval(() => {
-    if (new Date().getMinutes() % 15 === 0) {
-      log(
-        `will clean records/names cache: ${
-          new Date().getMinutes()
-        } minutes % 15 === 0`,
-      );
-      runRecordsChildProcessJob(new Date().getMinutes() / 15);
+    try {
+      const pursePrice = await getPurseZeroPrice(pickRandomReadOnly(store));
+      store.namePrice = pursePrice.namePrice;
+    } catch (err) {
+      log('failed to get purse zero price');
+      log(err);
     }
-  }, 1000 * 60);
+  }
 
   setInterval(() => {
-    health(pickRandomReadOnly());
+    health(pickRandomReadOnly(store));
   }, 30000);
 
-  setInterval(() => {
-    getLastFinalizedBlockNumber(pickRandomReadOnly())
-      .then((a) => {
-        lastFinalizedBlockNumber = a.lastFinalizedBlockNumber;
-      })
-      .catch((err) => {
-        log('failed to get last finalized block height');
-        console.log(err);
-      });
-
+  setInterval(async () => {
+    const blockNumber = await getLastFinalizedBlockNumber(pickRandomReadOnly(store));
+    try {
+      store.lastFinalizedBlockNumber = blockNumber.lastFinalizedBlockNumber;
+    } catch (err) {
+      log('failed to get last finalized block height');
+      log(err);
+    }
     if (
       process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI
       && process.env.RCHAIN_NAMES_CONTRACT_ID
     ) {
-      getPurseZeroPrice(pickRandomReadOnly())
-        .then((a) => {
-          namePrice = a.namePrice;
-        })
-        .catch((err) => {
-          log('failed to get purse zero price');
-          console.log(err);
-        });
+      try {
+        const pursePrice = await getPurseZeroPrice(pickRandomReadOnly(store));
+        store.namePrice = pursePrice.namePrice;
+      } catch (err) {
+        log('failed to get purse zero price');
+        log(err);
+      }
     }
   }, process.env.LAST_BLOCK_JOB_INTERVAL || 40000);
 };
 
-const startWhenRNodeIsReady = () => new Promise((resolve, reject) => {
+const startWhenRNodeIsReady = (store) => new Promise((resolve, reject) => {
   const intervalHandler = setInterval(() => {
-    const randomOptionsReadOnly = pickRandomReadOnly();
+    const randomOptionsReadOnly = pickRandomReadOnly(store);
 
     const req = (
       randomOptionsReadOnly.url.startsWith('https://') ? https : http
@@ -98,7 +69,7 @@ const startWhenRNodeIsReady = () => new Promise((resolve, reject) => {
       (resp) => {
         if (resp.statusCode !== 200) {
           log('Status code different from 200', 'error');
-          console.log(resp.statusCode);
+          log(resp.statusCode);
           reject(new Error('Status code different from 200'));
         }
 
@@ -109,7 +80,7 @@ const startWhenRNodeIsReady = () => new Promise((resolve, reject) => {
         });
 
         resp.on('end', () => {
-          rnodeVersion = rawData;
+          store.rnodeVersion = rawData;
           const req2 = (
             randomOptionsReadOnly.url.startsWith('https://') ? https : http
           ).get(
@@ -134,7 +105,7 @@ const startWhenRNodeIsReady = () => new Promise((resolve, reject) => {
                   log(
                     `RChain node responding at ${randomOptionsReadOnly.url}/version and /api/blocks/1`,
                   );
-                  initJobs();
+                  initJobs(store);
                   clearInterval(intervalHandler);
                   resolve();
                 }
@@ -147,7 +118,7 @@ const startWhenRNodeIsReady = () => new Promise((resolve, reject) => {
 
           req2.end();
           req2.on('error', (err) => {
-            console.log(err);
+            log(err);
             log(
               'rnode observer blocks api not ready (2), will try again in 10s',
             );
@@ -159,34 +130,13 @@ const startWhenRNodeIsReady = () => new Promise((resolve, reject) => {
       },
     );
     req.end();
-    req.on('error', (err) => {
+    req.on('error', () => {
       log('rnode observer not ready, will try again in 10s');
     });
   }, 10000);
 });
 
-let nodes;
-
-function initNodes() {
-  try {
-    if (process.env.NODES_FILE) {
-      nodes = JSON.parse(
-        fs
-          .readFileSync(path.join('./', process.env.NODES_FILE))
-          .toString('utf8'),
-      );
-    } else {
-      log('ignoring NODES_FILE', 'warning');
-    }
-  } catch (err) {
-    log(`could not parse nodes file : ${process.env.NODES_FILE}`, 'error');
-  }
-}
-
-let httpUrlValidator;
-let httpUrlReadOnly;
-
-function checkConfiguration() {
+function initRChainConfiguration(store) {
   if (
     !process.env.VALIDATOR.startsWith('https://')
     && !process.env.VALIDATOR.startsWith('http://')
@@ -195,43 +145,26 @@ function checkConfiguration() {
     process.exit();
   }
 
-  httpUrlValidator = process.env.VALIDATOR.includes(',')
+  store.httpUrlValidator = process.env.VALIDATOR.includes(',')
     ? process.env.VALIDATOR.split(',')
     : [process.env.VALIDATOR];
 
-  httpUrlReadOnly = process.env.READ_ONLY.includes(',')
+  store.httpUrlReadOnly = process.env.READ_ONLY.includes(',')
     ? process.env.READ_ONLY.split(',')
     : [process.env.READ_ONLY];
 
-  log(`host (read-only):                   ${httpUrlReadOnly}`);
+  store.rchainNamesMasterRegistryUri = process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI || 'notconfigured';
+  store.rchainNamesContractId = process.env.RCHAIN_NAMES_CONTRACT_ID || 'notconfigured';
+  store.rchainNetwork = process.env.RCHAIN_NETWORK;
+
+  log(`host (read-only):                   ${store.httpUrlReadOnly}`);
   log(`host (validator):                   ${process.env.VALIDATOR}`);
 }
 
-const readOnlyOptions = {};
-
-const pickRandomReadOnly = () => {
-  const r = httpUrlReadOnly[Math.floor(Math.random() * httpUrlReadOnly.length)];
-  if (readOnlyOptions[r]) {
-    return readOnlyOptions[r];
-  }
-  readOnlyOptions[r] = {
-    url: r,
-  };
-
-  if (r.startsWith('https://') && process.env.READ_ONLY_CERTIFICATE_PATH) {
-    const cert = fs.readFileSync(
-      process.env.READ_ONLY_CERTIFICATE_PATH,
-      'utf8',
-    );
-    readOnlyOptions[r].ca = [cert];
-  }
-  return readOnlyOptions[r];
-};
-
-async function start() {
-  checkConfiguration();
-  await startWhenRNodeIsReady();
-  initNodes();
+async function start(store) {
+  initRChainConfiguration(store);
+  await startWhenRNodeIsReady(store);
+  startJobCacheContractLogs();
 }
 
 module.exports = {

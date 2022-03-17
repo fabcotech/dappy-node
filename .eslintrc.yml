@@ -8,6 +8,7 @@ extends:
 parserOptions:
   ecmaVersion: latest
 rules:
+  no-param-reassign: 0
   no-restricted-syntax: 
     - error
     - ForInStatement

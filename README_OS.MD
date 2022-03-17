@@ -15,7 +15,7 @@ Know the variables of the dappy network too:
 - `DAPPY_NODE_PUBLIC_DOMAIN_NAME`: identifier of your node in the dappy network (no DNS), for example `fabcogamma`
 - `RCHAIN_NAMES_MASTER_REGISTRY_URI`: See README.MD
 - `RCHAIN_NAMES_CONTRACT_ID`: See README.MD
-- `CONTRACTS`: See README.MD
+- `RCHAIN_NAMES_LOGS_CONTRACTS`: See README.MD
 
 ### Prequisites
 

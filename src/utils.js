@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const fs = require('fs');
 const path = require('path');
 
@@ -10,7 +12,9 @@ const log = (a, level = 'info') => {
         path.join(__dirname, '../logs/warnings.txt'),
         'utf8',
       );
-    } catch (err) {}
+    } catch (err) {
+      // do nothing
+    }
     warnings += `${new Date().toISOString()} ${a}\n`;
     fs.writeFileSync(
       path.join(__dirname, '../logs/warnings.txt'),
@@ -24,7 +28,9 @@ const log = (a, level = 'info') => {
         path.join(__dirname, '../logs/errors.txt'),
         'utf8',
       );
-    } catch (err) {}
+    } catch (err) {
+      // do nothing
+    }
     errors += `${new Date().toISOString()} ${a}\n`;
     fs.writeFileSync(
       path.join(__dirname, '../logs/errors.txt'),

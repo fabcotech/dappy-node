@@ -3,7 +3,7 @@ const rchainToolkit = require('rchain-toolkit');
 
 const listenDataAtNameBodySchema = require('./listen-for-data-at-name').schema;
 
-const { log } = require('./utils');
+const { log } = require('../../utils');
 
 const ajv = new Ajv();
 const schema = {
@@ -33,11 +33,11 @@ module.exports.listenForDataAtNameXWsHandler = (body, urlOrOptions) => {
     }
 
     Promise.all(
-      bodyWithBuffers.map((b) => rchainToolkit.http.dataAtName(urlOrOptions, b)),
+      body.map((b) => rchainToolkit.http.dataAtName(urlOrOptions, b)),
     )
       .then((dataAtNameResponses) => {
         const data = dataAtNameResponses.map((r) => {
-          const parsedResponse = JSON.parse(dataAtNameResponse);
+          const parsedResponse = JSON.parse(r);
 
           return {
             success: true,
@@ -53,10 +53,7 @@ module.exports.listenForDataAtNameXWsHandler = (body, urlOrOptions) => {
       .catch((err) => {
         log('error : communication error with the node (HTTP endpoint)');
         log(err);
-        reject({
-          success: false,
-          error: { message: err.message || err },
-        });
+        reject(err);
       });
   });
 };

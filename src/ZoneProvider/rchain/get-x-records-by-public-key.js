@@ -1,6 +1,6 @@
 const Ajv = require('ajv');
 
-const { log } = require('./utils');
+const { log } = require('../../utils');
 
 const ajv = new Ajv();
 const schema = {
@@ -35,7 +35,9 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
     };
   }
 
-  await new Promise((r) => setTimeout(r, 5000));
+  await new Promise((r) => {
+    setTimeout(r, 5000);
+  });
 
   if (body.publicKeys.length > 5) {
     return {
@@ -68,7 +70,7 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
                             res2(null);
                           }
                         })
-                        .catch((err) => {
+                        .catch(() => {
                           log(`redis error get keys for ${n}`, 'error');
                         });
                     })),
@@ -94,7 +96,7 @@ module.exports.getXRecordsByPublicKeyWsHandler = async (body, redisClient) => {
 
     return { records, success: true };
   } catch (err) {
-    console.log(err);
+    log(err);
     return {
       success: false,
       error: { message: err },

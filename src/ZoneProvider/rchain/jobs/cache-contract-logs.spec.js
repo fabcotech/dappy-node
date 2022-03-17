@@ -7,16 +7,15 @@ chai.use(spies);
 const {
   parseArray,
   parseRedisUrl,
-  saveContractLogs,
   saveToSortedSetsInRedis,
   parseBool,
   initConfig,
   queryLogs,
-} = require('./get-contract-logs');
+} = require('./cache-contract-logs');
 
 const createPurchaseLog = (date, toBox, fromBox, amount, price, fromToken, token) => `p,${date.getTime()},${toBox},${fromBox},${amount},${price},${fromToken},${token}`;
 
-describe('get-contract-logs', () => {
+describe('cache-contract-logs', () => {
   it('should parse contract name', () => {
     expect(
       parseArray('FOO ,BAR, BAZ FOO '),
@@ -26,8 +25,8 @@ describe('get-contract-logs', () => {
   });
   it('should parseBool', () => {
     expect(parseBool(undefined)).to.eql(false);
-    expect(parseBool('True')).to.be.true;
-    expect(parseBool('FalsE')).to.be.false;
+    expect(parseBool('True')).to.eql(true);
+    expect(parseBool('FalsE')).to.eql(false);
   });
   it('should parse parseRedisUrl', () => {
     expect(() => parseRedisUrl('redis://1.2.3.4/1')).to.not.throw();
@@ -37,12 +36,12 @@ describe('get-contract-logs', () => {
     expect(() => parseRedisUrl('redis://bar_baz:1454/1')).to.not.throw();
   });
   it('should check default config', () => {
-    expect(initConfig).to.throw('MASTER_REGISTRY_URI env var is not defined');
+    expect(initConfig).to.throw('RCHAIN_NAMES_MASTER_REGISTRY_URI env var is not defined');
 
     const config = initConfig({
-      MASTER_REGISTRY_URI: 'foo',
+      RCHAIN_NAMES_MASTER_REGISTRY_URI: 'foo',
       READ_ONLY: 'http://foo',
-      CONTRACTS: 'foo,bar',
+      RCHAIN_NAMES_LOGS_CONTRACTS: 'foo,bar',
       REDIS_URL: 'redis://redis_host:1234/4',
     });
     expect(config.logsInteval).to.eql(10 * 1000);

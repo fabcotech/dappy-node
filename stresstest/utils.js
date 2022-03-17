@@ -32,14 +32,14 @@ module.exports.validAfterBlockNumber = async (httpUrlReadOnly) => {
       }),
     )[0].blockNumber;
   } catch (err) {
-    log('Unable to get last finalized block', 'error');
+    console.log('Unable to get last finalized block', 'error');
     console.log(err);
     throw new Error();
   }
   return validAfterBlockNumberResponse;
 };
 
-module.exports.waitForUnforgeable = (validator, name) => new Promise((resolve, reject) => {
+module.exports.waitForUnforgeable = (validator, name) => new Promise((resolve) => {
   let dataAtNameResponse;
   const interval = setInterval(() => {
     try {

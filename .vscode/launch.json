@@ -7,11 +7,23 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "dappy-node (rchain)",
       "skipFiles": [
         "<node_internals>/**"
       ],
       "program": "${workspaceFolder}/src/index.js"
+    },
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "dappy-node (memory)" ,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/src/index.js",
+      "env": {
+        "DAPPY_NODE_ZONE_PROVIDER": "memory"
+      }
     },
     {
       "type": "node",

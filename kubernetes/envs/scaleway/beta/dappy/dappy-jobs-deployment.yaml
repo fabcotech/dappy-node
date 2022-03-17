@@ -10,7 +10,7 @@ spec:
           env:
             - name: READ_ONLY
               value: https://observer-eu.services.mainnet.rchain.coop
-            - name: CONTRACTS
+            - name: RCHAIN_NAMES_LOGS_CONTRACTS
               value: ""
-            - name: MASTER_REGISTRY_URI
+            - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
               value: ""

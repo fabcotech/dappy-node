@@ -33,7 +33,9 @@ function initRequestMetrics() {
     let logs = {};
     try {
       logs = JSON.parse(fs.readFileSync(`./logs/dappy-node-${day}.json`, 'utf8'));
-    } catch (err) {}
+    } catch (err) {
+      // do nothing
+    }
     logs[new Date().toISOString().slice(11, 19)] = Object.values(requestMetrics);
     fs.writeFileSync(
       `./logs/dappy-node-${day}.json`,
@@ -46,7 +48,7 @@ function initRequestMetrics() {
 }
 
 const incRequestMetric = (reqPath) => {
-  if (!reqPath in requestMetrics) return;
+  if (!(reqPath in requestMetrics)) return;
 
   requestMetrics.total += 1;
   requestMetrics[reqPath] += 1;

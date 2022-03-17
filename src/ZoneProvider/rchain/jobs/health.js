@@ -9,7 +9,9 @@ module.exports.health = async (httpUrlReadOnly) => {
       let logs = {};
       try {
         logs = JSON.parse(fs.readFileSync(`./logs/dappy-network-${day}.json`));
-      } catch (err) {}
+      } catch (err) {
+        // ignore
+      }
       logs[new Date().toISOString().slice(11, 19)] = results;
       fs.writeFileSync(
         `./logs/dappy-network-${day}.json`,
@@ -21,7 +23,7 @@ module.exports.health = async (httpUrlReadOnly) => {
 
   const s = new Date().getTime();
   try {
-    lastblock = JSON.parse(
+    const lastblock = JSON.parse(
       await rchainToolkit.http.blocks(httpUrlReadOnly, {
         position: 1,
       }),

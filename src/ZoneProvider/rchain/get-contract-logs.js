@@ -13,7 +13,7 @@ const schema = {
   required: ['contract'],
 };
 
-const logs = (zRange, log) => async (params, res) => {
+const getContractLogsHandler = (zRange, log) => async (params, res) => {
   const validate = ajv.compile(schema);
 
   if (!validate(params)) {
@@ -22,10 +22,11 @@ const logs = (zRange, log) => async (params, res) => {
     return;
   }
 
-  let { contract, size = 100, offset = 0 } = params;
+  let { size = 100, offset = 0 } = params;
+  const { contract } = params;
 
-  size = parseInt(size);
-  offset = parseInt(offset);
+  size = parseInt(size, 10);
+  offset = parseInt(offset, 10);
 
   if (size <= 0) size = 1;
   if (size > 100) size = 100;
@@ -51,5 +52,5 @@ const logs = (zRange, log) => async (params, res) => {
 };
 
 module.exports = {
-  logs,
+  getContractLogsHandler,
 };

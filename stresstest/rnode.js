@@ -1,5 +1,3 @@
-const fs = require('fs');
-const https = require('https');
 const http = require('http');
 
 const rchainNode = '195.154.70.253';

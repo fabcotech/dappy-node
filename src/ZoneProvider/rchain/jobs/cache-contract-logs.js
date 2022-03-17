@@ -3,16 +3,18 @@ const rchainToolkit = require('rchain-toolkit');
 const { readLogsTerm, logs } = require('rchain-token');
 const redis = require('redis');
 
+const { log } = require('../../../utils');
+
 function formatLogMessage(msg) {
   return `${new Date().toISOString()} - ${msg}`;
 }
 
 function logInfo(msg) {
-  console.log(formatLogMessage(msg));
+  log(formatLogMessage(msg));
 }
 
 function logError(msg) {
-  console.error(formatLogMessage(msg));
+  log(formatLogMessage(msg), 'error');
 }
 
 function mandatory(varName, value) {
@@ -41,7 +43,7 @@ function parseRedisUrl(value) {
 }
 
 function getFileContent(path) {
-  if (!path) return;
+  if (!path) return undefined;
 
   return fs.readFileSync(process.env.READ_ONLY_CERTIFICATE_PATH, 'utf8');
 }
@@ -50,10 +52,10 @@ function initConfig(env = {}) {
   return {
     logsInteval: 10000, // parseInt(env.LOGS_INTERVAL) || 10 * 1000,
     masterRegistryUri: mandatory(
-      'MASTER_REGISTRY_URI',
-      env.MASTER_REGISTRY_URI,
+      'RCHAIN_NAMES_MASTER_REGISTRY_URI',
+      env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
     ),
-    contracts: parseArray(mandatory('CONTRACTS', env.CONTRACTS)),
+    contracts: parseArray(mandatory('RCHAIN_NAMES_LOGS_CONTRACTS', env.RCHAIN_NAMES_LOGS_CONTRACTS)),
     rnodeUri: mandatory('READ_ONLY', env.READ_ONLY),
     redisUrl: parseRedisUrl(mandatory('REDIS_URL', env.REDIS_URL)),
     caCertificate: getFileContent(env.READ_ONLY_CERTIFICATE_PATH),
@@ -69,7 +71,7 @@ async function initClientRedis(redisUrl) {
 }
 
 function parseLogTs(l) {
-  return parseInt(l.match(/^[^,]+,(\d+),/)[1]);
+  return parseInt(l.match(/^[^,]+,(\d+),/)[1], 10);
 }
 
 function parseLogs(rawLogs) {
@@ -116,12 +118,12 @@ async function queryLogs(
   return parseLogs(rchainToolkit.utils.rhoValToJs(parsed.expr[0]));
 }
 
-async function saveToSortedSetsInRedis(zAdd, contract, logs) {
-  if (!logs.length) return;
+async function saveToSortedSetsInRedis(zAdd, contract, contractLogs) {
+  if (!contractLogs.length) return;
 
   const nbEntries = await zAdd(
     `logs:${contract}`,
-    ...logs.map((l) => [l.ts, l.msg]).flat(),
+    ...contractLogs.map((l) => [l.ts, l.msg]).flat(),
   );
 
   if (nbEntries) {
@@ -132,8 +134,10 @@ async function saveToSortedSetsInRedis(zAdd, contract, logs) {
 async function saveContractLogs(exploreDeploy, zAdd, config) {
   for (const contract of config.contracts) {
     try {
-      const logs = await queryLogs(exploreDeploy, contract, config);
-      await saveToSortedSetsInRedis(zAdd, contract, logs);
+      // eslint-disable-next-line no-await-in-loop
+      const contractLogs = await queryLogs(exploreDeploy, contract, config);
+      // eslint-disable-next-line no-await-in-loop
+      await saveToSortedSetsInRedis(zAdd, contract, contractLogs);
     } catch (err) {
       logError(err);
     }
@@ -141,23 +145,30 @@ async function saveContractLogs(exploreDeploy, zAdd, config) {
 }
 
 function waitDuration(milliseconds) {
-  return new Promise((res) => setTimeout(() => res(), milliseconds));
+  return new Promise((res) => {
+    setTimeout(() => res(), milliseconds);
+  });
 }
 
-async function startJob() {
+async function start() {
   const config = initConfig(process.env);
   const redisClient = await initClientRedis(config.redisUrl);
   const zAdd = redisClient.zAdd.bind(redisClient);
 
-  logInfo('get contract logs started');
+  logInfo('cache contract logs started');
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
+    // eslint-disable-next-line no-await-in-loop
     await saveContractLogs(rchainToolkit.http.exploreDeploy, zAdd, config);
+    // eslint-disable-next-line no-await-in-loop
     await waitDuration(config.logsInteval);
   }
 }
 
-parseBool(process.env.START_JOB) && startJob();
+if (parseBool(process.env.START_JOB)) {
+  start();
+}
 
 module.exports = {
   parseArray,
@@ -167,4 +178,5 @@ module.exports = {
   saveToSortedSetsInRedis,
   queryLogs,
   initConfig,
+  start,
 };

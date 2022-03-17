@@ -5,9 +5,9 @@ const { expect } = chai;
 chai.use(spies);
 const { spy } = chai;
 
-const { logs } = require('./logs');
+const { getLogsHandler } = require('./get-contract-logs');
 
-describe('/logs', () => {
+describe('/get-contract-logs', () => {
   it('should return error 500 on redis query error', async () => {
     const error = new Error('error');
     const zRange = spy(() => Promise.reject(error));
@@ -17,7 +17,7 @@ describe('/logs', () => {
       send: spy(),
     };
 
-    await logs(zRange, log)({
+    await getLogsHandler(zRange, log)({
       contract: 'foo',
       size: 100,
       offset: 0,
@@ -36,7 +36,7 @@ describe('/logs', () => {
       send: spy(),
     };
 
-    await logs(zRange, spy())({
+    await getLogsHandler(zRange, spy())({
       contract: 'foo',
       size: 100,
       offset: 0,
@@ -54,7 +54,7 @@ describe('/logs', () => {
       send: spy(),
     };
 
-    await logs(zRange, log)({
+    await getLogsHandler(zRange, log)({
       contract: 'foo',
       size: 'foo',
       offset: 'bar',
@@ -73,7 +73,7 @@ describe('/logs', () => {
       send: spy(),
     };
 
-    await logs(zRange, log)({
+    await getLogsHandler(zRange, log)({
       size: 100,
       offset: 0,
     }, res);
@@ -91,13 +91,13 @@ describe('/logs', () => {
       send: spy(),
     };
 
-    await logs(zRange, spy())({
+    await getLogsHandler(zRange, spy())({
       contract: 'foo',
       size: -1,
       offset: 0,
     }, res);
 
-    await logs(zRange, spy())({
+    await getLogsHandler(zRange, spy())({
       contract: 'foo',
       size: 101,
       offset: 0,
@@ -114,7 +114,7 @@ describe('/logs', () => {
       send: spy(),
     };
 
-    await logs(zRange, spy())({
+    await getLogsHandler(zRange, spy())({
       contract: 'foo',
       size: 100,
       offset: -1,

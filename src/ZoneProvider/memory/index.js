@@ -1,7 +1,11 @@
+const { log } = require('../../utils');
+const { getRoutes } = require('./routes');
+
 function start() {
-  console.log('memory provider started');
+  log('memory provider started');
 }
 
 module.exports = {
   start,
+  getRoutes,
 };

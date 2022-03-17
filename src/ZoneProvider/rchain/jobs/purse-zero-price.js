@@ -40,8 +40,8 @@ module.exports.getPurseZeroPrice = async (urlOrOptions) => {
       throw new Error('Invalid name price');
     }
   } catch (err) {
-    console.log(exploreDeployResult);
-    console.log(err);
+    log(exploreDeployResult);
+    log(err);
     log(
       'Unable to parse explore-deploy result as JSON for name price',
       'error',
