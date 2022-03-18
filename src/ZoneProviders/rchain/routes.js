@@ -1,3 +1,6 @@
+const { Router } = require('express');
+const bodyParser = require('body-parser');
+
 const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
 const {
   listenForDataAtNameXWsHandler,
@@ -145,21 +148,25 @@ const getContractLogs = (store) => (req, res) => {
   getContractLogsHandler(store.redisClient.zRange.bind(store.redisClient), log)(req.body, res);
 };
 
-function getRoutes() {
-  return [
-    ['get', '/info', getInfo],
-    ['post', '/info', getInfo],
-    ['post', '/last-finalized-block-number', getLastFinalizedBlockNumber],
-    ['post', '/explore-deploy-x', exploreDeployX],
-    ['post', '/listen-for-data-at-name-x', listenForDataAtNameX],
-    ['post', '/get-x-records', getXRecords],
-    ['post', '/get-x-records-by-public-key', getXRecordsByPublicKey],
-    ['post', '/get-contract-logs', getContractLogs],
-    ['post', '/api/deploy', deploy],
-    ['post', '/api/prepare-deploy', prepareDeploy],
-    ['post', '/api/explore-deploy', exploreDeploy],
-    ['post', '/api/listen-for-data-at-name', listenForDataAtName],
-  ];
+function getRoutes(store) {
+  const router = Router();
+
+  router.use(bodyParser.json());
+
+  router.get('/info', getInfo(store));
+  router.post('/info', getInfo(store));
+  router.post('/last-finalized-block-number', getLastFinalizedBlockNumber(store));
+  router.post('/explore-deploy-x', exploreDeployX(store));
+  router.post('/listen-for-data-at-name-x', listenForDataAtNameX(store));
+  router.post('/get-x-records', getXRecords(store));
+  router.post('/get-x-records-by-public-key', getXRecordsByPublicKey(store));
+  router.post('/get-contract-logs', getContractLogs(store));
+  router.post('/api/deploy', deploy(store));
+  router.post('/api/prepare-deploy', prepareDeploy(store));
+  router.post('/api/explore-deploy', exploreDeploy(store));
+  router.post('/api/listen-for-data-at-name', listenForDataAtName(store));
+
+  return router;
 }
 
 module.exports = {

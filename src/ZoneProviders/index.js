@@ -24,11 +24,9 @@ function startZoneProvider(store) {
 
 function addZoneProviderRoutes(app, store) {
   const zoneProvider = getCurrentZoneProvider();
-  const routes = zoneProvider.getRoutes();
+  const routes = zoneProvider.getRoutes(store);
 
-  routes.forEach(([method, routePath, createHandler]) => {
-    app[method](routePath, createHandler(store));
-  });
+  app.use('/', routes);
 }
 
 module.exports = {

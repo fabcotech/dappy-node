@@ -1,3 +1,8 @@
+const { Router } = require('express');
+
 module.exports = {
-  getRoutes: () => [],
+  getRoutes: () => {
+    const router = Router();
+    return router;
+  },
 };

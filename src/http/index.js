@@ -2,10 +2,9 @@ const http = require('http');
 const https = require('https');
 const path = require('path');
 const fs = require('fs');
-const bodyParser = require('body-parser');
 const express = require('express');
 
-const { getNodes, ping, dnsQuery } = require('./routes');
+const { getRouter } = require('./routes');
 const { initSentry } = require('./sentry');
 const { addZoneProviderRoutes } = require('../ZoneProviders');
 const { incRequestMetricsMiddleware } = require('../requestMetrics');
@@ -15,9 +14,7 @@ const { log } = require('../log');
 const initRoutes = (app, store) => {
   initSentry(app);
 
-  app.post('/ping', ping);
-  app.post('/get-nodes', getNodes(store));
-  app.post('/dns-query', dnsQuery);
+  app.use('/', getRouter(store));
 
   addZoneProviderRoutes(app, store);
 };
@@ -25,7 +22,6 @@ const initRoutes = (app, store) => {
 const startHttpServers = (store) => {
   const app = express();
 
-  app.use(bodyParser.json());
   app.use(incRequestMetricsMiddleware);
   initRoutes(app, store);
 
