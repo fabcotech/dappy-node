@@ -4,10 +4,10 @@ import {
   isArrayNotEmptyOf,
   isNumber,
   isOneOf,
-} from '../../utils/validation';
+} from '../utils/validation';
 
 import { isRRA, isRRAAAA, isRRCERT, RR } from './ResourceRecords';
-import { JSONObject } from '../../utils/json';
+import { JSONObject } from '../utils/json';
 
 export type NameZone = {
   origin: string;

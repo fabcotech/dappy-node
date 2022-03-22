@@ -1,6 +1,6 @@
 const chai = require('chai');
 const spies = require('chai-spies');
-const { createNamePacketQuery } = require('../model/fakeData');
+const { createNamePacketQuery } = require('../../model/fakeData');
 
 const { getAnswers } = require('./dns-query');
 

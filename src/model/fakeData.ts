@@ -1,7 +1,7 @@
 import { NameZone } from './NameZone';
 import { NamePacket, ReturnCode, PacketType } from './NamePacket';
 
-import { mergeDeep } from '../../utils/mergeDeep';
+import { mergeDeep } from '../utils/mergeDeep';
 import { RRA, RRAAAA, RRCERT } from './ResourceRecords';
 
 export const createRRA = (rra: Partial<RRA> = {}): RRA => {

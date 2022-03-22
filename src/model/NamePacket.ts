@@ -1,4 +1,4 @@
-import { JSONObject } from '../../utils/json';
+import { JSONObject } from '../utils/json';
 import {
   isArrayNotEmptyOf,
   isNumber,
@@ -8,7 +8,7 @@ import {
   isUndefined,
   match,
   not,
-} from '../../utils/validation';
+} from '../utils/validation';
 import { RecordType, RRData, recordTypeRegExp } from './ResourceRecords';
 
 export type NameClass = 'IN';

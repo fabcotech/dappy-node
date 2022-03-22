@@ -4,9 +4,9 @@ import {
   isStringNotEmpty,
   isNumber,
   match,
-} from '../../utils/validation';
+} from '../utils/validation';
 
-import { JSONObject } from '../../utils/json';
+import { JSONObject } from '../utils/json';
 
 export enum RecordType {
   A = 'A',
