@@ -4,6 +4,11 @@ const { getXRecordsWsHandler } = require('./get-x-records');
 const { pickRandomReadOnly } = require('./pickRandomReadOnly');
 const { log } = require('../../log');
 
+const getAnswers = (questions, zone) => undefined;
+  // questions
+  //   .filter((q) => q.type !== 'CERT')
+  //   .map(({ type, name }) => zone.records.find((record) => record.type === queriedType).data);
+
 const dnsQuery = (store) => async (req, res) => {
   res.set({
     'content-type': 'application/dns-message',
@@ -16,23 +21,29 @@ const dnsQuery = (store) => async (req, res) => {
   const queryPacket = dnsPacket.decode(req.body);
 
   console.log(JSON.stringify(queryPacket.questions));
+  const queriedType = queryPacket.questions[0].type;
 
-  const r = await getXRecordsWsHandler({
-    names: queryPacket.questions.map((q) => q.name.replace(/\.dappy$/, '')),
-  }, {
-    redisClient: store.redisClient,
-    log,
-    urlOrOptions: pickRandomReadOnly(store),
-  });
+  const r = await getXRecordsWsHandler(
+    {
+      names: queryPacket.questions.map((q) => q.name.replace(/\.dappy$/, '')),
+    },
+    {
+      redisClient: store.redisClient,
+      log,
+      urlOrOptions: pickRandomReadOnly(store),
+    },
+  );
 
   let zone;
   try {
-    zone = JSON.parse(r.records[0].data).values[0];
+    zone = JSON.parse(r.records[0].data);
   } catch {
     zone = {
-      records: [{
-        ip: '192.168.0.1',
-      }],
+      records: [
+        {
+          ip: '192.168.0.1',
+        },
+      ],
     };
   }
 
@@ -46,10 +57,10 @@ const dnsQuery = (store) => async (req, res) => {
     answers: [
       {
         name: queryPacket.questions[0].name,
-        type: 'A',
+        type: queriedType,
         class: 'IN',
         ttl: 60,
-        data: zone.records[0].ip,
+        data: zone.records.find((record) => record.type === queriedType).data,
       },
     ],
   });
@@ -59,4 +70,5 @@ const dnsQuery = (store) => async (req, res) => {
 
 module.exports = {
   dnsQuery,
+  getAnswers,
 };

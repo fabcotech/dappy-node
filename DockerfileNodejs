@@ -15,8 +15,9 @@ USER node
 RUN mkdir ./logs
 RUN mkdir ./www
 COPY --chown=node:node package*.json ./
+COPY --chown=node:node tsconfig.json ./
 COPY --chown=node:node src ./src/
 
-RUN npm install --only=production
+RUN npm install && npm run build 
 
-CMD ["node", "--max-old-space-size=8192", "src/index.js"]
+CMD ["node", "--max-old-space-size=8192", "dist/index.js"]

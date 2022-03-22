@@ -11,7 +11,11 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/src/index.js"
+      "program": "${workspaceFolder}/src/index.js",
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+      ]
     },
     {
       "type": "pwa-node",
@@ -23,7 +27,11 @@
       "program": "${workspaceFolder}/src/index.js",
       "env": {
         "DAPPY_NODE_ZONE_PROVIDER": "memory"
-      }
+      },
+      "runtimeArgs": [
+        "-r",
+        "ts-node/register",
+      ]
     },
     {
       "type": "node",
@@ -33,6 +41,8 @@
       "stopOnEntry": false,
       "cwd": "${workspaceRoot}",
       "args": [
+        "-r",
+        "ts-node/register",
         "--inspect-brk",
         "${relativeFile}"
       ],

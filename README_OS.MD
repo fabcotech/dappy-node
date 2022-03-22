@@ -176,7 +176,9 @@ The dappy-node program will use `dappynode.crt` and `dappynode.key` for the port
 
 ```
 # run dappy-node
-node src/index.js
+npm i
+npm run build
+node dist/index.js
 
 # check that you have logs that look like the following
 2022-02-24T09:59:55.149Z RChain node responding at http://localhost:40403/version and /api/blocks/1
