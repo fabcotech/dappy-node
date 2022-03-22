@@ -73,3 +73,5 @@ dappynode.crt
 .metals
 
 ca-rnode.pem
+
+dist
