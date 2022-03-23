@@ -22,8 +22,6 @@ async function start() {
 
   await startZoneProvider(store);
   startHttpServers(store);
-
-  initRequestMetrics();
 }
 
 start();
