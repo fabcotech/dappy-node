@@ -40,7 +40,7 @@ export const createRRCERT = (rrcert: Partial<RRCERT> = {}): RRCERT => {
 export const createNameZone = (zone: Partial<NameZone> = {}): NameZone => {
   return mergeDeep(
     {
-      origin: 'example.dappy',
+      origin: 'example',
       ttl: 3600,
       records: [
         createRRA(),

@@ -24,6 +24,7 @@ export type ResourceRecord = {
 // Simplified version of A RR from RFC 1035
 export type RRA = ResourceRecord & {
   data: string;
+  type: 'A';
 };
 
 export const isRRA = (data: JSONObject): data is RRA =>
@@ -37,6 +38,7 @@ export const isRRA = (data: JSONObject): data is RRA =>
 // Simplified version of AAAA RR from RFC 1035
 export type RRAAAA = ResourceRecord & {
   data: string;
+  type: 'AAAA';
 };
 
 export const isRRAAAA = (data: JSONObject): data is RRAAAA =>
@@ -49,6 +51,7 @@ export const isRRAAAA = (data: JSONObject): data is RRAAAA =>
 
 export type RRCERT = ResourceRecord & {
   data: string;
+  type: 'CERT';
 };
 
 export const isRRCERT = (data: JSONObject): data is RRCERT =>
