@@ -6,7 +6,7 @@
   "repository": "https://github.com/fabcotech/dappy-node.git",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "mocha -r ts-node/register src/**/*.spec.js",
+    "test": "mocha -r ts-node/register src/**/*.spec.js src/**/*.spec.ts",
     "build": "rm -rf dist && tsc",
     "start": "node dist/index.js",
     "start:dev:rchain": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=rchain node -r ts-node/register src/index.js",

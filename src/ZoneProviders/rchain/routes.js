@@ -15,7 +15,6 @@ const {
 } = require('./get-x-records-by-public-key');
 const { pickRandomReadOnly } = require('./pickRandomReadOnly');
 const { getContractLogsHandler } = require('./get-contract-logs');
-const { dnsQuery } = require('./dns-query');
 const { log } = require('../../log');
 
 const getInfo = (store) => (req, res) => {
@@ -154,9 +153,6 @@ function getRoutes(store) {
 
   router.use(bodyParser.json());
 
-  router.post('/dns-query', bodyParser.raw({
-    type: 'application/dns-message',
-  }), dnsQuery(store));
   router.get('/info', getInfo(store));
   router.post('/info', getInfo(store));
   router.post('/last-finalized-block-number', getLastFinalizedBlockNumber(store));

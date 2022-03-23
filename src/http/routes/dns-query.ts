@@ -1,9 +1,6 @@
 import dnsPacket, { Packet, Question } from 'dns-packet';
 import { Request, Response } from 'express';
 
-import { getXRecordsWsHandler } from './get-x-records';
-import { pickRandomReadOnly } from './pickRandomReadOnly';
-import { log } from '../../log';
 import { NameZone } from '../../model/NameZone';
 import { RR } from '../../model/ResourceRecords';
 import { NameAnswer, NamePacket, PacketType, ReturnCode } from '../../model/NamePacket';
@@ -42,22 +39,6 @@ export const getZoneRecords = (questions: Question[], zones: NameZone[]): NameAn
       data: record.data,
     }) as any);
 
-export const getZones = (store: any) => async (names: string[]): Promise<NameZone[]> => {
-  const result = await getXRecordsWsHandler({ names },
-  {
-    redisClient: store.redisClient,
-    log,
-    urlOrOptions: pickRandomReadOnly(store),
-  });
-
-  if (!result.success) {
-    throw new Error('Failed to get zones from rchain');
-  }
-
-  return result.records as NameZone[];
-};
-
-
 export const getTLDs = (names: string[]): string[] =>
   names.map(name => name.replace(/\.dappy$/, '').split('.').slice(-1)[0]);
 
@@ -91,14 +72,14 @@ export const createFetchNameAnswers = (getZonesApi: (names: string[]) => Promise
   };
 };
 
-export const dnsQuery = (store: any) => async (req: Request, res: Response) => {
+export const createDnsQuery = (getZones: (names: string[]) => Promise<NameZone[]>) => async (req: Request, res: Response) => {
   res.set({
     'content-type': 'application/dns-message',
     'Access-Control-Allow-Origin': '*',
   });
 
   const queryPacket = dnsPacket.decode(req.body);
-  const response = await createFetchNameAnswers(getZones(store))(queryPacket as NamePacket);
+  const response = await createFetchNameAnswers(getZones)(queryPacket as NamePacket);
 
   res.send(dnsPacket.encode(response as Packet)); 
 };
