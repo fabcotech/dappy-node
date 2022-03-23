@@ -30,9 +30,8 @@ export const getZoneRecords = (questions: Question[], zones: NameZone[]): NameAn
   questions
     .filter((q) => q.type !== 'CERT')
     .map(({ type, name }) => {
-      const records = zones[0].records.filter(record => record.type === type);
-      const rRecords = normalizeRecords(zones[0], records, /\.dappy$/.test(name));
-      return rRecords.filter(record => record.name === name);
+      const records = zones.map((zone) => normalizeRecords(zone, zone.records, /\.dappy$/.test(name))).flat();
+      return records.filter(record => record.type === type && record.name === name);
     })
     .flat()
     .map(record => ({
