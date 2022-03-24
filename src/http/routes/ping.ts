@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response } from 'express';
 
 // eslint-disable-next-line import/prefer-default-export
 export const ping = (req: Request, res: Response) => {

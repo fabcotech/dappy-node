@@ -26,13 +26,33 @@ describe('dns-query', () => {
       records: [
         { name: '@', type: 'A', data: '127.0.0.1' },
         { name: '', type: 'A', data: '127.0.0.1' },
-        { name: 'foo', type: 'A', data: '127.0.0.1', ttl: 300 },
+        {
+          name: 'foo',
+          type: 'A',
+          data: '127.0.0.1',
+          ttl: 300,
+        },
       ],
     });
     expect(normalizeRecords(zone, zone.records)).to.eql([
-      { name: zone.origin, type: 'A', data: '127.0.0.1', ttl: 3600 },
-      { name: zone.origin, type: 'A', data: '127.0.0.1', ttl: 3600 },
-      { name: `foo.${zone.origin}`, type: 'A', data: '127.0.0.1', ttl: 300 },
+      {
+        name: zone.origin,
+        type: 'A',
+        data: '127.0.0.1',
+        ttl: 3600,
+      },
+      {
+        name: zone.origin,
+        type: 'A',
+        data: '127.0.0.1',
+        ttl: 3600,
+      },
+      {
+        name: `foo.${zone.origin}`,
+        type: 'A',
+        data: '127.0.0.1',
+        ttl: 300,
+      },
     ]);
   });
 
@@ -160,8 +180,8 @@ describe('dns-query', () => {
         class: 'IN',
         name: 'bar.foo.dappy',
         ttl: 3600,
-        data: '192.168.1.1',    
-      }
+        data: '192.168.1.1',
+      },
     ]);
   });
 });

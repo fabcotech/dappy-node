@@ -15,7 +15,7 @@ describe('validation', () => {
     expect(
       isObjectWith({
         foo: isStringNotEmpty,
-      })(value),
+      })(value)
     ).to.eql(true);
 
     const value2 = {
@@ -25,28 +25,28 @@ describe('validation', () => {
     expect(
       isObjectWith({
         foo: isStringNotEmpty,
-      })(value2),
+      })(value2)
     ).to.eql(false);
   });
   it('isArrayNotEmptyOf()', () => {
     const listOfNonEmptyStrings = ['foo', 'bar', 'baz'];
 
     expect(isArrayNotEmptyOf(isStringNotEmpty)(listOfNonEmptyStrings)).to.eql(
-      true,
+      true
     );
 
     const listWithSomeEmptyStrings = ['foo', 'bar', 'baz', ''];
 
     expect(
-      isArrayNotEmptyOf(isStringNotEmpty)(listWithSomeEmptyStrings),
+      isArrayNotEmptyOf(isStringNotEmpty)(listWithSomeEmptyStrings)
     ).to.eql(false);
 
     const listOfSameObjects = [{ foo: 'bar' }, { foo: 'baz' }, { foo: 'qux' }];
 
     expect(
       isArrayNotEmptyOf(isObjectWith({ foo: isStringNotEmpty }))(
-        listOfSameObjects,
-      ),
+        listOfSameObjects
+      )
     ).to.eql(true);
 
     const listOfDifferentsObjects = [
@@ -57,8 +57,8 @@ describe('validation', () => {
 
     expect(
       isArrayNotEmptyOf(isObjectWith({ foo: isStringNotEmpty }))(
-        listOfDifferentsObjects,
-      ),
+        listOfDifferentsObjects
+      )
     ).to.eql(false);
   });
 });

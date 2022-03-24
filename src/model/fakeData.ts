@@ -11,7 +11,7 @@ export const createRRA = (rra: Partial<RRA> = {}): RRA => {
       type: 'A',
       data: '127.0.0.1',
     },
-    rra,
+    rra
   );
 };
 
@@ -22,7 +22,7 @@ export const createRRAAAA = (rraaaa: Partial<RRAAAA> = {}): RRAAAA => {
       type: 'AAAA',
       data: '::1',
     },
-    rraaaa,
+    rraaaa
   );
 };
 
@@ -33,7 +33,7 @@ export const createRRCERT = (rrcert: Partial<RRCERT> = {}): RRCERT => {
       type: 'CERT',
       data: '123456789ABCDEF',
     },
-    rrcert,
+    rrcert
   );
 };
 
@@ -51,12 +51,12 @@ export const createNameZone = (zone: Partial<NameZone> = {}): NameZone => {
         createRRCERT({ name: 'foo' }),
       ],
     },
-    zone,
+    zone
   );
 };
 
 export const createNamePacketQuery = (
-  packet: Partial<NamePacket> = {},
+  packet: Partial<NamePacket> = {}
 ): NamePacket => {
   return mergeDeep(
     {
@@ -72,12 +72,12 @@ export const createNamePacketQuery = (
         },
       ],
     },
-    packet,
+    packet
   );
 };
 
 export const createNamePacketSuccessResponse = (
-  packet: Partial<NamePacket> = {},
+  packet: Partial<NamePacket> = {}
 ): NamePacket => {
   return mergeDeep(
     {
@@ -102,12 +102,12 @@ export const createNamePacketSuccessResponse = (
         },
       ],
     },
-    packet,
+    packet
   );
 };
 
 export const createNamePacketErrorResponse = (
-  packet: Partial<NamePacket> = {},
+  packet: Partial<NamePacket> = {}
 ): NamePacket => {
   return mergeDeep(
     {
@@ -124,6 +124,6 @@ export const createNamePacketErrorResponse = (
       ],
       answers: [],
     },
-    packet,
+    packet
   );
 };

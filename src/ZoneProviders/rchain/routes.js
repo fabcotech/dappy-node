@@ -148,7 +148,7 @@ const getContractLogs = (store) => (req, res) => {
   getContractLogsHandler(store.redisClient.zRange.bind(store.redisClient), log)(req.body, res);
 };
 
-function getRoutes(store) {
+export function getRoutes(store) {
   const router = Router();
 
   router.use(bodyParser.json());
@@ -168,7 +168,3 @@ function getRoutes(store) {
 
   return router;
 }
-
-module.exports = {
-  getRoutes,
-};

@@ -70,7 +70,7 @@ export const isNamePacket = (packet: JSONObject): packet is NamePacket =>
         type: match(recordTypeRegExp),
         class: match(/^IN$/),
         name: isStringNotEmpty,
-      }),
+      })
     ),
     answers: isOptional(
       isArrayNotEmptyOf(
@@ -80,7 +80,7 @@ export const isNamePacket = (packet: JSONObject): packet is NamePacket =>
           name: isStringNotEmpty,
           ttl: isNumber,
           data: not(isUndefined),
-        }),
-      ),
+        })
+      )
     ),
   })(packet);

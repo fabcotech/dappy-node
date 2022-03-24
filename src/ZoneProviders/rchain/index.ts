@@ -1,10 +1,9 @@
 import { createGetZones } from './getZones';
+import { start } from './start';
+import { getRoutes } from './routes';
 
-const { start } = require('./start');
-const { getRoutes } = require('./routes');
-
-module.exports = {
+export const rchainZoneProvider = {
+  createGetZones,
   start,
   getRoutes,
-  createGetZones,
 };

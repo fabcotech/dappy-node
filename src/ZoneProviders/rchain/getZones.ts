@@ -3,17 +3,21 @@ import { pickRandomReadOnly } from './pickRandomReadOnly';
 import { log } from '../../log';
 import { NameZone } from '../../model/NameZone';
 
-export const createGetZones = (store: any) => async (names: string[]): Promise<NameZone[]> => {
-  const result = await getXRecordsWsHandler({ names },
-  {
-    redisClient: store.redisClient,
-    log,
-    urlOrOptions: pickRandomReadOnly(store),
-  });
+export const createGetZones =
+  (store: any) =>
+  async (names: string[]): Promise<NameZone[]> => {
+    const result = await getXRecordsWsHandler(
+      { names },
+      {
+        redisClient: store.redisClient,
+        log,
+        urlOrOptions: pickRandomReadOnly(store),
+      }
+    );
 
-  if (!result.success) {
-    throw new Error('Failed to get zones from rchain');
-  }
+    if (!result.success) {
+      throw new Error('Failed to get zones from rchain');
+    }
 
-  return result.records as NameZone[];
-};
+    return result.records?.map((r) => JSON.parse(r.data)) as NameZone[];
+  };

@@ -1,19 +1,19 @@
-import { Express } from 'express';
+import { Router } from 'express';
 
-const { log } = require('../log');
+import { log } from '../log';
 
-const RChainZoneProvider = require('./rchain');
-const MemoryZoneProvider = require('./memory');
+import { rchainZoneProvider } from './rchain';
+import { memoryZoneProvider } from './memory';
 
 interface ZoneProvider {
   createGetZones(store: any): (names: string[]) => Promise<any>;
   start(store: any): Promise<void>;
-  getRoutes(store: any): Express;
+  getRoutes(store: any): Router;
 }
 
 const providers: Record<string, ZoneProvider> = {
-  rchain: RChainZoneProvider,
-  memory: MemoryZoneProvider,
+  rchain: rchainZoneProvider,
+  memory: memoryZoneProvider,
 };
 
 export function getCurrentZoneProvider() {
@@ -30,7 +30,7 @@ export function startZoneProvider(store: any) {
   return zoneProvider.start(store);
 }
 
-export function addZoneProviderRoutes(app: Express, store: any) {
+export function addZoneProviderRoutes(app: Router, store: any) {
   const zoneProvider = getCurrentZoneProvider();
   const routes = zoneProvider.getRoutes(store);
 

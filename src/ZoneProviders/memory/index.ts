@@ -1,8 +1,15 @@
-export { createGetZones } from './getZones';
-export  { getRoutes } from './routes';
+import { createGetZones } from './getZones';
+import { getRoutes } from './routes';
 
-const { log } = require('../../log');
+import { log } from '../../log';
 
-export function start() {
+function start() {
   log('memory provider started');
+  return Promise.resolve();
 }
+
+export const memoryZoneProvider = {
+  createGetZones,
+  start,
+  getRoutes,
+};

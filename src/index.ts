@@ -1,15 +1,10 @@
-const { initNodes } = require('./nodes');
-const { startZoneProvider } = require('./ZoneProviders');
-const { initCache } = require('./cache');
-const { startHttpServers } = require('./http');
-const { initStore } = require('./store');
+import 'dotenv/config';
 
-// will not override the env variables in docker-compose
-require('dotenv').config();
-
-const {
-  initRequestMetrics,
-} = require('./requestMetrics');
+import { initNodes } from './nodes';
+import { startZoneProvider } from './ZoneProviders';
+import { initCache } from './cache';
+import { startHttpServers } from './http';
+import { initStore } from './store';
 
 async function start() {
   const store = initStore();

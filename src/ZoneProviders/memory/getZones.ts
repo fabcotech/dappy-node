@@ -1,6 +1,6 @@
-import { createNameZone } from "../../model/fakeData";
-import { NameZone } from "../../model/NameZone";
+import { createNameZone } from '../../model/fakeData';
+import { NameZone } from '../../model/NameZone';
 
-export const createGetZones = (store: any) => async (names: string[]): Promise<NameZone[]> => {
+export const createGetZones = () => async (): Promise<NameZone[]> => {
   return [createNameZone()];
 };

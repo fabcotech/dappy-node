@@ -11,9 +11,13 @@ export function getRouter(store: any) {
 
   router.post('/ping', ping);
   router.post('/get-nodes', getNodes(store));
-  router.post('/dns-query', bodyParser.raw({
-    type: 'application/dns-message',
-  }), createDnsQuery(getCurrentZoneProvider().createGetZones(store)));
+  router.post(
+    '/dns-query',
+    bodyParser.raw({
+      type: 'application/dns-message',
+    }),
+    createDnsQuery(getCurrentZoneProvider().createGetZones(store))
+  );
 
   return router;
 }
