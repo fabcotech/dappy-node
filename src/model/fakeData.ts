@@ -60,7 +60,6 @@ export const createNamePacketQuery = (
 ): NamePacket => {
   return mergeDeep(
     {
-      version: '1.0.0',
       type: PacketType.QUERY,
       rcode: ReturnCode.NOERROR,
       id: 0,
@@ -82,7 +81,6 @@ export const createNamePacketSuccessResponse = (
 ): NamePacket => {
   return mergeDeep(
     {
-      version: '1.0.0',
       type: PacketType.RESPONSE,
       rcode: ReturnCode.NOERROR,
       id: 0,
@@ -113,7 +111,6 @@ export const createNamePacketErrorResponse = (
 ): NamePacket => {
   return mergeDeep(
     {
-      version: '1.0.0',
       type: PacketType.RESPONSE,
       rcode: ReturnCode.SERVFAIL,
       id: 0,

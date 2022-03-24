@@ -11,7 +11,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/src/index.js",
+      "program": "${workspaceFolder}/src/index.ts",
       "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node",
     },
     {
@@ -21,7 +21,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/src/index.js",
+      "program": "${workspaceFolder}/src/index.ts",
       "env": {
         "DAPPY_NODE_ZONE_PROVIDER": "memory"
       },

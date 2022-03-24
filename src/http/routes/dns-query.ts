@@ -45,7 +45,7 @@ export const getTLDs = (names: string[]): string[] =>
 export const createFetchNameAnswers = (getZonesApi: (names: string[]) => Promise<NameZone[]>) => async (packet: NamePacket): Promise<NamePacket> => {
   if (!packet.questions || packet.questions.length === 0) {
     return {
-      version: '1.0.0',
+      version: "1.0.0",
       rcode: ReturnCode.NXDOMAIN,
       type: PacketType.RESPONSE,
       id: 0,
@@ -62,7 +62,7 @@ export const createFetchNameAnswers = (getZonesApi: (names: string[]) => Promise
   return {
     version: '1.0.0',
     type: PacketType.RESPONSE,
-    rcode: 0,
+    rcode: ReturnCode.NOERROR,
     id: 0,
     flags: 0,
     questions: packet.questions,
