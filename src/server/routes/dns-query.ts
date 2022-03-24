@@ -91,18 +91,35 @@ export const createFetchNameAnswers =
       };
     }
 
-    const tldZones = await getZonesApi(
-      getTLDs(packet.questions.map((q) => q.name))
-    );
+    let tldZones;
+    try {
+      tldZones = await getZonesApi(
+        getTLDs(packet.questions.map((q) => q.name))
+      );
+    } catch (e) {
+      return {
+        version: '1.0.0',
+        rcode: ReturnCode.SERVFAIL,
+        type: PacketType.RESPONSE,
+        id: 0,
+        flags: 0,
+        questions: [],
+        answers: [],
+        additionals: [],
+        authorities: [],
+      };
+    }
+
+    const answers = getZoneRecords(packet.questions, tldZones);
 
     return {
       version: '1.0.0',
       type: PacketType.RESPONSE,
-      rcode: ReturnCode.NOERROR,
+      rcode: answers.length === 0 ? ReturnCode.NXDOMAIN : ReturnCode.NOERROR,
       id: 0,
       flags: 0,
       questions: packet.questions,
-      answers: getZoneRecords(packet.questions, tldZones),
+      answers,
       additionals: [],
       authorities: [],
     };

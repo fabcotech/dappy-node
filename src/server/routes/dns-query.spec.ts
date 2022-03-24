@@ -184,4 +184,32 @@ describe('dns-query', () => {
       },
     ]);
   });
+  it('fetchNameAnswers() return NXDOMAIN when no record found', async () => {
+    const nsQuery = createNamePacketQuery();
+    const fooZone = createNameZone({
+      origin: 'foo',
+      records: [
+        {
+          name: 'bar',
+          type: 'A',
+          data: '192.168.1.1',
+        },
+      ],
+    });
+    const nsAnwser = await createFetchNameAnswers(() =>
+      Promise.resolve([fooZone])
+    )(nsQuery);
+
+    expect(nsAnwser.rcode).to.eql('NXDOMAIN');
+    expect(nsAnwser.answers).to.eql([]);
+  });
+  it('fetchNameAnswers() return SERVFAIL when unable to fetch zones', async () => {
+    const nsQuery = createNamePacketQuery();
+    const nsAnwser = await createFetchNameAnswers(() =>
+      Promise.reject(new Error('Unable to fetch zones'))
+    )(nsQuery);
+
+    expect(nsAnwser.rcode).to.eql('SERVFAIL');
+    expect(nsAnwser.answers).to.eql([]);
+  });
 });
