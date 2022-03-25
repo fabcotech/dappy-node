@@ -26,9 +26,22 @@ export const getCertificatesFromZones = (
 export const createFetchCertificates =
   (getZones: (names: string[]) => Promise<NameZone[]>) =>
   async (names: string[]) => {
-    const tldZones = await getZones(getTLDs(names));
+    let tldZones;
+    try {
+      tldZones = await getZones(getTLDs(names));
+    } catch {
+      return {
+        rcode: 'SERVFAIL',
+        questions: names,
+        answers: [],
+      };
+    }
     const certificates = getCertificatesFromZones(names, tldZones);
-    return certificates;
+    return {
+      rcode: certificates.length === 0 ? 'NXDOMAIN' : 'NOERROR',
+      questions: names,
+      answers: certificates,
+    };
   };
 
 export const createGetCertificates =
@@ -42,7 +55,7 @@ export const createGetCertificates =
       body: { names },
     } = req;
 
-    const response = await createFetchCertificates(getZones)(names);
+    const certificates = await createFetchCertificates(getZones)(names);
 
-    res.send(response);
+    res.send(certificates);
   };
