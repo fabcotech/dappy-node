@@ -5,27 +5,46 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "pwa-node",
-      "request": "launch",
       "name": "dappy-node (rchain)",
-      "skipFiles": [
-        "<node_internals>/**"
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register",
       ],
-      "program": "${workspaceFolder}/src/index.ts",
-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node",
+      "args": [
+        "./src/index.ts",
+      ],
+      "cwd": "${workspaceFolder}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": [
+        "<node_internals>/**",
+        "node_modules/**"
+      ],
     },
     {
-      "type": "pwa-node",
+      "name": "dappy-node (memory)",
+      "type": "node",
       "request": "launch",
-      "name": "dappy-node (memory)" ,
-      "skipFiles": [
-        "<node_internals>/**"
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register",
       ],
-      "program": "${workspaceFolder}/src/index.ts",
+      "args": [
+        "./src/index.ts",
+      ],
+      "cwd": "${workspaceFolder}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": [
+        "<node_internals>/**",
+        "node_modules/**"
+      ],
       "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json",
         "DAPPY_NODE_ZONE_PROVIDER": "memory"
-      },
-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node",
+      }
     },
     {
       "type": "node",
