@@ -30,11 +30,11 @@ describe('get-certificates', () => {
     expect(certificates).to.eql([
       {
         name: 'example',
-        certificate: 'cert1',
+        data: 'cert1',
       },
       {
         name: 'example',
-        certificate: 'cert2',
+        data: 'cert2',
       },
     ]);
   });
@@ -45,7 +45,7 @@ describe('get-certificates', () => {
     expect(certificates).to.eql([
       {
         name: 'foo.example',
-        certificate: '123456789ABCDEF',
+        data: '123456789ABCDEF',
       },
     ]);
   });
@@ -56,7 +56,7 @@ describe('get-certificates', () => {
     expect(certificates).to.eql([
       {
         name: 'example',
-        certificate: '123456789ABCDEF',
+        data: '123456789ABCDEF',
       },
     ]);
   });
@@ -67,7 +67,7 @@ describe('get-certificates', () => {
     expect(certificates).to.eql([
       {
         name: 'example.dappy',
-        certificate: '123456789ABCDEF',
+        data: '123456789ABCDEF',
       },
     ]);
   });
@@ -86,11 +86,11 @@ describe('get-certificates', () => {
     expect(certificates).to.eql([
       {
         name: 'zone1',
-        certificate: '123456789ABCDEF',
+        data: '123456789ABCDEF',
       },
       {
         name: 'zone2',
-        certificate: '123456789ABCDEF',
+        data: '123456789ABCDEF',
       },
     ]);
   });

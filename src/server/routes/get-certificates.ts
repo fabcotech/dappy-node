@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { NameZone } from '../../model/NameZone';
 import { getTLDs, normalizeRecords } from './utils';
 
-export type CertificateAnswer = { name: string; certificate: string };
+export type CertificateAnswer = { name: string; data: string };
 
 export const getCertificatesFromZones = (
   names: string[],
@@ -19,7 +19,7 @@ export const getCertificatesFromZones = (
 
       return nRecords
         .filter((record) => record.type === 'CERT' && record.name === name)
-        .map((record) => ({ name: record.name, certificate: record.data }));
+        .map((record) => ({ name: record.name, data: record.data }));
     })
     .flat();
 
@@ -50,7 +50,6 @@ export const createGetCertificates =
     res.set({
       'Access-Control-Allow-Origin': '*',
     });
-
     const {
       body: { names },
     } = req;
