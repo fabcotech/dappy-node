@@ -3,60 +3,13 @@ import spies from 'chai-spies';
 import { createNamePacketQuery, createNameZone } from '../../model/fakeData';
 import { RecordType } from '../../model/ResourceRecords';
 
-import {
-  getTLDs,
-  getZoneRecords,
-  normalizeRecords,
-  createFetchNameAnswers,
-} from './dns-query';
+import { getZoneRecords, createFetchNameAnswers } from './dns-query';
 
 const { expect } = chai;
 chai.use(spies);
 
 describe('dns-query', () => {
-  it('getTLDs()', () => {
-    expect(getTLDs(['foo.bar.baz'])).to.eql(['baz']);
-    expect(getTLDs(['foo'])).to.eql(['foo']);
-    expect(getTLDs(['foo.dappy'])).to.eql(['foo']);
-    expect(getTLDs(['foo.bar.dappy'])).to.eql(['bar']);
-  });
-
-  it('normalizeRecords() should works', () => {
-    const zone = createNameZone({
-      records: [
-        { name: '@', type: 'A', data: '127.0.0.1' },
-        { name: '', type: 'A', data: '127.0.0.1' },
-        {
-          name: 'foo',
-          type: 'A',
-          data: '127.0.0.1',
-          ttl: 300,
-        },
-      ],
-    });
-    expect(normalizeRecords(zone, zone.records)).to.eql([
-      {
-        name: zone.origin,
-        type: 'A',
-        data: '127.0.0.1',
-        ttl: 3600,
-      },
-      {
-        name: zone.origin,
-        type: 'A',
-        data: '127.0.0.1',
-        ttl: 3600,
-      },
-      {
-        name: `foo.${zone.origin}`,
-        type: 'A',
-        data: '127.0.0.1',
-        ttl: 300,
-      },
-    ]);
-  });
-
-  it('getZoneRecords() should works', () => {
+  it('getZoneRecords() should returns records according to query questions', () => {
     const nsQuery = createNamePacketQuery();
     const zone = createNameZone();
 
