@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import spies from 'chai-spies';
 
-import { createNameZone } from '../../model/fakeData';
+import { createNameZone, fakeSelfSignedCert } from '../../model/fakeData';
 
 import {
   getCertificatesFromZones,
@@ -45,7 +45,7 @@ describe('get-certificates', () => {
     expect(certificates).to.eql([
       {
         name: 'foo.example',
-        data: '123456789ABCDEF',
+        data: fakeSelfSignedCert,
       },
     ]);
   });
@@ -56,7 +56,7 @@ describe('get-certificates', () => {
     expect(certificates).to.eql([
       {
         name: 'example',
-        data: '123456789ABCDEF',
+        data: fakeSelfSignedCert,
       },
     ]);
   });
@@ -67,7 +67,7 @@ describe('get-certificates', () => {
     expect(certificates).to.eql([
       {
         name: 'example.dappy',
-        data: '123456789ABCDEF',
+        data: fakeSelfSignedCert,
       },
     ]);
   });
@@ -86,11 +86,11 @@ describe('get-certificates', () => {
     expect(certificates).to.eql([
       {
         name: 'zone1',
-        data: '123456789ABCDEF',
+        data: fakeSelfSignedCert,
       },
       {
         name: 'zone2',
-        data: '123456789ABCDEF',
+        data: fakeSelfSignedCert,
       },
     ]);
   });
