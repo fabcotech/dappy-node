@@ -31,10 +31,16 @@ describe('get-certificates', () => {
       {
         name: 'example',
         data: 'cert1',
+        class: 'IN',
+        ttl: 3600,
+        type: 'CERT',
       },
       {
         name: 'example',
         data: 'cert2',
+        class: 'IN',
+        ttl: 3600,
+        type: 'CERT',
       },
     ]);
   });
@@ -46,6 +52,9 @@ describe('get-certificates', () => {
       {
         name: 'foo.example',
         data: fakeSelfSignedCert,
+        class: 'IN',
+        ttl: 3600,
+        type: 'CERT',
       },
     ]);
   });
@@ -57,6 +66,9 @@ describe('get-certificates', () => {
       {
         name: 'example',
         data: fakeSelfSignedCert,
+        class: 'IN',
+        ttl: 3600,
+        type: 'CERT',
       },
     ]);
   });
@@ -68,6 +80,9 @@ describe('get-certificates', () => {
       {
         name: 'example.dappy',
         data: fakeSelfSignedCert,
+        class: 'IN',
+        ttl: 3600,
+        type: 'CERT',
       },
     ]);
   });
@@ -87,10 +102,16 @@ describe('get-certificates', () => {
       {
         name: 'zone1',
         data: fakeSelfSignedCert,
+        class: 'IN',
+        ttl: 3600,
+        type: 'CERT',
       },
       {
         name: 'zone2',
         data: fakeSelfSignedCert,
+        class: 'IN',
+        ttl: 3600,
+        type: 'CERT',
       },
     ]);
   });
