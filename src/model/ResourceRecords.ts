@@ -12,9 +12,10 @@ export enum RecordType {
   A = 'A',
   AAAA = 'AAAA',
   CERT = 'CERT',
+  TXT = 'TXT',
 }
 
-export const recordTypeRegExp = /^(A|AAAA|CERT)$/;
+export const recordTypeRegExp = /^(A|AAAA|CERT|TXT)$/;
 
 export type ResourceRecord = {
   name: string;
@@ -62,10 +63,24 @@ export const isRRCERT = (data: JSONObject): data is RRCERT =>
     type: match(/^CERT$/),
   })(data);
 
-export type RR = RRA | RRAAAA | RRCERT;
+export type RRTXT = ResourceRecord & {
+  data: string;
+  type: 'TXT';
+};
+
+export const isRRTXT = (data: JSONObject): data is RRTXT =>
+  isObjectWith({
+    name: isStringNotEmpty,
+    ttl: isOptional(isNumber),
+    data: isStringNotEmpty,
+    type: match(/^TXT$/),
+  })(data);
+
+export type RR = RRA | RRAAAA | RRCERT | RRTXT;
 
 export type RRAData = string;
 export type RRAAAAData = string;
 export type RRCERTData = string;
+export type RRTXTData = string;
 
-export type RRData = RRAData | RRAAAAData | RRCERTData;
+export type RRData = RRAData | RRAAAAData | RRCERTData | RRTXTData;

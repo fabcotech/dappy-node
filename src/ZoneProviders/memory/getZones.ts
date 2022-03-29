@@ -1,4 +1,4 @@
-import { createNameZone, createRRA, createRRCERT } from '../../model/fakeData';
+import { createNameZone, createRRA, createRRCERT, createRRTXT } from '../../model/fakeData';
 import { NameZone } from '../../model/NameZone';
 
 export const createGetZones = () => async (): Promise<NameZone[]> => {
@@ -10,6 +10,9 @@ export const createGetZones = () => async (): Promise<NameZone[]> => {
         createRRA({ data: '255.255.255.255' }),
         createRRCERT(),
         createRRCERT(),
+        createRRTXT(),
+        createRRTXT({ data: 'label2=value2' }),
+        createRRTXT({ name: 'foo' }),
       ],
     }),
   ];

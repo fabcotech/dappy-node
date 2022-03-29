@@ -2,7 +2,7 @@ import { NameZone } from './NameZone';
 import { NamePacket, ReturnCode, PacketType } from './NamePacket';
 
 import { mergeDeep } from '../utils/mergeDeep';
-import { RRA, RRAAAA, RRCERT } from './ResourceRecords';
+import { RRA, RRAAAA, RRCERT, RRTXT } from './ResourceRecords';
 
 export const fakeSelfSignedCert = Buffer.from(`-----BEGIN CERTIFICATE-----
 MIIEZzCCAs+gAwIBAgIRAKOiJf1OO3+OOR+peyH8HsQwDQYJKoZIhvcNAQELBQAw
@@ -53,6 +53,17 @@ export const createRRAAAA = (rraaaa: Partial<RRAAAA> = {}): RRAAAA => {
   );
 };
 
+export const createRRTXT = (rrtxt: Partial<RRTXT> = {}): RRTXT => {
+  return mergeDeep(
+    {
+      name: '@',
+      type: 'TXT',
+      data: 'label=value',
+    },
+    rrtxt
+  );
+};
+
 export const createRRCERT = (rrcert: Partial<RRCERT> = {}): RRCERT => {
   return mergeDeep(
     {
@@ -73,9 +84,11 @@ export const createNameZone = (zone: Partial<NameZone> = {}): NameZone => {
         createRRA(),
         createRRAAAA(),
         createRRCERT(),
+        createRRTXT(),
         createRRA({ name: 'foo' }),
         createRRAAAA({ name: 'foo' }),
         createRRCERT({ name: 'foo' }),
+        createRRTXT({ name: 'foo' }),
       ],
     },
     zone
