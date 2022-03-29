@@ -165,4 +165,16 @@ describe('dns-query', () => {
     expect(nsAnwser.rcode).to.eql('SERVFAIL');
     expect(nsAnwser.answers).to.eql([]);
   });
+
+  it('fetchNameAnswers() return NOTZONE when record is not in NameZone format', async () => {
+    const nsQuery = createNamePacketQuery();
+    const nsAnwser = await createFetchNameAnswers(() =>
+      Promise.resolve({
+        fo: 'bar',
+      } as any)
+    )(nsQuery);
+
+    expect(nsAnwser.rcode).to.eql('NOTZONE');
+    expect(nsAnwser.answers).to.eql([]);
+  });
 });

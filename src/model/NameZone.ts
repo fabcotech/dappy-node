@@ -1,9 +1,9 @@
 import {
-  isStringNotEmpty,
   isObjectWith,
   isArrayNotEmptyOf,
   isNumber,
   isOneOf,
+  isStringNotEmpty,
 } from '../utils/validation';
 
 import { isRRA, isRRAAAA, isRRCERT, isRRTXT, RR } from './ResourceRecords';

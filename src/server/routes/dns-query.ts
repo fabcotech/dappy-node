@@ -1,7 +1,7 @@
 import dnsPacket, { Packet, Question } from 'dns-packet';
 import { Request, Response } from 'express';
 
-import { NameZone } from '../../model/NameZone';
+import { isNameZone, NameZone } from '../../model/NameZone';
 import {
   NameAnswer,
   NamePacket,
@@ -38,6 +38,13 @@ export const getZoneRecords = (
         } as any)
     );
 
+const isNameZones = (zones: any[]): zones is NameZone[] => {
+  if (!Array.isArray(zones) || zones.length === 0) {
+    return false;
+  }
+  return zones.every((zone) => isNameZone(zone));
+};
+
 export const createFetchNameAnswers =
   (getZonesApi: (names: string[]) => Promise<NameZone[]>) =>
   async (packet: NamePacket): Promise<NamePacket> => {
@@ -55,7 +62,7 @@ export const createFetchNameAnswers =
       };
     }
 
-    let tldZones;
+    let tldZones: NameZone[];
     try {
       tldZones = await getZonesApi(
         getTLDs(packet.questions.map((q) => q.name))
@@ -67,13 +74,26 @@ export const createFetchNameAnswers =
         type: PacketType.RESPONSE,
         id: 0,
         flags: 0,
-        questions: [],
+        questions: packet.questions,
         answers: [],
         additionals: [],
         authorities: [],
       };
     }
 
+    if (!isNameZones(tldZones)) {
+      return {
+        version: '1.0.0',
+        rcode: ReturnCode.NOTZONE,
+        type: PacketType.RESPONSE,
+        id: 0,
+        flags: 0,
+        questions: packet.questions,
+        answers: [],
+        additionals: [],
+        authorities: [],
+      };
+    }
     const answers = getZoneRecords(packet.questions, tldZones);
 
     return {

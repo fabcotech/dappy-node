@@ -4,6 +4,10 @@ export const not = (fn: ValuePredicat) => (v: any) => !fn(v);
 
 export const isUndefined = (v: any) => v === undefined;
 
+export function isString(v: string) {
+  return typeof v === 'string';
+}
+
 export function isStringNotEmpty(v: string) {
   return typeof v === 'string' && v.length > 0;
 }

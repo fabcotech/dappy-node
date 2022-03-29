@@ -2,6 +2,7 @@ import {
   isObjectWith,
   isOptional,
   isStringNotEmpty,
+  isString,
   isNumber,
   match,
 } from '../utils/validation';
@@ -30,7 +31,7 @@ export type RRA = ResourceRecord & {
 
 export const isRRA = (data: JSONObject): data is RRA =>
   isObjectWith({
-    name: isStringNotEmpty,
+    name: isString,
     ttl: isOptional(isNumber),
     data: isStringNotEmpty,
     type: match(/^A$/),
@@ -44,7 +45,7 @@ export type RRAAAA = ResourceRecord & {
 
 export const isRRAAAA = (data: JSONObject): data is RRAAAA =>
   isObjectWith({
-    name: isStringNotEmpty,
+    name: isString,
     ttl: isOptional(isNumber),
     data: isStringNotEmpty,
     type: match(/^AAAA$/),
@@ -57,7 +58,7 @@ export type RRCERT = ResourceRecord & {
 
 export const isRRCERT = (data: JSONObject): data is RRCERT =>
   isObjectWith({
-    name: isStringNotEmpty,
+    name: isString,
     ttl: isOptional(isNumber),
     data: isStringNotEmpty,
     type: match(/^CERT$/),
@@ -70,7 +71,7 @@ export type RRTXT = ResourceRecord & {
 
 export const isRRTXT = (data: JSONObject): data is RRTXT =>
   isObjectWith({
-    name: isStringNotEmpty,
+    name: isString,
     ttl: isOptional(isNumber),
     data: isStringNotEmpty,
     type: match(/^TXT$/),
