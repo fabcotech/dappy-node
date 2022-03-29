@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import spies from 'chai-spies';
 
 import { createNameZone, fakeSelfSignedCert } from '../../model/fakeData';
+import { ReturnCode } from '../../model/NamePacket';
 
 import {
   getCertificatesFromZones,
@@ -132,7 +133,7 @@ describe('get-certificates', () => {
     const response = await createFetchCertificates(() =>
       Promise.resolve([zone])
     )(['example']);
-    expect(response.rcode).to.equal('NOERROR');
+    expect(response.rcode).to.equal(ReturnCode.NOERROR);
   });
 
   it('fetchCertificates() should returns NXDOMAIN if no certifcates found', async () => {
@@ -140,13 +141,13 @@ describe('get-certificates', () => {
     const response = await createFetchCertificates(() =>
       Promise.resolve([zone])
     )(['example2']);
-    expect(response.rcode).to.equal('NXDOMAIN');
+    expect(response.rcode).to.equal(ReturnCode.NXDOMAIN);
   });
 
   it('fetchCertificates() should returns SERVFAIL if a error occured', async () => {
     const response = await createFetchCertificates(() =>
       Promise.reject(new Error('error'))
     )(['example']);
-    expect(response.rcode).to.equal('SERVFAIL');
+    expect(response.rcode).to.equal(ReturnCode.SERVFAIL);
   });
 });

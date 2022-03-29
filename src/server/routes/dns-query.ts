@@ -52,9 +52,9 @@ export const createFetchNameAnswers =
       return {
         version: '1.0.0',
         rcode: ReturnCode.NXDOMAIN,
+        flags: ReturnCode.NXDOMAIN,
         type: PacketType.RESPONSE,
         id: 0,
-        flags: 0,
         questions: [],
         answers: [],
         additionals: [],
@@ -71,9 +71,9 @@ export const createFetchNameAnswers =
       return {
         version: '1.0.0',
         rcode: ReturnCode.SERVFAIL,
+        flags: ReturnCode.SERVFAIL,
         type: PacketType.RESPONSE,
         id: 0,
-        flags: 0,
         questions: packet.questions,
         answers: [],
         additionals: [],
@@ -85,9 +85,9 @@ export const createFetchNameAnswers =
       return {
         version: '1.0.0',
         rcode: ReturnCode.NOTZONE,
+        flags: ReturnCode.NOTZONE,
         type: PacketType.RESPONSE,
         id: 0,
-        flags: 0,
         questions: packet.questions,
         answers: [],
         additionals: [],
@@ -99,9 +99,9 @@ export const createFetchNameAnswers =
     return {
       version: '1.0.0',
       type: PacketType.RESPONSE,
+      flags: answers.length === 0 ? ReturnCode.NXDOMAIN : ReturnCode.NOERROR,
       rcode: answers.length === 0 ? ReturnCode.NXDOMAIN : ReturnCode.NOERROR,
       id: 0,
-      flags: 0,
       questions: packet.questions,
       answers,
       additionals: [],

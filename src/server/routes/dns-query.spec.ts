@@ -1,6 +1,7 @@
 import chai from 'chai';
 import spies from 'chai-spies';
 import { createNamePacketQuery, createNameZone } from '../../model/fakeData';
+import { ReturnCode } from '../../model/NamePacket';
 import { RecordType } from '../../model/ResourceRecords';
 
 import { getZoneRecords, createFetchNameAnswers } from './dns-query';
@@ -153,7 +154,7 @@ describe('dns-query', () => {
       Promise.resolve([fooZone])
     )(nsQuery);
 
-    expect(nsAnwser.rcode).to.eql('NXDOMAIN');
+    expect(nsAnwser.rcode).to.eql(ReturnCode.NXDOMAIN);
     expect(nsAnwser.answers).to.eql([]);
   });
   it('fetchNameAnswers() return SERVFAIL when unable to fetch zones', async () => {
@@ -162,7 +163,7 @@ describe('dns-query', () => {
       Promise.reject(new Error('Unable to fetch zones'))
     )(nsQuery);
 
-    expect(nsAnwser.rcode).to.eql('SERVFAIL');
+    expect(nsAnwser.rcode).to.eql(ReturnCode.SERVFAIL);
     expect(nsAnwser.answers).to.eql([]);
   });
 
@@ -174,7 +175,7 @@ describe('dns-query', () => {
       } as any)
     )(nsQuery);
 
-    expect(nsAnwser.rcode).to.eql('NOTZONE');
+    expect(nsAnwser.rcode).to.eql(ReturnCode.NOTZONE);
     expect(nsAnwser.answers).to.eql([]);
   });
 });

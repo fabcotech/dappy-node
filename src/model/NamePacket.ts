@@ -29,16 +29,16 @@ export type NameAnswer = {
 
 // DNS RCODEs in https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml
 export enum ReturnCode {
-  NOERROR = 'NOERROR', // DNS Query completed successfully
-  FORMERR = 'FORMERR', //  DNS Query Format Error
-  SERVFAIL = 'SERVFAIL', // Server failed to complete the DNS request
-  NXDOMAIN = 'NXDOMAIN', //  Domain name does not exist.
-  NOTIMP = 'NOTIMP', //  Function not implemented
-  REFUSED = 'REFUSED', // The server refused to answer for the query
-  YXDOMAIN = 'YXDOMAIN', //  Name that should not exist, does exist
-  XRRSET = 'YXDOMAIN', //  RRset that should not exist, does exist
-  NOTAUTH = 'NOTAUTH', //  Server not authoritative for the zone
-  NOTZONE = 'NOTZONE', //  Name not in zone
+  NOERROR, // DNS Query completed successfully
+  FORMERR, //  DNS Query Format Error
+  SERVFAIL, // Server failed to complete the DNS request
+  NXDOMAIN, //  Domain name does not exist.
+  NOTIMP, //  Function not implemented
+  REFUSED, // The server refused to answer for the query
+  YXDOMAIN, //  Name that should not exist, does exist
+  XRRSET, //  RRset that should not exist, does exist
+  NOTAUTH, //  Server not authoritative for the zone
+  NOTZONE, //  Name not in zone
 }
 export enum PacketType {
   QUERY = 'query',
@@ -62,7 +62,7 @@ export const isNamePacket = (packet: JSONObject): packet is NamePacket =>
   isObjectWith({
     // version: isStringNotEmpty,
     type: match(/^(query|response)$/),
-    rcode: isStringNotEmpty,
+    rcode: isNumber,
     id: isOptional(isNumber),
     flags: isNumber,
     questions: isArrayNotEmptyOf(
