@@ -6,6 +6,18 @@ The main component of this repository is the nodeJS application `src` and the ku
 
 To run dappy-node locally, please refer to the [developer documentation](/DEVELOPER.MD).
 
+### helloworld.dappy IP application (dev)
+
+Deploy your zone using [dappy-cli](https://github.com/fabcotech/dappy-cli)
+
+Run web server over TLS using the following script
+
+```sh
+node src/helloworld
+```
+
+You can load `helloworld.dappy:3005` in dappy browser.
+
 ### Production with kubernetes (gamma, beta or d network)
 
 #### General architecture

@@ -38,7 +38,7 @@ export const startHttpServers = (store: any) => {
     } !`
   );
   const serverHttp = http.createServer(app);
-  serverHttp.listen(process.env.DAPPY_NODE_HTTP_PORT);
+  serverHttp.listen(process.env.DAPPY_NODE_HTTP_PORT || 3001);
 
   if (process.env.DAPPY_NODE_HTTPS_PORT) {
     log(
