@@ -20,6 +20,9 @@
     "new_name_system": "./scripts/new_name_system.js",
     "dappy-node": "./dist/index.js"
   },
+  "engines": {
+    "node": ">=16"
+  },
   "license": "MIT",
   "dependencies": {
     "@sentry/node": "^6.2.3",
@@ -31,7 +34,7 @@
     "dotenv": "6.2.0",
     "elliptic": "6.5.4",
     "express": "^4.17.1",
-    "rchain-token": "fabcotech/rchain-token#16.0.0",
+    "rchain-token": "16.0.0",
     "rchain-toolkit": "0.4.5",
     "redis": "^4.0.2"
   },
