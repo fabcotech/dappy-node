@@ -8,9 +8,9 @@ spec:
       containers:
         - name: get-contract-logs
           env:
-            - name: READ_ONLY
+            - name: DAPPY_RCHAIN_READ_ONLY
               value: https://observer-eu.services.mainnet.rchain.coop
-            - name: RCHAIN_NAMES_LOGS_CONTRACTS
+            - name: DAPPY_JOBS_LOGS_CONTRACTS
               value: ""
-            - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
+            - name: DAPPY_NAMES_MASTER_REGISTRY_URI
               value: ""

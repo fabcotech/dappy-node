@@ -13,11 +13,11 @@
     "start": "node dist/index.js",
     "start:dev:rchain": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=rchain ts-node src/index.ts",
     "start:dev:memory": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=memory ts-node src/index.ts",
-    "new_name_system": "new_name_system",
+    "deploy_name_contract": "./scripts/deploy_name_contract.js",
     "prepare": "husky install"
   },
   "bin": {
-    "new_name_system": "./scripts/new_name_system.js",
+    "deploy_name_contract": "./scripts/deploy_name_contract.js",
     "dappy-node": "./dist/index.js"
   },
   "engines": {

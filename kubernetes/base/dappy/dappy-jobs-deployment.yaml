@@ -16,13 +16,13 @@ spec:
           name: get-contract-logs
           imagePullPolicy: IfNotPresent
           env:
-            - name: REDIS_URL
+            - name: DAPPY_JOBS_LOGS_INTERVAL
               value: redis://redis:6379/1
-            - name: LOGS_INTERVAL
+            - name: DAPPY_JOBS_LOGS_INTERVAL
               value: '1000'
-            - name: START_JOB
+            - name: DAPPY_NODE_START_JOBS
               value: 'true'
-            - name: READ_ONLY
+            - name: DAPPY_RCHAIN_READ_ONLY
               value: http://rnode:40403
           command:
           - sh

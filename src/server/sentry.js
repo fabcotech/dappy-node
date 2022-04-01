@@ -1,10 +1,12 @@
 const Sentry = require('@sentry/node');
 const Tracing = require('@sentry/tracing');
+const { getConfig } = require('../config');
 
 function initSentry(app) {
-  if (process.env.SENTRY) {
+  const config = getConfig();
+  if (config.dappyNodeSentryUrl) {
     Sentry.init({
-      dsn: process.env.SENTRY,
+      dsn: config.dappyNodeSentryUrl,
       integrations: [
         // enable HTTP calls tracing
         new Sentry.Integrations.Http({ tracing: true }),

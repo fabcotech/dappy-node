@@ -14,38 +14,40 @@ import {
 } from '../requestMetrics';
 
 import { log } from '../log';
+import { getConfig } from '../config';
 
-const initRoutes = (app: Router, store: any) => {
+const initRoutes = (app: Router) => {
   initSentry(app);
 
-  app.use('/', getRouter(store));
+  app.use('/', getRouter());
 
-  addZoneProviderRoutes(app, store);
+  addZoneProviderRoutes(app);
 };
 
-export const startHttpServers = (store: any) => {
+export const startHttpServers = () => {
   const app = express();
+  const config = getConfig();
 
-  if (process.env.DAPPY_NODE_ENABLE_REQUEST_METRICS) {
+  if (config.dappyNodeEnableRequestMetrics) {
     initRequestMetrics();
     app.use(incRequestMetricsMiddleware);
   }
-  initRoutes(app, store);
+  initRoutes(app);
 
-  log(
-    `Listening for HTTP on address 127.0.0.1:${
-      process.env.DAPPY_NODE_HTTP_PORT || 3001
-    } !`
-  );
+  log(`Listening for HTTP on address 127.0.0.1:${config.dappyNodeHttpPort} !`);
   const serverHttp = http.createServer(app);
-  serverHttp.listen(process.env.DAPPY_NODE_HTTP_PORT || 3001);
+  serverHttp.listen(config.dappyNodeHttpPort);
 
-  if (process.env.DAPPY_NODE_HTTPS_PORT) {
+  if (config.dappyNodeHttpsPort) {
     log(
-      `Listening for HTTP+TLS on address 127.0.0.1:${process.env.DAPPY_NODE_HTTPS_PORT} ! (TLS handled by nodeJS)`
+      `Listening for HTTP+TLS on address 127.0.0.1:${config.dappyNodeHttpsPort} ! (TLS handled by nodeJS)`
     );
-    const key = fs.readFileSync(path.join(process.cwd(), './dappynode.key'));
-    const cert = fs.readFileSync(path.join(process.cwd(), './dappynode.crt'));
+    const key = fs.readFileSync(
+      path.join(process.cwd(), `./${config.dappyNodePrivateKeyFilename}`)
+    );
+    const cert = fs.readFileSync(
+      path.join(process.cwd(), `./${config.dappyNodeCertificateFilename}`)
+    );
     const options = {
       key,
       cert,
@@ -54,6 +56,6 @@ export const startHttpServers = (store: any) => {
     };
     const serverHttps = https.createServer(options, app);
 
-    serverHttps.listen(process.env.DAPPY_NODE_HTTPS_PORT);
+    serverHttps.listen(config.dappyNodeHttpsPort);
   }
 };

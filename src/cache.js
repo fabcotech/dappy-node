@@ -1,15 +1,20 @@
 const redis = require('redis');
+const { getConfig } = require('./config');
 
 const { startJobExpiredRecords } = require('./jobs/deleteExpiredRecords');
 const { log } = require('./log');
+const { getStore } = require('./store');
 
 /*
  Clean cached results from exlore-deploy and explore-deploy-x
  every 30 seconds
 */
-function startJobClearExpiredExploreDeploys(store) {
+function startJobClearExpiredExploreDeploys() {
+  const store = getStore();
+  const config = getConfig();
+
   setInterval(async () => {
-    const cacheEpoch = Math.round(new Date().getTime() / (1000 * store.caching));
+    const cacheEpoch = Math.round(new Date().getTime() / (1000 * config.dappyNodeCaching));
     const edKeys = await store.redisClient.keys('cache:ed:*');
     const edxKeys = await store.redisClient.keys('cache:edx:*');
     const old = edKeys
@@ -25,16 +30,19 @@ function startJobClearExpiredExploreDeploys(store) {
   }, 30000);
 }
 
-async function startRedisClient(store) {
-  if (!process.env.DAPPY_NODE_CACHING) {
+async function startRedisClient() {
+  const config = getConfig();
+  const store = getStore();
+
+  if (!config.dappyNodeCaching) {
     return;
   }
 
   store.redisClient = redis.createClient({
-    database: process.env.REDIS_DB,
+    database: config.redisDb,
     socket: {
-      host: process.env.REDIS_SERVICE_HOST,
-      port: process.env.REDIS_SERVICE_PORT || 6379,
+      host: config.redisHost,
+      port: config.redisPort,
     },
   });
 
@@ -45,10 +53,10 @@ async function startRedisClient(store) {
   });
 }
 
-async function initCache(store) {
-  await startRedisClient(store);
-  startJobClearExpiredExploreDeploys(store);
-  startJobExpiredRecords(store);
+async function initCache() {
+  await startRedisClient();
+  startJobClearExpiredExploreDeploys();
+  startJobExpiredRecords();
 }
 
 module.exports = {

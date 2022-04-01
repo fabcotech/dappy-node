@@ -2,7 +2,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const envFilePath = path.resolve('./', '.env');
+const DAPPY_CONFIG_FILE_NAME = 'dappyrc'
+const envFilePath = path.resolve('./', DAPPY_CONFIG_FILE_NAME);
+
+const createConfigFileIfNotExists = () => fs.closeSync(fs.openSync(envFilePath, 'a'))
 
 const readEnvVars = () => fs.readFileSync(envFilePath, 'utf-8').split(os.EOL);
 
@@ -20,13 +23,15 @@ const setEnvValue = (key, value) => {
     // update existing line
     const targetLineIndex = envVars.indexOf(targetLine);
     // replace the key/value with the new value
-    envVars.splice(targetLineIndex, 1, `${key}="${value}"`);
+    envVars.splice(targetLineIndex, 1, `${key}=${value}`);
   } else {
     // create new key value
-    envVars.push(`${key}="${value}"`);
+    envVars.push(`${key}=${value}`);
   }
   // write everything back to the file system
-  fs.writeFileSync(envFilePath, envVars.join(os.EOL));
+  fs.writeFileSync(envFilePath, envVars.join(os.EOL), {
+    flag: 'w+'
+  });
 };
 
 const mustBeUrl = (value, message) => {
@@ -58,4 +63,6 @@ module.exports = {
   setEnvValue,
   mustBeNotEmptyString,
   mustBeUrl,
+  createConfigFileIfNotExists,
+  DAPPY_CONFIG_FILE_NAME,
 };

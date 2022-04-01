@@ -6,6 +6,8 @@ const {
   readPursesTerm,
   readBoxTerm,
 } = require('rchain-token');
+const { getConfig } = require('../../config');
+const { configureScope } = require('@sentry/node');
 
 const ajv = new Ajv();
 const schema = {
@@ -93,10 +95,10 @@ const storeRecord = async (record, redisClient) => {
   const redisSetValues = [];
   for (const key of Object.keys(record)) {
     if (
-      typeof record[key] === 'string'
-      || typeof record[key] === 'number'
-      || typeof record[key] === 'boolean'
-      || record[key] === null
+      typeof record[key] === 'string' ||
+      typeof record[key] === 'number' ||
+      typeof record[key] === 'boolean' ||
+      record[key] === null
     ) {
       redisSetValues.push([key, record[key]]);
     } else if (!!record[key] && record[key].constructor === Array) {
@@ -106,7 +108,11 @@ const storeRecord = async (record, redisClient) => {
     }
   }
 
-  await Promise.all(redisSetValues.map(([k, v]) => redisClient.hSet(`record:${record.id}`, k, v)));
+  await Promise.all(
+    redisSetValues.map(([k, v]) =>
+      redisClient.hSet(`record:${record.id}`, k, v)
+    )
+  );
 
   await redisClient.sAdd(`publicKey:${record.publicKey}`, record.id);
 
@@ -117,11 +123,8 @@ const storeRecord = async (record, redisClient) => {
   return record;
 };
 
-const cacheNegativeRecords = (hset) => async (names) => Promise.all(
-  names.map(
-    (name) => hset(`record:${name}`, 'notfound', 'true'),
-  ),
-);
+const cacheNegativeRecords = (hset) => async (names) =>
+  Promise.all(names.map((name) => hset(`record:${name}`, 'notfound', 'true')));
 
 function validateXRecordsArgs(args) {
   const valid = validate(args);
@@ -140,30 +143,24 @@ function validateXRecordsArgs(args) {
   return undefined;
 }
 
-const fetchRchainBox = async (boxId, {
-  redisClient,
-  log,
-  urlOrOptions,
-  exploreDeploy,
-}) => {
+const fetchRchainBox = async (
+  boxId,
+  { redisClient, log, urlOrOptions, exploreDeploy }
+) => {
+  const config = getConfig();
   try {
     const exploreDeployResponseBox = await exploreDeploy(urlOrOptions, {
       term: readBoxTerm({
-        masterRegistryUri:
-          process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+        masterRegistryUri: config.dappyNamesMasterRegistryUri,
         boxId,
       }),
     });
 
     const boxConfig = rchainToolkit.utils.rhoValToJs(
-      JSON.parse(exploreDeployResponseBox).expr[0],
+      JSON.parse(exploreDeployResponseBox).expr[0]
     );
 
-    await redisClient.hSet(
-      `box:${boxId}`,
-      'values',
-      JSON.stringify(boxConfig),
-    );
+    await redisClient.hSet(`box:${boxId}`, 'values', JSON.stringify(boxConfig));
     return boxConfig;
   } catch (err) {
     log(`could not get box ${boxId}`, 'error');
@@ -181,12 +178,10 @@ const parsePurseData = (purseData, log) => {
   return JSON.parse(buf.toString('utf8'));
 };
 
-const getRchainBox = async (boxId, {
-  redisClient,
-  log,
-  urlOrOptions,
-  exploreDeploy,
-}) => {
+const getRchainBox = async (
+  boxId,
+  { redisClient, log, urlOrOptions, exploreDeploy }
+) => {
   const hg = await redisClient.hGetAll(`box:${boxId}`);
 
   if (Object.keys(hg).length) {
@@ -201,91 +196,89 @@ const getRchainBox = async (boxId, {
   });
 };
 
-const cacheRecords = async (records, redisClient) => Promise.all(
-  records.map(
-    (record) => storeRecord(record, redisClient),
-  ),
-);
+const cacheRecords = async (records, redisClient) =>
+  Promise.all(records.map((record) => storeRecord(record, redisClient)));
 
-const makeRecords = async (purses, pursesData, {
-  redisClient,
-  log,
-  urlOrOptions,
-  exploreDeploy,
-}) => Promise.all(Object.keys(purses).map(
-  async (k) => {
-    if (!pursesData[k]) {
-      return undefined;
-    }
-    try {
-      const rchainBox = await getRchainBox(purses[k].boxId, {
-        redisClient,
-        log,
-        urlOrOptions,
-        exploreDeploy,
-      });
-      const completeRecord = {
-        // rchain-token purse
-        id: k,
-        publicKey: rchainBox.publicKey,
-        boxId: purses[k].boxId,
+const makeRecords = async (
+  purses,
+  pursesData,
+  { redisClient, log, urlOrOptions, exploreDeploy }
+) =>
+  Promise.all(
+    Object.keys(purses).map(async (k) => {
+      if (!pursesData[k]) {
+        return undefined;
+      }
+      try {
+        const rchainBox = await getRchainBox(purses[k].boxId, {
+          redisClient,
+          log,
+          urlOrOptions,
+          exploreDeploy,
+        });
+        const completeRecord = {
+          // rchain-token purse
+          id: k,
+          publicKey: rchainBox.publicKey,
+          boxId: purses[k].boxId,
 
-        // rchain-token data
-        data: parsePurseData(pursesData[k], log),
-      };
+          // rchain-token data
+          data: parsePurseData(pursesData[k], log),
+        };
         // redis cannot store undefined as value
         // price will be stored in redis, and sent back to client as string
-      if (
-        typeof purses[k].price === 'number'
-          && !Number.isNaN(purses[k].price)
-      ) {
-        completeRecord.price = purses[k].price;
-      }
-      if (
-        typeof purses[k].expires === 'number'
-          && !Number.isNaN(purses[k].expires)
-      ) {
-        completeRecord.expires = purses[k].expires;
-      }
+        if (
+          typeof purses[k].price === 'number' &&
+          !Number.isNaN(purses[k].price)
+        ) {
+          completeRecord.price = purses[k].price;
+        }
+        if (
+          typeof purses[k].expires === 'number' &&
+          !Number.isNaN(purses[k].expires)
+        ) {
+          completeRecord.expires = purses[k].expires;
+        }
 
-      const valid = validateRecord(completeRecord);
-      if (!valid) {
-        log(`invalid record ${completeRecord.id}`);
-        log(validate.errors);
-        return undefined;
-      }
-      const match = completeRecord.id.match(/[a-z]([A-Za-z0-9]*)*/g);
-      if (!match || (match.length !== 1 && match[0].length !== completeRecord.id.length)) {
-        log(`invalid record (regexp) ${completeRecord.id}`);
-        return undefined;
-      }
+        const valid = validateRecord(completeRecord);
+        if (!valid) {
+          log(`invalid record ${completeRecord.id}`);
+          log(validate.errors);
+          return undefined;
+        }
+        const match = completeRecord.id.match(/[a-z]([A-Za-z0-9]*)*/g);
+        if (
+          !match ||
+          (match.length !== 1 && match[0].length !== completeRecord.id.length)
+        ) {
+          log(`invalid record (regexp) ${completeRecord.id}`);
+          return undefined;
+        }
 
-      return completeRecord;
-    } catch (err) {
-      log(err);
-      log(`failed to parse record ${k}`, 'warning');
-      throw err;
-    }
-  },
-));
+        return completeRecord;
+      } catch (err) {
+        log(err);
+        log(`failed to parse record ${k}`, 'warning');
+        throw err;
+      }
+    })
+  );
 
-const fetchRchainPurses = async (names, {
-  log,
-  urlOrOptions,
-  exploreDeploy,
-}) => {
+const fetchRchainPurses = async (
+  names,
+  { log, urlOrOptions, exploreDeploy }
+) => {
+  debugger; 
+  const config = getConfig();
   let exploreDeployResponse;
   try {
-    exploreDeployResponse = await exploreDeploy(
-      urlOrOptions,
-      {
-        term: readPursesTerm({
-          masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
-          contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
-          pursesIds: names,
-        }),
-      },
-    );
+    exploreDeployResponse = await exploreDeploy(urlOrOptions, {
+      term: readPursesTerm({
+        masterRegistryUri: config.dappyNamesMasterRegistryUri,
+        contractId: config.dappyNamesContractId,
+        pursesIds: names,
+      }),
+    });
   } catch (err) {
     log(`Names ${names.join(' ')}: could not explore-deploy ${err}`, 'error');
     throw new Error('explore-deploy request to the blockchain failed');
@@ -293,7 +286,7 @@ const fetchRchainPurses = async (names, {
 
   try {
     return rchainToolkit.utils.rhoValToJs(
-      JSON.parse(exploreDeployResponse).expr[0],
+      JSON.parse(exploreDeployResponse).expr[0]
     );
   } catch (err) {
     log(`get-x-records could not parse purses ${err}`, 'error');
@@ -306,14 +299,15 @@ const fetchRchainPursesData = async (names, {
   urlOrOptions,
   exploreDeploy,
 }) => {
+  const config = getConfig();
   let exploreDeployResponseData;
   try {
     exploreDeployResponseData = await exploreDeploy(
       urlOrOptions,
       {
         term: readPursesDataTerm({
-          masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
-          contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
+          masterRegistryUri: config.dappyNamesMasterRegistryUri,
+          contractId: config.dappyNamesContractId,
           pursesIds: names,
         }),
       },

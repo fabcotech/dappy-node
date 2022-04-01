@@ -4,11 +4,12 @@ import { log } from '../log';
 
 import { rchainZoneProvider } from './rchain';
 import { memoryZoneProvider } from './memory';
+import { getConfig } from '../config';
 
 interface ZoneProvider {
-  createGetZones(store: any): (names: string[]) => Promise<any>;
-  start(store: any): Promise<void>;
-  getRoutes(store: any): Router;
+  getZones: (names: string[]) => Promise<any>;
+  start(): Promise<void>;
+  getRoutes(): Router;
 }
 
 const providers: Record<string, ZoneProvider> = {
@@ -17,7 +18,8 @@ const providers: Record<string, ZoneProvider> = {
 };
 
 export function getCurrentZoneProvider() {
-  const provider = providers[process.env.DAPPY_NODE_ZONE_PROVIDER || 'rchain'];
+  const config = getConfig();
+  const provider = providers[config.dappyNodeZoneProvider];
   if (!provider) {
     log(`Zone provider ${provider} not found`, 'error');
     process.exit(1);
@@ -25,14 +27,14 @@ export function getCurrentZoneProvider() {
   return provider;
 }
 
-export function startZoneProvider(store: any) {
+export function startZoneProvider() {
   const zoneProvider = getCurrentZoneProvider();
-  return zoneProvider.start(store);
+  return zoneProvider.start();
 }
 
-export function addZoneProviderRoutes(app: Router, store: any) {
+export function addZoneProviderRoutes(app: Router) {
   const zoneProvider = getCurrentZoneProvider();
-  const routes = zoneProvider.getRoutes(store);
+  const routes = zoneProvider.getRoutes();
 
   app.use('/', routes);
 }

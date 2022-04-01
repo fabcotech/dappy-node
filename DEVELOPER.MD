@@ -44,20 +44,12 @@ You must copy the values in any of the `.env.local.example` files, and rename it
 cp .env.local.example .env
 ```
 
-In `.env` file, `RCHAIN_NAMES_MASTER_REGISTRY_URI=<MASTER_URI_TO_BE_DEFINED>` have to filled with a contract id of a dappy name system. 
+In `.env` file, `DAPPY_NAMES_MASTER_REGISTRY_URI=<MASTER_URI_TO_BE_DEFINED>` have to filled with a contract id of a dappy name system. 
 
 You will deploy it in next steps on your rchain local node.
 
 ```sh
-cat << EOF >> .env
-VALIDATOR=http://localhost:40403
-PRIVATE_KEY=28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36
-BOX_ID=nsbox1
-CONTRACT_ID=nscontract1
-EOF
-
-npm run new_name_system
-
+npm run deploy_name_contract
 ```
 
 Contract is now deployed on your local rnode network, you can get `Master registry URI` and `Contract id` values from stdout.
@@ -134,32 +126,25 @@ curl https://rnode.dev/status
 ## Deploy dappy-node 
 
 Prerequisites to run dappy-node:
-- Dappy name system master uri is needed and set to `RCHAIN_NAMES_MASTER_REGISTRY_URI` env variable.
+- Dappy name system master uri is needed and set to `DAPPY_NAMES_MASTER_REGISTRY_URI` env variable.
 - Dappy name system contract `dappynamesystem` must exists on local rnode network
 
 To create master and deploy dappy name system contract on local rnode network, follow instructions below.
 
 ```sh
-cat << EOF >> .env
-VALIDATOR=http://localhost:40403
-PRIVATE_KEY=28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36
-BOX_ID=nsbox1
-CONTRACT_ID=nscontract1
-EOF
-
-npm run new_name_system
+npm run deploy_name_contract
 ```
 
 
 Contract is now deployed on your local rnode network, you can get `Master registry URI` and `Contract id` values from stdout.
 
-Save them, you will use them in next step, referenced as `RCHAIN_NAMES_MASTER_REGISTRY_URI` and `CONTRACT_ID`.
+Save them, you will use them in next step, referenced as `DAPPY_NAMES_MASTER_REGISTRY_URI` and `CONTRACT_ID`.
 
 Inside folder `<DAPPY_NODE_GIT_ROOT_FOLDER>/kubernetes/envs/minikube`
 
 ```sh
 # Create configmap that contains master uri
-kubectl create configmap rnode-config --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_URI=<RCHAIN_NAMES_MASTER_REGISTRY_URI> --from-literal=RCHAIN_NAMES_CONTRACT_ID=<CONTRACT_ID>
+kubectl create configmap rnode-config --from-literal=DAPPY_NAMES_MASTER_REGISTRY_URI=<DAPPY_NAMES_MASTER_REGISTRY_URI> --from-literal=DAPPY_NAMES_CONTRACT_ID=<CONTRACT_ID>
 
 # Use minikube docker runtime
 eval $(minikube docker-env)
@@ -194,15 +179,15 @@ exit
 
 ```sh
 
-# Create new_name_system 
-npm run new_name_system
+# Create deploy_name_contract 
+npm run deploy_name_contract
 
 # Delete old configmap rnode-config
 kubectl delete cm dappy-config
 
-# <Grab and replace in next command RCHAIN_NAMES_MASTER_REGISTRY_URI> and <CONTRACT_ID> from stdout
+# <Grab and replace in next command DAPPY_NAMES_MASTER_REGISTRY_URI> and <CONTRACT_ID> from stdout
 # Create configmap that contains master uri
-kubectl create configmap dappy-config --from-literal=RCHAIN_NAMES_MASTER_REGISTRY_URI=<RCHAIN_NAMES_MASTER_REGISTRY_URI> --from-literal=RCHAIN_NAMES_CONTRACT_ID=<CONTRACT_ID>
+kubectl create configmap dappy-config --from-literal=DAPPY_NAMES_MASTER_REGISTRY_URI=<DAPPY_NAMES_MASTER_REGISTRY_URI> --from-literal=DAPPY_NAMES_CONTRACT_ID=<CONTRACT_ID>
 
 # start or update config
 kubectl apply -k dappy

@@ -62,6 +62,16 @@
       "skipFiles": [
         "<node_internals>/**"
       ]      
-    }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "deploy_name_contract",
+      "stopOnEntry": false,
+      "cwd": "${workspaceRoot}",
+      "args": [
+        "./scripts/deploy_name_contract.js"
+      ]
+    }    
   ]
 }

@@ -4,6 +4,7 @@ const { readLogsTerm, logs } = require('rchain-token');
 const redis = require('redis');
 
 const { log } = require('../../../log');
+const { getConfig } = require('../../../config');
 
 function formatLogMessage(msg) {
   return `${new Date().toISOString()} - ${msg}`;
@@ -45,19 +46,19 @@ function parseRedisUrl(value) {
 function getFileContent(path) {
   if (!path) return undefined;
 
-  return fs.readFileSync(process.env.READ_ONLY_CERTIFICATE_PATH, 'utf8');
+  return fs.readFileSync(path, 'utf8');
 }
 
 function initConfig(env = {}) {
   return {
-    logsInteval: 10000, // parseInt(env.LOGS_INTERVAL) || 10 * 1000,
+    logsInteval: 10000, // parseInt(env.DAPPY_JOBS_LOGS_INTERVAL) || 10 * 1000,
     masterRegistryUri: mandatory(
-      'RCHAIN_NAMES_MASTER_REGISTRY_URI',
-      env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
+      'DAPPY_NAMES_MASTER_REGISTRY_URI',
+      env.DAPPY_NAMES_MASTER_REGISTRY_URI,
     ),
-    contracts: parseArray(mandatory('RCHAIN_NAMES_LOGS_CONTRACTS', env.RCHAIN_NAMES_LOGS_CONTRACTS)),
-    rnodeUri: mandatory('READ_ONLY', env.READ_ONLY),
-    redisUrl: parseRedisUrl(mandatory('REDIS_URL', env.REDIS_URL)),
+    contracts: parseArray(mandatory('DAPPY_JOBS_LOGS_CONTRACTS', env.DAPPY_JOBS_LOGS_CONTRACTS)),
+    rnodeUri: mandatory('DAPPY_RCHAIN_READ_ONLY', env.DAPPY_RCHAIN_READ_ONLY),
+    redisUrl: parseRedisUrl(mandatory('DAPPY_JOBS_LOGS_INTERVAL', env.DAPPY_JOBS_LOGS_INTERVAL)),
     caCertificate: getFileContent(env.READ_ONLY_CERTIFICATE_PATH),
   };
 }
@@ -166,7 +167,7 @@ async function start() {
   }
 }
 
-if (parseBool(process.env.START_JOB)) {
+if (parseBool(process.env.DAPPY_NODE_START_JOBS)) {
   start();
 }
 

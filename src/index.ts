@@ -5,18 +5,20 @@ import { startZoneProvider } from './ZoneProviders';
 import { initCache } from './cache';
 import { startHttpServers } from './server';
 import { initStore } from './store';
+import { initConfig } from './config';
 
 async function start() {
-  const store = initStore();
+  const config = initConfig();
+  initStore();
 
-  if (store.useCache) {
-    initCache(store);
+  if (config.dappyNodeCaching) {
+    initCache();
   }
 
-  initNodes(store);
+  initNodes();
 
-  await startZoneProvider(store);
-  startHttpServers(store);
+  await startZoneProvider();
+  startHttpServers();
 }
 
 start();

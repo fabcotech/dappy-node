@@ -1,4 +1,4 @@
-import { createGetZones } from './getZones';
+import { getZones } from './getZones';
 import { getRoutes } from './routes';
 
 import { log } from '../../log';
@@ -9,7 +9,7 @@ function start() {
 }
 
 export const memoryZoneProvider = {
-  createGetZones,
+  getZones,
   start,
   getRoutes,
 };

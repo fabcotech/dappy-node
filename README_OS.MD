@@ -5,17 +5,17 @@ This guide focuses on running the softwares necessary to run an observer rnode (
 You must have a valid URL pointing to your server to start with. This tutorial has been written and tested with ubuntu server OS.
 
 Know the RChain network you want to connect to first:
-- `RCHAIN_NETWORK`: See README.MD
-- `SHARD_NAME`: See README.MD
-- `BOOTSTRAP`: See README.MD
+- `DAPPY_RCHAIN_NETWORK`: See README.MD
+- `DAPPY_RCHAIN_SHARD_NAME`: See README.MD
+- `DAPPY_RCHAIN_BOOTSTRAP`: See README.MD
 - `RNODE_PUBLIC_DOMAIN_NAME`: See README.MD
 
 Know the variables of the dappy network too:
 - `DAPPY_NETWORK`: See README.MD
 - `DAPPY_NODE_PUBLIC_DOMAIN_NAME`: identifier of your node in the dappy network (no DNS), for example `fabcogamma`
-- `RCHAIN_NAMES_MASTER_REGISTRY_URI`: See README.MD
-- `RCHAIN_NAMES_CONTRACT_ID`: See README.MD
-- `RCHAIN_NAMES_LOGS_CONTRACTS`: See README.MD
+- `DAPPY_NAMES_MASTER_REGISTRY_URI`: See README.MD
+- `DAPPY_NAMES_CONTRACT_ID`: See README.MD
+- `DAPPY_JOBS_LOGS_CONTRACTS`: See README.MD
 
 ### Prequisites
 
@@ -102,11 +102,11 @@ wget https://github.com/rchain/rchain/releases/download/v0.12.4/rnode_0.12.4_all
 
 sudo apt install ./rnode_0.12.4_all.deb
 
-# run rnode, replace $BOOTSTRAP $RCHAIN_NETWORK, $SHARD_NAME and
+# run rnode, replace $DAPPY_RCHAIN_BOOTSTRAP $DAPPY_RCHAIN_NETWORK, $DAPPY_RCHAIN_SHARD_NAME and
 # $RNODE_PUBLIC_DOMAIN_NAME and with single quotes, example --bootstrap 'rnode://xxx'
 
 # run in the background with nohup
-nohup rnode run --bootstrap $BOOTSTRAP --network-id $RCHAIN_NETWORK --shard-name $SHARD_NAME --host $RNODE_PUBLIC_DOMAIN_NAME --protocol-port '40400' --discovery-port '40404' --api-port-grpc-external '40401' --api-port-http '40403' --finalization-rate '1' --max-number-of-parents '1' --fault-tolerance-threshold '-1' --synchrony-constraint-threshold '0.99' --fork-choice-stale-threshold '60 minutes'
+nohup rnode run --bootstrap $DAPPY_RCHAIN_BOOTSTRAP --network-id $DAPPY_RCHAIN_NETWORK --shard-name $DAPPY_RCHAIN_SHARD_NAME --host $RNODE_PUBLIC_DOMAIN_NAME --protocol-port '40400' --discovery-port '40404' --api-port-grpc-external '40401' --api-port-http '40403' --finalization-rate '1' --max-number-of-parents '1' --fault-tolerance-threshold '-1' --synchrony-constraint-threshold '0.99' --fork-choice-stale-threshold '60 minutes'
 
 ctrl+z
 bg
@@ -155,21 +155,19 @@ REDIS_DB=1
 HTTP_PORT=80
 HTTPS_PORT=443
 
-CACHING=30
-READ_ONLY=http://localhost:40403
+DAPPY_NODE_CACHING=30
+DAPPY_RCHAIN_READ_ONLY=http://localhost:40403
 
 # Make sure it is a valid validator
-VALIDATOR=https://node0.testnet.rchain.coop
+DAPPY_RCHAIN_VALIDATOR=https://node0.testnet.rchain.coop
 
 # Make sure the six following values are accurate
 # with the network you want to plug into
-RCHAIN_NAMES_MASTER_REGISTRY_URI=iwusrr5g6zdywzh4mg5jydb5p3dh4edonz39jp33cb9eqi4zbehzs4
-RCHAIN_NAMES_CONTRACT_ID=iuwdappynamesystem
+DAPPY_NAMES_MASTER_REGISTRY_URI=iwusrr5g6zdywzh4mg5jydb5p3dh4edonz39jp33cb9eqi4zbehzs4
+DAPPY_NAMES_CONTRACT_ID=iuwdappynamesystem
 
 DAPPY_NETWORK=gamma
-RCHAIN_NETWORK=testnet220210
-DAPPY_BROWSER_MIN_VERSION=0.5.4
-DAPPY_BROWSER_DOWNLOAD_LINK=https://github.com/fabcotech/dappy/releases/tag/0.5.4?warning
+DAPPY_RCHAIN_NETWORK=testnet220210
 ```
 
 The dappy-node program will use `dappynode.crt` and `dappynode.key` for the port 443. And nothing for port 80.

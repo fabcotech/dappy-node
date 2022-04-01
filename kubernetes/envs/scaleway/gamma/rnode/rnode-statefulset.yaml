@@ -61,11 +61,11 @@ spec:
         - image: rchain/rnode:v0.12.4
           name: rnode
           env:
-            - name: BOOTSTRAP
+            - name: DAPPY_RCHAIN_BOOTSTRAP
               value: rnode://12c235aeb57e75c448fbe6a6b3dae55f44c64bb9@node0.testnet.rchain.coop?protocol=40400&discovery=40404
-            - name: RCHAIN_NETWORK
+            - name: DAPPY_RCHAIN_NETWORK
               value: testnet220210
-            - name: SHARD_NAME
+            - name: DAPPY_RCHAIN_SHARD_NAME
               value: testnet3
           volumeMounts:
             - name: rnode-tls 
@@ -80,9 +80,9 @@ spec:
             - "-c" 
             - |
               /opt/docker/bin/rnode run \
-                  --bootstrap $BOOTSTRAP \
-                  --network-id $RCHAIN_NETWORK \
-                  --shard-name $SHARD_NAME \
+                  --bootstrap $DAPPY_RCHAIN_BOOTSTRAP \
+                  --network-id $DAPPY_RCHAIN_NETWORK \
+                  --shard-name $DAPPY_RCHAIN_SHARD_NAME \
                   --host `cat /var/lib/config/public-domain` \
                   --protocol-port '40400' \
                   --discovery-port '40404' \

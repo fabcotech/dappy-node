@@ -76,3 +76,5 @@ ca-rnode.pem
 
 dist
 warnings.txt
+.rnode
+dappyrc

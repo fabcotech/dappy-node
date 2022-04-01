@@ -10,9 +10,9 @@ spec:
           env:
             - name: DAPPY_NETWORK
               value: beta
-            - name: RCHAIN_NETWORK
+            - name: DAPPY_RCHAIN_NETWORK
               value: mainnet 
-            - name: READ_ONLY
+            - name: DAPPY_RCHAIN_READ_ONLY
               value: https://observer-eu.services.mainnet.rchain.coop
-            - name: VALIDATOR
+            - name: DAPPY_RCHAIN_VALIDATOR
               value: https://node0.root-shard.mainnet.rchain.coop

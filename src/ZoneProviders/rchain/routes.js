@@ -1,3 +1,6 @@
+import { getConfig } from '../../config';
+import { getStore } from '../../store';
+
 const { Router } = require('express');
 const bodyParser = require('body-parser');
 
@@ -18,25 +21,25 @@ const { getContractLogsHandler } = require('./get-contract-logs');
 const { log } = require('../../log');
 
 const getInfo = (store) => (req, res) => {
+  const config = getConfig();
+
   res.setHeader('Content-Type', 'application/json');
 
-  let wrappedRevContractId = 'notconfigured';
-  if (store.rchainNamesMasterRegistryUri !== 'notconfigured') {
-    wrappedRevContractId = `${store.rchainNamesMasterRegistryUri.slice(0, 3)}rev`;
-  }
+  const wrappedRevContractId = `${config.dappyNamesMasterRegistryUri.slice(0, 3)}rev`;
 
   res.json({
     success: true,
     data: {
-      dappyNodeVersion: store.dappyNodeVersion,
-      dappyBrowserMinVersion: store.dappyBrowserMinVersion,
-      dappyBrowserDownloadLink: store.dappyBrowserDownloadLink,
+      dappyNodeVersion: config.dappyNodeVersion,
+      dappyBrowserMinVersion: config.dappyBrowserMinVersion,
+      dappyBrowserDownloadLink: config.dappyBrowserDownloadLink,
+      dappyNetwork: config.dappyNetwork,
+      rchainNamesMasterRegistryUri: config.dappyNamesMasterRegistryUri,
+      rchainNamesContractId: config.dappyNamesContractId,
+      rchainNetwork: config.rchainNetwork,
+      wrappedRevContractId,
       lastFinalizedBlockNumber: store.lastFinalizedBlockNumber,
       rnodeVersion: store.rnodeVersion,
-      rchainNamesMasterRegistryUri: store.rchainNamesMasterRegistryUri,
-      rchainNamesContractId: store.rchainNamesContractId,
-      wrappedRevContractId,
-      rchainNetwork: store.rchainNetwork,
       namePrice: store.namePrice,
     },
   });
@@ -69,12 +72,13 @@ const prepareDeploy = (store) => async (req, res) => {
 };
 
 const exploreDeploy = (store) => async (req, res) => {
+  const config = getConfig();
   const data = await exploreDeployWsHandler(
     req.body,
     pickRandomReadOnly(store),
     store.redisClient,
-    store.useCache,
-    store.caching,
+    !!config.dappyNodeCaching,
+    config.dappyNodeCaching,
   );
   if (data.success) {
     res.json(data);
@@ -84,12 +88,13 @@ const exploreDeploy = (store) => async (req, res) => {
 };
 
 const exploreDeployX = (store) => async (req, res) => {
+  const config = getConfig();
   const data = await exploreDeployXWsHandler(
     req.body,
     pickRandomReadOnly(store),
     store.redisClient,
-    store.useCache,
-    store.caching,
+    !!config.dappyNodeCaching,
+    config.dappyNodeCaching,
   );
   if (data.success) {
     res.json(data);
@@ -148,8 +153,9 @@ const getContractLogs = (store) => (req, res) => {
   getContractLogsHandler(store.redisClient.zRange.bind(store.redisClient), log)(req.body, res);
 };
 
-export function getRoutes(store) {
+export function getRoutes() {
   const router = Router();
+  const store = getStore();
 
   router.use(bodyParser.json());
 

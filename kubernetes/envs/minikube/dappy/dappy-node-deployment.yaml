@@ -8,18 +8,18 @@ spec:
       containers:
         - name: dappy-node
           env:
-            - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
+            - name: DAPPY_NAMES_MASTER_REGISTRY_URI
               valueFrom:
                 configMapKeyRef:
                   name: dappy-config
-                  key: RCHAIN_NAMES_MASTER_REGISTRY_URI 
-            - name: RCHAIN_NAMES_CONTRACT_ID
+                  key: DAPPY_NAMES_MASTER_REGISTRY_URI 
+            - name: DAPPY_NAMES_CONTRACT_ID
               valueFrom:
                 configMapKeyRef:
                   name: dappy-config
-                  key: RCHAIN_NAMES_CONTRACT_ID
-            - name: RCHAIN_NAMES_LOGS_CONTRACTS
+                  key: DAPPY_NAMES_CONTRACT_ID
+            - name: DAPPY_JOBS_LOGS_CONTRACTS
               valueFrom:
                 configMapKeyRef:
                   name: dappy-config
-                  key: RCHAIN_NAMES_LOGS_CONTRACTS                  
+                  key: DAPPY_JOBS_LOGS_CONTRACTS                  

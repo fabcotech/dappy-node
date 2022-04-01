@@ -16,22 +16,16 @@ spec:
           name: dappy-node
           imagePullPolicy: IfNotPresent
           env:
-            - name: READ_ONLY
+            - name: DAPPY_RCHAIN_READ_ONLY
               value: http://rnode:40403
-            - name: VALIDATOR
+            - name: DAPPY_RCHAIN_VALIDATOR
               value: http://rnode:40403
-            - name: RCHAIN_NETWORK
+            - name: DAPPY_RCHAIN_NETWORK
               value: local
             - name: DAPPY_NETWORK
-              value: local          
-            - name: CACHING
+              value: local       
+            - name: DAPPY_NODE_CACHING
               value: '10'
-            - name: REDIS_DB
-              value: '1'
-            - name: HTTP_PORT
-              value: '3001'
-            - name: LAST_BLOCK_JOB_INTERVAL
-              value: '40000'
           ports:
             - containerPort: 3001
             - containerPort: 3002

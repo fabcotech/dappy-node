@@ -8,25 +8,20 @@ spec:
       containers:
         - name: dappy-node
           env:
-            - name: RCHAIN_NAMES_MASTER_REGISTRY_URI
+            - name: DAPPY_NAMES_MASTER_REGISTRY_URI
               value: iwusrr5g6zdywzh4mg5jydb5p3dh4edonz39jp33cb9eqi4zbehzs4
-            - name: RCHAIN_NAMES_CONTRACT_ID
+            - name: DAPPY_NAMES_CONTRACT_ID
               value: iwudappynamesystem
             - name: DAPPY_NETWORK
               value: gamma
-            - name: RCHAIN_NETWORK
+            - name: DAPPY_RCHAIN_NETWORK
               value: testnet220210
-            - name: VALIDATOR
+            - name: DAPPY_RCHAIN_VALIDATOR
               value: https://node0.testnet.rchain.coop
-            - name: READ_ONLY
+            - name: DAPPY_RCHAIN_READ_ONLY
               value: https://rnode
-            - name: READ_ONLY_CERTIFICATE_PATH
+            - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
               value: '/ssl/tls.crt'
-            - name: DAPPY_BROWSER_MIN_VERSION
-              value: 0.5.4
-            - name: DAPPY_BROWSER_DOWNLOAD_LINK
-              value: https://github.com/fabcotech/dappy/releases/tag/0.5.4?warning
-
           volumeMounts:
           - name: rnode-tls
             mountPath: /ssl

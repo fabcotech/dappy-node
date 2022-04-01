@@ -2,14 +2,17 @@ const rchainToolkit = require('rchain-toolkit');
 
 const { readPursesTerm } = require('rchain-token');
 const { log } = require('../../../log');
+const { getConfig } = require('../../../config');
 
 module.exports.getPurseZeroPrice = async (urlOrOptions) => {
   let exploreDeployResult;
+  const config = getConfig();
+
   try {
     exploreDeployResult = await rchainToolkit.http.exploreDeploy(urlOrOptions, {
       term: readPursesTerm({
-        masterRegistryUri: process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI,
-        contractId: process.env.RCHAIN_NAMES_CONTRACT_ID,
+        masterRegistryUri: config.dappyNamesMasterRegistryUri,
+        contractId: config.dappyNamesContractId,
         pursesIds: ['0'],
       }),
     });

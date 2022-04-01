@@ -6,11 +6,13 @@ import { ping } from './ping';
 import { createDnsQuery } from './dns-query';
 import { getCurrentZoneProvider } from '../../ZoneProviders';
 import { createGetCertificates } from './get-certificates';
+import { getStore } from '../../store';
 
-export function getRouter(store: any) {
+export function getRouter() {
   const router = Router();
+  const store = getStore();
 
-  const getZones = getCurrentZoneProvider().createGetZones(store);
+  const { getZones } = getCurrentZoneProvider();
 
   router.post('/ping', ping);
   router.post('/get-nodes', getNodes(store));

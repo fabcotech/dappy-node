@@ -110,13 +110,6 @@ describe('get-x-records', function test() {
     const args = {
       names: ['foo', 'dappy', 'baz'],
     };
-    // const urlOrOptions = {
-    //   url: 'https://observer.testnet.rchain.coop',
-    // };
-    // global.process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI =
-    //   'bwyeb7iiidaowwip6rowz4s645ytcqio34qu9g9qg66t5qjfcugqdo';
-    // global.process.env.RCHAIN_NAMES_CONTRACT_ID = 'bwydappynamesystem';
-
     const urlOrOptions = {};
     const cachedRecord = {};
     const redisClient = {
@@ -139,16 +132,12 @@ describe('get-x-records', function test() {
       sAdd: chai.spy(Promise.resolve({})),
     };
 
-    // const redisClient = require('redis').createClient({
-    //   url: 'redis://localhost:53146/2',
-    // });
-    // await redisClient.connect();
-
     const log = chai.spy();
     const exploreDeploy = chai.spy(
       (() => {
         let call = 0;
         return () => {
+          debugger;
           call += 1;
           if (call === 1) {
             return JSON.stringify(createPurseExpr('dappy'));

@@ -8,21 +8,23 @@ const { getPurseZeroPrice } = require('./jobs/purse-zero-price');
 const { start: startJobCacheContractLogs } = require('./jobs/cache-contract-logs');
 
 const { log } = require('../../log');
+const { getStore } = require('../../store');
+const { getConfig } = require('../../config');
 
-const initJobs = async (store) => {
+const initJobs = async () => {
+  const store = getStore();
+  const config = getConfig();
+
   try {
-    const blockNumber = getLastFinalizedBlockNumber(pickRandomReadOnly(store));
+    const blockNumber = getLastFinalizedBlockNumber(pickRandomReadOnly());
     store.lastFinalizedBlockNumber = blockNumber.lastFinalizedBlockNumber;
   } catch (err) {
     log('failed to get last finalized block height');
     log(err);
   }
-  if (
-    process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI
-    && process.env.RCHAIN_NAMES_CONTRACT_ID
-  ) {
+  if (config.dappyNamesMasterRegistryUri && config.dappyNamesContractId) {
     try {
-      const pursePrice = await getPurseZeroPrice(pickRandomReadOnly(store));
+      const pursePrice = await getPurseZeroPrice(pickRandomReadOnly());
       store.namePrice = pursePrice.namePrice;
     } catch (err) {
       log('failed to get purse zero price');
@@ -31,140 +33,139 @@ const initJobs = async (store) => {
   }
 
   setInterval(() => {
-    health(pickRandomReadOnly(store));
+    health(pickRandomReadOnly());
   }, 30000);
 
   setInterval(async () => {
-    const blockNumber = await getLastFinalizedBlockNumber(pickRandomReadOnly(store));
+    const blockNumber = await getLastFinalizedBlockNumber(pickRandomReadOnly());
     try {
       store.lastFinalizedBlockNumber = blockNumber.lastFinalizedBlockNumber;
     } catch (err) {
       log('failed to get last finalized block height');
       log(err);
     }
-    if (
-      process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI
-      && process.env.RCHAIN_NAMES_CONTRACT_ID
-    ) {
+    if (config.dappyNamesMasterRegistryUri && config.dappyNamesContractId) {
       try {
-        const pursePrice = await getPurseZeroPrice(pickRandomReadOnly(store));
+        const pursePrice = await getPurseZeroPrice(pickRandomReadOnly());
         store.namePrice = pursePrice.namePrice;
       } catch (err) {
         log('failed to get purse zero price');
         log(err);
       }
     }
-  }, process.env.LAST_BLOCK_JOB_INTERVAL || 40000);
+  }, config.dappyNodeLastBlockJobInterval);
 };
 
-const startWhenRNodeIsReady = (store) => new Promise((resolve, reject) => {
-  const intervalHandler = setInterval(() => {
-    const randomOptionsReadOnly = pickRandomReadOnly(store);
+const startWhenRNodeIsReady = () =>
+  new Promise((resolve, reject) => {
+    const store = getStore();
+    const intervalHandler = setInterval(() => {
+      const randomOptionsReadOnly = pickRandomReadOnly();
 
-    const req = (
-      randomOptionsReadOnly.url.startsWith('https://') ? https : http
-    ).get(
-      `${randomOptionsReadOnly.url}/version`,
-      randomOptionsReadOnly,
-      (resp) => {
-        if (resp.statusCode !== 200) {
-          log('Status code different from 200', 'error');
-          log(resp.statusCode);
-          reject(new Error('Status code different from 200'));
-        }
+      const req = (
+        randomOptionsReadOnly.url.startsWith('https://') ? https : http
+      ).get(
+        `${randomOptionsReadOnly.url}/version`,
+        randomOptionsReadOnly,
+        (resp) => {
+          if (resp.statusCode !== 200) {
+            log('Status code different from 200', 'error');
+            log(resp.statusCode);
+            reject(new Error('Status code different from 200'));
+          }
 
-        resp.setEncoding('utf8');
-        let rawData = '';
-        resp.on('data', (chunk) => {
-          rawData += chunk;
-        });
-
-        resp.on('end', () => {
-          store.rnodeVersion = rawData;
-          const req2 = (
-            randomOptionsReadOnly.url.startsWith('https://') ? https : http
-          ).get(
-            `${randomOptionsReadOnly.url}/api/blocks/1`,
-            randomOptionsReadOnly,
-            (resp2) => {
-              if (resp2.statusCode !== 200) {
-                log(
-                  'rnode observer blocks api not ready (1), will try again in 10s',
-                );
-                return;
-              }
-
-              resp2.setEncoding('utf8');
-              let rawData2 = '';
-              resp2.on('data', (chunk) => {
-                rawData2 += chunk;
-              });
-              resp2.on('end', () => {
-                if (typeof JSON.parse(rawData2)[0].blockHash === 'string') {
-                  log(`${rawData}\n`);
-                  log(
-                    `RChain node responding at ${randomOptionsReadOnly.url}/version and /api/blocks/1`,
-                  );
-                  initJobs(store);
-                  clearInterval(intervalHandler);
-                  resolve();
-                }
-              });
-              resp2.on('error', (err) => {
-                reject(err);
-              });
-            },
-          );
-
-          req2.end();
-          req2.on('error', (err) => {
-            log(err);
-            log(
-              'rnode observer blocks api not ready (2), will try again in 10s',
-            );
+          resp.setEncoding('utf8');
+          let rawData = '';
+          resp.on('data', (chunk) => {
+            rawData += chunk;
           });
-        });
-        resp.on('error', (err) => {
-          reject(err);
-        });
-      },
-    );
-    req.end();
-    req.on('error', () => {
-      log('rnode observer not ready, will try again in 10s');
-    });
-  }, 10000);
-});
 
-function initRChainConfiguration(store) {
-  if (
-    !process.env.VALIDATOR.startsWith('https://')
-    && !process.env.VALIDATOR.startsWith('http://')
-  ) {
-    log('VALIDATOR must start with http:// or https://', 'error');
+          resp.on('end', () => {
+            store.rnodeVersion = rawData;
+            const req2 = (
+              randomOptionsReadOnly.url.startsWith('https://') ? https : http
+            ).get(
+              `${randomOptionsReadOnly.url}/api/blocks/1`,
+              randomOptionsReadOnly,
+              (resp2) => {
+                if (resp2.statusCode !== 200) {
+                  log(
+                    'rnode observer blocks api not ready (1), will try again in 10s'
+                  );
+                  return;
+                }
+
+                resp2.setEncoding('utf8');
+                let rawData2 = '';
+                resp2.on('data', (chunk) => {
+                  rawData2 += chunk;
+                });
+                resp2.on('end', () => {
+                  if (typeof JSON.parse(rawData2)[0].blockHash === 'string') {
+                    log(`${rawData}\n`);
+                    log(
+                      `RChain node responding at ${randomOptionsReadOnly.url}/version and /api/blocks/1`
+                    );
+                    initJobs();
+                    clearInterval(intervalHandler);
+                    resolve();
+                  }
+                });
+                resp2.on('error', (err) => {
+                  reject(err);
+                });
+              }
+            );
+
+            req2.end();
+            req2.on('error', (err) => {
+              log(err);
+              log(
+                'rnode observer blocks api not ready (2), will try again in 10s'
+              );
+            });
+          });
+          resp.on('error', (err) => {
+            reject(err);
+          });
+        }
+      );
+      req.end();
+      req.on('error', () => {
+        log('rnode observer not ready, will try again in 10s');
+      });
+    }, 10000);
+  });
+
+function initRChainConfiguration() {
+  const store = getStore();
+  const config = getConfig();
+
+  if (!/^https?:\/\//.test(config.rchainValidator)) {
+    log(
+      'rchain node validator url must start with http:// or https://',
+      'error'
+    );
     process.exit();
   }
 
-  store.httpUrlValidator = process.env.VALIDATOR.includes(',')
-    ? process.env.VALIDATOR.split(',')
-    : [process.env.VALIDATOR];
+  store.httpUrlValidator = config.rchainValidator.includes(',')
+    ? config.rchainValidator.split(',')
+    : [config.rchainValidator];
 
-  store.httpUrlReadOnly = process.env.READ_ONLY.includes(',')
-    ? process.env.READ_ONLY.split(',')
-    : [process.env.READ_ONLY];
+  store.httpUrlReadOnly = config.rchainReadOnly.includes(',')
+    ? config.rchainReadOnly.split(',')
+    : [config.rchainReadOnly];
 
-  store.rchainNamesMasterRegistryUri = process.env.RCHAIN_NAMES_MASTER_REGISTRY_URI || 'notconfigured';
-  store.rchainNamesContractId = process.env.RCHAIN_NAMES_CONTRACT_ID || 'notconfigured';
-  store.rchainNetwork = process.env.RCHAIN_NETWORK;
-
-  log(`host (read-only):                   ${store.httpUrlReadOnly}`);
-  log(`host (validator):                   ${process.env.VALIDATOR}`);
+  log(`host (read-only):                   ${config.rchainReadOnly}`);
+  log(`host (validator):                   ${config.rchainValidator}`);
 }
 
-async function start(store) {
-  initRChainConfiguration(store);
-  await startWhenRNodeIsReady(store);
-  if (/^true$/i.test(process.env.START_JOB)) {
+async function start() {
+  const config = getConfig();
+  initRChainConfiguration();
+  await startWhenRNodeIsReady();
+  if (config.dappyNodeStartJobs) {
     startJobCacheContractLogs();
   }
 }

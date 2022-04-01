@@ -1,7 +1,14 @@
 const fs = require('fs');
+const { getConfig } = require('../../config');
+const { getStore } = require('../../store');
 
-const pickRandomReadOnly = (store) => {
-  const readOnlyIndex = Math.floor(Math.random() * store.httpUrlReadOnly.length);
+const pickRandomReadOnly = () => {
+  const store = getStore();
+  const config = getConfig();
+
+  const readOnlyIndex = Math.floor(
+    Math.random() * store.httpUrlReadOnly.length
+  );
   const r = store.httpUrlReadOnly[readOnlyIndex];
 
   if (!store.readOnlyOptions) {
@@ -16,10 +23,13 @@ const pickRandomReadOnly = (store) => {
     url: r,
   };
 
-  if (r.startsWith('https://') && process.env.READ_ONLY_CERTIFICATE_PATH) {
+  if (
+    r.startsWith('https://') &&
+    config.rchainReadOnlyCertificateFilename
+  ) {
     const cert = fs.readFileSync(
-      process.env.READ_ONLY_CERTIFICATE_PATH,
-      'utf8',
+      config.rchainReadOnlyCertificateFilename,
+      'utf8'
     );
     store.readOnlyOptions[r].ca = [cert];
   }

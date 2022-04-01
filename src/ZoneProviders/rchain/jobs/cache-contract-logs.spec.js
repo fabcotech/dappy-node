@@ -36,13 +36,13 @@ describe('cache-contract-logs', () => {
     expect(() => parseRedisUrl('redis://bar_baz:1454/1')).to.not.throw();
   });
   it('should check default config', () => {
-    expect(initConfig).to.throw('RCHAIN_NAMES_MASTER_REGISTRY_URI env var is not defined');
+    expect(initConfig).to.throw('DAPPY_NAMES_MASTER_REGISTRY_URI env var is not defined');
 
     const config = initConfig({
-      RCHAIN_NAMES_MASTER_REGISTRY_URI: 'foo',
-      READ_ONLY: 'http://foo',
-      RCHAIN_NAMES_LOGS_CONTRACTS: 'foo,bar',
-      REDIS_URL: 'redis://redis_host:1234/4',
+      DAPPY_NAMES_MASTER_REGISTRY_URI: 'foo',
+      DAPPY_RCHAIN_READ_ONLY: 'http://foo',
+      DAPPY_JOBS_LOGS_CONTRACTS: 'foo,bar',
+      DAPPY_JOBS_LOGS_INTERVAL: 'redis://redis_host:1234/4',
     });
     expect(config.logsInteval).to.eql(10 * 1000);
     expect(config.contracts).to.eql(['foo', 'bar']);
