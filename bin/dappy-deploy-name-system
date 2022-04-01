@@ -91,6 +91,7 @@ async function deployNameSystem() {
   });
   console.log('✓ Purse 0 price updated to 50000000');
   console.log(''); 
+  setEnvValue('DAPPY_PRIVATE_KEY', privateKey);
   console.log(`Name system deployed, dappy node configuration is saved into ./${DAPPY_CONFIG_FILE_NAME} file`);
 }
 

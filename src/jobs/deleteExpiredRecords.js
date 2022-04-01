@@ -1,5 +1,6 @@
 const { blake2b } = require('blakejs');
 const { log } = require('../log');
+const { getStore } = require('../store');
 
 const deleteRecords = async (redisClient, quarter) => {
   const nameKeys = await redisClient.keys('record:*');
@@ -42,7 +43,8 @@ const runRecordsChildProcessJob = async (quarter, store) => {
   recordsJobRunning = false;
 };
 
-function startJobExpiredRecords(store) {
+function startJobExpiredRecords() {
+  const store = getStore();
   setInterval(() => {
     if (new Date().getMinutes() % 15 === 0) {
       log(

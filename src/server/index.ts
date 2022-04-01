@@ -1,9 +1,9 @@
 import { SecureVersion } from 'tls';
 import http from 'http';
 import https from 'https';
-import path from 'path';
 import fs from 'fs';
 import express, { Router } from 'express';
+import pem from 'pem';
 
 import { getRouter } from './routes';
 import { initSentry } from './sentry';
@@ -16,6 +16,8 @@ import {
 import { log } from '../log';
 import { getConfig } from '../config';
 
+const SELF_SIGNED_CERTIFICATE_DURATION = 365 * 20; // 20 years
+
 const initRoutes = (app: Router) => {
   initSentry(app);
 
@@ -24,7 +26,39 @@ const initRoutes = (app: Router) => {
   addZoneProviderRoutes(app);
 };
 
-export const startHttpServers = () => {
+const getOrCreateCertificate = (
+  certificatePath: string,
+  privateKeyPath: string
+): Promise<string[]> => {
+  return new Promise((resolve, reject) => {
+    if (fs.existsSync(certificatePath) && fs.existsSync(privateKeyPath)) {
+      resolve([
+        fs.readFileSync(certificatePath, 'utf8'),
+        fs.readFileSync(privateKeyPath, 'utf8'),
+      ]);
+    }
+
+    pem.createCertificate(
+      {
+        days: SELF_SIGNED_CERTIFICATE_DURATION,
+        selfSigned: true,
+        altNames: ['localhost'],
+      },
+      (err, certificate) => {
+        if (err) {
+          reject(err);
+        }
+
+        fs.writeFileSync(certificatePath, certificate.certificate);
+        fs.writeFileSync(privateKeyPath, certificate.serviceKey);
+
+        resolve([certificate.certificate, certificate.serviceKey]);
+      }
+    );
+  });
+};
+
+export const startHttpServers = async () => {
   const app = express();
   const config = getConfig();
 
@@ -42,12 +76,11 @@ export const startHttpServers = () => {
     log(
       `Listening for HTTP+TLS on address 127.0.0.1:${config.dappyNodeHttpsPort} ! (TLS handled by nodeJS)`
     );
-    const key = fs.readFileSync(
-      path.join(process.cwd(), `./${config.dappyNodePrivateKeyFilename}`)
+    const [cert, key] = await getOrCreateCertificate(
+      config.dappyNodeCertificateFilename,
+      config.dappyNodePrivateKeyFilename
     );
-    const cert = fs.readFileSync(
-      path.join(process.cwd(), `./${config.dappyNodeCertificateFilename}`)
-    );
+
     const options = {
       key,
       cert,

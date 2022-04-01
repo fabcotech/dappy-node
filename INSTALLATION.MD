@@ -1,20 +1,64 @@
 # Installation
 
-## RChain node for local development 
+## For a local environment
 
-How to install RChain ? [Click here](https://github.com/rchain/rchain#installation)
-
+### Prerequisites
 ```sh
-./scripts/init_rchain_genesis_block.sh
-
-# Fetch latest rchain node
-docker pull rchain/rnode:latest
-
-# Run a local rchain node for develpement
-docker run -v $HOME/.rnode:/var/lib/rnode -it -p 40400:40400 -p 40403:40403 rchain/rnode:latest \
- run \
-  -s \
-  --validator-private-key 28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36 \
-  --dev-mode
+npm i -g @fabcotech/dappy-node
+npm i -g @fabcotech/dappy-cli
+npm i -g @fabcotech/dappy-lookup
 ```
 
+### Deploy and run a local dappy name system
+
+```sh
+# Create .rnode folder with genesis block
+dappy-init-rchain-genesis-block
+
+# Run local rnode, propose blocks, and redis using docker and docker-compose 
+dappy-run-local-rnode
+
+# Deploy Dappy name system on local rnode
+dappy-deploy-name-system
+
+# Launch dappy-node (http on port 3001, https on port 3002)
+dappy-node
+```
+
+### Test
+
+```
+# Deploy example domain
+cat << EOF > dappy.config.json
+{
+  "zones": [
+    {
+      "origin": "example",
+      "ttl": 3600,
+      "records": [
+        {
+          "name": "@",
+          "type": "A",
+          "data": "127.0.0.1"
+        }
+      ]
+    }
+  ]
+}
+EOF
+dappy-cli pushzones 
+
+# lookup example A record
+npm i -g @fabcotech/dappy-lookup
+cat << EOF > network.json
+[
+  {
+    "ip": "127.0.0.1",
+    "port": "3001",
+    "hostname": "localhost",
+    "scheme": "http"
+  }
+]
+EOF
+dappy-lookup example A --network-file=network.json
+```

@@ -59,6 +59,7 @@ export function initConfig() {
       40000,
     dappyNodeStartJobs: process.env.DAPPY_NODE_START_JOBS === 'true',
     dappyNetwork: process.env.DAPPY_NETWORK || 'unknown',
+    dappyLogPath: process.env.DAPPY_LOG_PATH || './logs',
 
     redisDb: process.env.DAPPY_NODE_REDIS_DB || 1,
     redisHost: process.env.DAPPY_NODE_REDIS_SERVICE_HOST || 'localhost',
