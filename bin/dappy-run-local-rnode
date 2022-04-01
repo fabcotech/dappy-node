@@ -1,0 +1,5 @@
+#!/bin/bash
+
+PARENT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+
+docker-compose -f "$PARENT_PATH/../lib/node_modules/dappy-node/docker/docker-compose.yml" up 

@@ -13,12 +13,19 @@
     "start": "node dist/index.js",
     "start:dev:rchain": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=rchain ts-node src/index.ts",
     "start:dev:memory": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=memory ts-node src/index.ts",
-    "deploy_name_contract": "./scripts/deploy_name_contract.js",
+    "deploy-name-system": "./bin/dappy-deploy-name-system",
     "prepare": "husky install"
   },
+  "files": [
+    "dist/",
+    "docker/",
+    "bin/"
+  ],
   "bin": {
-    "deploy_name_contract": "./scripts/deploy_name_contract.js",
-    "dappy-node": "./dist/index.js"
+    "dappy-deploy-name-system": "./bin/dappy-deploy-name-system",
+    "dappy-init-rchain-genesis-block": "./bin/dappy-init-rchain-genesis-block",
+    "dappy-node": "./bin/dappy-node",
+    "dappy-run-local-rnode": "./bin/dappy-run-local-rnode"
   },
   "engines": {
     "node": ">=16"
