@@ -1,5 +1,5 @@
 {
-  "name": "dappy-node",
+  "name": "@fabcotech/dappy-node",
   "version": "3.20.1",
   "description": "Dappy main nodeJS program, stores the name records and provides a HTTP+TLS interface to interact with rnode",
   "author": "FABCO",
