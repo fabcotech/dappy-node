@@ -1,6 +1,6 @@
 const fs = require('fs');
-const rchainToolkit = require('rchain-toolkit');
-const { readLogsTerm, logs } = require('rchain-token');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
+const { readLogsTerm, logs } = require('@fabcotech/rchain-token');
 const redis = require('redis');
 
 const { log } = require('../../../log');

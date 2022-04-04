@@ -3,7 +3,7 @@
 /* eslint-disable no-console */
 const {
   deployMaster, deployBox, deploy, createPurse, updatePursePrice,
-} = require('rchain-token/cli/api');
+} = require('@fabcotech/rchain-token/cli/api');
 
 const { setEnvValue, mustBeUrl, mustBeNotEmptyString, createConfigFileIfNotExists, DAPPY_CONFIG_FILE_NAME } = require('./utils');
 

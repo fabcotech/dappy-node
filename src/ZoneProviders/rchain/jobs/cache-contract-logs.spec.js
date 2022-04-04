@@ -57,7 +57,7 @@ describe('cache-contract-logs', () => {
 }" }}
       ]
     }`);
-    // const exploreDeploy = require('rchain-toolkit').http.exploreDeploy;
+    // const exploreDeploy = require('@fabcotech/rchain-toolkit').http.exploreDeploy;
     const logs = await queryLogs(
       exploreDeploy,
       'pridt69gz6tnsux888afui7wegoq4fcywoze5bm6rt3cbnne5kn1sk',

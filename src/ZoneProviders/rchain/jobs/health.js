@@ -1,4 +1,4 @@
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 const fs = require('fs');
 
 module.exports.health = async (httpUrlReadOnly) => {

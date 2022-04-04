@@ -1,5 +1,5 @@
 const Ajv = require('ajv');
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 
 const listenDataAtNameBodySchema = require('./listen-for-data-at-name').schema;
 

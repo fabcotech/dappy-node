@@ -1,4 +1,4 @@
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 const Ajv = require('ajv');
 const { blake2b } = require('blakejs');
 

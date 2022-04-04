@@ -1,6 +1,6 @@
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 
-const { readPursesTerm } = require('rchain-token');
+const { readPursesTerm } = require('@fabcotech/rchain-token');
 const { log } = require('../../../log');
 const { getConfig } = require('../../../config');
 

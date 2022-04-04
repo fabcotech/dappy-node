@@ -1,11 +1,11 @@
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 const https = require('https');
 
 const {
   readPursesTerm,
   readAllPursesTerm,
   decodePurses,
-} = require('rchain-token');
+} = require('@fabcotech/rchain-token');
 
 const masterRegistryUri = 'zjfa7r7aqdg1weao6ozk6s3fhyiw5wo6pytrggaxkeqhsfw4rrd8yg';
 const contractId = 'dappynamesystem';

@@ -1,11 +1,11 @@
 const Ajv = require('ajv');
-const rchainToolkit = require('rchain-toolkit');
+const rchainToolkit = require('@fabcotech/rchain-toolkit');
 
 const {
   readPursesDataTerm,
   readPursesTerm,
   readBoxTerm,
-} = require('rchain-token');
+} = require('@fabcotech/rchain-token');
 const { getConfig } = require('../../config');
 const { configureScope } = require('@sentry/node');
 
