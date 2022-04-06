@@ -20,7 +20,7 @@ spec:
           path: /root/.rnode/
           type: DirectoryOrCreate
       containers:
-        - image: rchain/rnode:v0.12.1
+        - image: rchain/rnode:latest
           name: rnode-propose
           command:
           - sh

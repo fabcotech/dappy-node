@@ -22,4 +22,4 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: dappy-config
-                  key: DAPPY_JOBS_LOGS_CONTRACTS                  
+                  key: DAPPY_NAMES_CONTRACT_ID                  

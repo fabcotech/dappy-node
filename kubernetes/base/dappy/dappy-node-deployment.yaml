@@ -26,6 +26,10 @@ spec:
               value: local       
             - name: DAPPY_NODE_CACHING
               value: '10'
+            - name: DAPPY_NODE_REDIS_HOST
+              value: $(REDIS_SERVICE_HOST)
+            - name: DAPPY_NODE_REDIS_PORT
+              value: $(REDIS_SERVICE_PORT)
           ports:
             - containerPort: 3001
             - containerPort: 3002

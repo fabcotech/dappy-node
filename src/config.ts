@@ -28,7 +28,6 @@ export function initConfig() {
     dappyNamesMasterRegistryUri: mustBeDefined(
       'DAPPY_NAMES_MASTER_REGISTRY_URI'
     ),
-    dappyNamesBoxId: mustBeDefined('DAPPY_NAMES_BOX_ID'),
     dappyNamesContractId: mustBeDefined('DAPPY_NAMES_CONTRACT_ID'),
 
     rchainValidator:
@@ -41,8 +40,7 @@ export function initConfig() {
 
     dappyNodeHttpPort:
       parseInt(process.env.DAPPY_NODE_HTTP_PORT || '', 10) || 3001,
-    dappyNodeHttpsPort:
-      parseInt(process.env.DAPPY_NODE_HTTPS_PORT || '', 10) || 3002,
+    dappyNodeHttpsPort: parseInt(process.env.DAPPY_NODE_HTTPS_PORT || '', 10),
     dappyNodePrivateKeyFilename:
       process.env.DAPPY_NODE_PRIVATE_KEY_FILENAME || 'dappynode.key',
     dappyNodeCertificateFilename:
@@ -62,8 +60,8 @@ export function initConfig() {
     dappyLogPath: process.env.DAPPY_LOG_PATH || './logs',
 
     redisDb: process.env.DAPPY_NODE_REDIS_DB || 1,
-    redisHost: process.env.DAPPY_NODE_REDIS_SERVICE_HOST || 'localhost',
-    redisPort: parseInt(process.env.REDIS_SERVICE_PORT || '', 10) || 6379,
+    redisHost: process.env.DAPPY_NODE_REDIS_HOST || 'localhost',
+    redisPort: parseInt(process.env.DAPPY_NODE_REDIS_PORT || '', 10) || 6379,
   };
 
   config = cfg;

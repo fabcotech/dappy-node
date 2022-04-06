@@ -42,7 +42,7 @@
     "elliptic": "6.5.4",
     "express": "^4.17.1",
     "pem": "^1.14.6",
-    "@fabcotech/rchain-token": "^16.0.0",
+    "@fabcotech/rchain-token": "^16.0.2",
     "@fabcotech/rchain-toolkit": "^1.0.0",
     "redis": "^4.0.2"
   },

@@ -42,7 +42,7 @@ describe('cache-contract-logs', () => {
       DAPPY_NAMES_MASTER_REGISTRY_URI: 'foo',
       DAPPY_RCHAIN_READ_ONLY: 'http://foo',
       DAPPY_JOBS_LOGS_CONTRACTS: 'foo,bar',
-      DAPPY_JOBS_LOGS_INTERVAL: 'redis://redis_host:1234/4',
+      DAPPY_JOBS_REDIS_URL: 'redis://redis_host:1234/4',
     });
     expect(config.logsInteval).to.eql(10 * 1000);
     expect(config.contracts).to.eql(['foo', 'bar']);

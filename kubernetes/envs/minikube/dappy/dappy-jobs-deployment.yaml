@@ -12,7 +12,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: dappy-config
-                  key: DAPPY_JOBS_LOGS_CONTRACTS
+                  key: DAPPY_NAMES_CONTRACT_ID
             - name: DAPPY_NAMES_MASTER_REGISTRY_URI
               valueFrom:
                 configMapKeyRef:

@@ -16,7 +16,7 @@ spec:
           name: get-contract-logs
           imagePullPolicy: IfNotPresent
           env:
-            - name: DAPPY_JOBS_LOGS_INTERVAL
+            - name: DAPPY_JOBS_REDIS_URL
               value: redis://redis:6379/1
             - name: DAPPY_JOBS_LOGS_INTERVAL
               value: '1000'
@@ -27,5 +27,5 @@ spec:
           command:
           - sh
           - '-c'
-          - node src/ZoneProviders/rchain/jobs/cache-contract-logs.js
+          - node dist/ZoneProviders/rchain/jobs/cache-contract-logs.js
       restartPolicy: Always

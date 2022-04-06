@@ -3,7 +3,6 @@ const rchainToolkit = require('@fabcotech/rchain-toolkit');
 const { readLogsTerm, logs } = require('@fabcotech/rchain-token');
 const redis = require('redis');
 
-const { log } = require('../../../log');
 const { getConfig } = require('../../../config');
 
 function formatLogMessage(msg) {
@@ -11,11 +10,11 @@ function formatLogMessage(msg) {
 }
 
 function logInfo(msg) {
-  log(formatLogMessage(msg));
+  console.log(formatLogMessage(msg));
 }
 
 function logError(msg) {
-  log(formatLogMessage(msg), 'error');
+  console.error(formatLogMessage(msg), 'error');
 }
 
 function mandatory(varName, value) {
@@ -51,14 +50,14 @@ function getFileContent(path) {
 
 function initConfig(env = {}) {
   return {
-    logsInteval: 10000, // parseInt(env.DAPPY_JOBS_LOGS_INTERVAL) || 10 * 1000,
+    logsInteval: parseInt(env.DAPPY_JOBS_LOGS_INTERVAL || '', 10) || 10 * 1000,
     masterRegistryUri: mandatory(
       'DAPPY_NAMES_MASTER_REGISTRY_URI',
       env.DAPPY_NAMES_MASTER_REGISTRY_URI,
     ),
     contracts: parseArray(mandatory('DAPPY_JOBS_LOGS_CONTRACTS', env.DAPPY_JOBS_LOGS_CONTRACTS)),
     rnodeUri: mandatory('DAPPY_RCHAIN_READ_ONLY', env.DAPPY_RCHAIN_READ_ONLY),
-    redisUrl: parseRedisUrl(mandatory('DAPPY_JOBS_LOGS_INTERVAL', env.DAPPY_JOBS_LOGS_INTERVAL)),
+    redisUrl: parseRedisUrl(mandatory('DAPPY_JOBS_REDIS_URL', env.DAPPY_JOBS_REDIS_URL)),
     caCertificate: getFileContent(env.READ_ONLY_CERTIFICATE_PATH),
   };
 }
