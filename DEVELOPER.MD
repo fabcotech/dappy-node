@@ -148,7 +148,7 @@ kubectl create configmap dappy-config --from-env-file dappyrc
 eval $(minikube docker-env)
 
 # Build dappy-node image and push it into minikube docker runtime
-docker build -t fabcotech/dappy-node -f ../../../DockerfileNodejs ../../../
+docker build -t fabcotech/dappy-node -f ../../../ ../../../
 
 # generate certificate for dappy-node HTTPS endpoint
 mkcert dappy.dev
@@ -198,8 +198,8 @@ kubectl wait --for=condition=available --timeout=600s deployment/dappy-node
 
 ```sh
 # dappy-node (nodejs)
-docker build . -f DockerfileNodejs -t fabcotech/dappy-node:0.1
-docker push fabcotech/dappy-node:0.1
+docker build . -t fabcotech/dappy-node:{DAPPY_NODE_VERSION}
+docker push fabcotech/dappy-node:{DAPPY_NODE_VERSION}
 ```
 
 ## Other commands
@@ -214,7 +214,7 @@ kubectl logs [pod name]
 # Update dappy-node image and run it on kubernetes
 cd <DAPPY_NODE_GIT_ROOT_FOLDER> 
 eval $(minikube docker-env)
-docker build -t fabcotech/dappy-node -f DockerfileNodejs .
+docker build -t fabcotech/dappy-node .
 kubectl rollout restart deployment dappy-jobs dappy-node
 
 # update values in file stresstest/ping-pong.js
