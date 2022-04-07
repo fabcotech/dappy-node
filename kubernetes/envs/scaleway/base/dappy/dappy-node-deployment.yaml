@@ -31,8 +31,8 @@ spec:
               value: '30'
             - name: DAPPY_RCHAIN_READ_ONLY
               value: https://rnode
-            - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
-              value: /ssl/tls.crt
+            # - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
+            #   value: /ssl/tls.crt
           resources:
             limits:
               memory: 128Mi

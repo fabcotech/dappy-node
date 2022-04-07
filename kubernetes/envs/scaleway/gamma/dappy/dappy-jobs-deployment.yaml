@@ -9,11 +9,11 @@ spec:
         - name: get-contract-logs
           env:
             - name: DAPPY_NAMES_MASTER_REGISTRY_URI
-              value: iwusrr5g6zdywzh4mg5jydb5p3dh4edonz39jp33cb9eqi4zbehzs4
+              value: eakdr9k4q37b1gq879jwsfq38autx8bm3tjz6wbdw5pjfkwb5got9f
             - name: DAPPY_JOBS_LOGS_CONTRACTS
-              value: "iwudappynamesystem"
-            - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
-              value: /ssl/tls.crt
+              value: eakcontractns 
+            # - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
+            #   value: /ssl/tls.crt
           volumeMounts:
           - name: rnode-tls 
             mountPath: '/ssl'

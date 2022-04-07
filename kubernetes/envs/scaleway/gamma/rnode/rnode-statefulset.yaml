@@ -57,7 +57,7 @@ spec:
               hostPort: 443
           resources:
             limits:
-              memory: 500Mi
+              memory: 200Mi
         - image: rchain/rnode:v0.13.0-alpha
           name: rnode
           env:
@@ -104,7 +104,7 @@ spec:
               hostPort: 40404
           resources:
             requests:
-              memory: 5Gi
+              memory: 6Gi
               cpu: 1400m
       
       volumes:

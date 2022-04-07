@@ -9,23 +9,25 @@ spec:
         - name: dappy-node
           env:
             - name: DAPPY_NAMES_MASTER_REGISTRY_URI
-              value: iwusrr5g6zdywzh4mg5jydb5p3dh4edonz39jp33cb9eqi4zbehzs4
+              value: eakdr9k4q37b1gq879jwsfq38autx8bm3tjz6wbdw5pjfkwb5got9f
             - name: DAPPY_NAMES_CONTRACT_ID
-              value: iwudappynamesystem
+              value: eakcontractns
+            - name: DAPPY_JOBS_LOGS_CONTRACTS
+              value: eakcontractns
             - name: DAPPY_NETWORK
               value: gamma
             - name: DAPPY_RCHAIN_NETWORK
-              value: testnet220210
+              value: testnet220309
             - name: DAPPY_RCHAIN_VALIDATOR
-              value: https://node0.testnet.rchain.coop
+              value: https://node0.testnet.rchain.coop 
             - name: DAPPY_RCHAIN_READ_ONLY
-              value: https://rnode
-            - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
-              value: '/ssl/tls.crt'
-          volumeMounts:
-          - name: rnode-tls
-            mountPath: /ssl
-            readOnly: true              
+              value: https://observer.testnet.rchain.coop
+            # - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
+            #   value: '/ssl/tls.crt'
+          # volumeMounts:
+          # - name: rnode-tls
+          #   mountPath: /ssl
+          #   readOnly: true              
       volumes:
         - name: rnode-tls
           secret:
