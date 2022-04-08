@@ -13,7 +13,7 @@ spec:
         app: rnode
     spec:
       nodeSelector:
-        rnode: 'true'
+        k8s.scaleway.com/rnode: 'true'
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -62,7 +62,7 @@ spec:
           name: rnode
           env:
             - name: DAPPY_RCHAIN_BOOTSTRAP
-              value: rnode://8c7b1834f78f11e640ce58a899f0c1dc7605d712@node0.testnet.rchain.coop?protocol=40400&discovery=40404
+              value: rnode://e04032917f284b73b8a201cca0e4e9c539b4468e@node1.testnet.rchain.coop?protocol=41400&discovery=41404 
             - name: DAPPY_RCHAIN_NETWORK
               value: testnet220309
             - name: DAPPY_RCHAIN_SHARD_NAME
@@ -92,7 +92,8 @@ spec:
                   --max-number-of-parents '1' \
                   --fault-tolerance-threshold '-1' \
                   --synchrony-constraint-threshold '0.99' \
-                  --fork-choice-stale-threshold '60 minutes'
+                  --fork-choice-stale-threshold '60 minutes' \
+                  -J-Xms10g
           ports:
             - containerPort: 40400
               hostPort: 40400
@@ -104,7 +105,7 @@ spec:
               hostPort: 40404
           resources:
             requests:
-              memory: 6Gi
+              memory: 14Gi
               cpu: 1400m
       
       volumes:

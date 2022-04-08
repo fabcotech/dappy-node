@@ -12,8 +12,8 @@ spec:
               value: eakdr9k4q37b1gq879jwsfq38autx8bm3tjz6wbdw5pjfkwb5got9f
             - name: DAPPY_JOBS_LOGS_CONTRACTS
               value: eakcontractns 
-            # - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
-            #   value: /ssl/tls.crt
+            - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
+              value: /ssl/tls.crt
           volumeMounts:
           - name: rnode-tls 
             mountPath: '/ssl'
