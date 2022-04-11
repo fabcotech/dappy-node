@@ -14,3 +14,33 @@ Persist name zone directly on the blockchains garantees:
 - Data is highly available throught the network
 
 Records are fetched in a **trustless manner** by requesting network members in parallel, using a mecanism called **co-resolution**. Distributing trust over network is an alternative solution to [DNSSEC](https://datatracker.ietf.org/doc/html/rfc4033).
+
+## Get Dappy-node
+
+### Quick start-up
+
+Run a dappy-node with memory zone provider using npx
+
+### Other installations
+
+## Understanding Dappy-node
+
+### Zone providers
+
+### DNS over HTTPS
+
+## Support
+
+### Report a bug
+
+### Ask a question
+
+## Reference
+
+### Command line
+
+### Configuration
+
+### API.md
+
+## Want contributing ?
