@@ -21,7 +21,17 @@ Records are fetched in a **trustless manner** by requesting network members in p
 
 Run a dappy-node with memory zone provider using npx
 
-### Other installations
+```bash
+# Run a dappy-node that save zones in memory
+DAPPY_NODE_ZONE_PROVIDER=memory DAPPY_NODE_CACHING=0 npx @fabcotech/dappy-node
+
+# Resolve example.dappy A record
+dappy-lookup example.dappy A --endpoint=http://127.0.0.1:3001
+```
+
+### Other installation procedures
+
+Please refer to [INSTALLATION.md](INSTALLATION.MD) if you want to install a standalone dappy-node or to join an existing Dappy network.
 
 ## Understanding Dappy-node
 

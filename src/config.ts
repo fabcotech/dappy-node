@@ -3,13 +3,21 @@ import path from 'path';
 const DAPPY_CONFIG_FILE_NAME = 'dappyrc';
 const DAPPY_BROWSER_MIN_VERSION = '0.5.4';
 
-const mustBeDefined = (envVarName: string) => {
-  const envValue = process.env[envVarName];
-  if (!envValue || envValue.length === 0) {
-    throw new Error(`${envVarName} can't be empty`);
+const numberOr = (defaultValue: any, value: any) => {
+  if (typeof value === 'number' && !Number.isNaN(value)) {
+    return value;
   }
-  return envValue;
+  return defaultValue;
 };
+
+const createMustBeDefined =
+  (predicat: () => boolean) => (envVarName: string) => {
+    const envValue = process.env[envVarName];
+    if (predicat() && (!envValue || envValue.length === 0)) {
+      throw new Error(`${envVarName} can't be empty`);
+    }
+    return envValue;
+  };
 
 let config: ReturnType<typeof initConfig> = {} as any;
 
@@ -21,14 +29,18 @@ export function initConfig() {
     path: path.resolve(process.cwd(), DAPPY_CONFIG_FILE_NAME),
   });
 
+  const mustBeDefinedWhenRchain = createMustBeDefined(
+    () => process.env.DAPPY_NODE_ZONE_PROVIDER === 'rchain'
+  );
+
   const cfg = {
     dappyBrowserMinVersion: DAPPY_BROWSER_MIN_VERSION,
     dappyBrowserDownloadLink: `https://github.com/fabcotech/dappy/releases/tag/${DAPPY_BROWSER_MIN_VERSION}?warning`,
 
-    dappyNamesMasterRegistryUri: mustBeDefined(
+    dappyNamesMasterRegistryUri: mustBeDefinedWhenRchain(
       'DAPPY_NAMES_MASTER_REGISTRY_URI'
     ),
-    dappyNamesContractId: mustBeDefined('DAPPY_NAMES_CONTRACT_ID'),
+    dappyNamesContractId: mustBeDefinedWhenRchain('DAPPY_NAMES_CONTRACT_ID'),
 
     rchainValidator:
       process.env.DAPPY_RCHAIN_VALIDATOR || 'http://localhost:40403',
@@ -47,7 +59,10 @@ export function initConfig() {
       process.env.DAPPY_NODE_CERTIFICATE_FILENAME || 'dappynode.crt',
     dappyNodeVersion: '0.2.8',
     dappyNodeZoneProvider: process.env.DAPPY_NODE_ZONE_PROVIDER || 'rchain',
-    dappyNodeCaching: parseInt(process.env.DAPPY_NODE_CACHING || '', 10) || 60,
+    dappyNodeCaching: numberOr(
+      60,
+      parseInt(process.env.DAPPY_NODE_CACHING || '', 10)
+    ),
     dappyNodeFiles: process.env.NODES_FILE,
     dappyNodeEnableRequestMetrics:
       process.env.DAPPY_NODE_ENABLE_REQUEST_METRICS === 'true',
