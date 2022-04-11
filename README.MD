@@ -7,7 +7,7 @@ To avoid conflicts with existing TLDs, dappy zones are optionnaly suffixed with 
 
 What makes Dappy-node really unique is that zones are stored on the blockchain [Rchain](https://rchain-community.github.io/) which has 2 main benefits over others blockchain:
 - [Rchain](https://rchain-community.github.io/) is able to save data on-chain without referring to auxialiary P2P networks like [IPFS](https://ipfs.io/)
-- [Rchain](https://rchain-community.github.io/) scale massively. It produces blocks in parallel using a DAG and by applying merging them.
+- [Rchain](https://rchain-community.github.io/) scale massively. It produces blocks in parallel and merge them using a DAG and merging strategies.
 
 Persist name zone directly on the blockchains garantees: 
 - Records can't be falsified
