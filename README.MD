@@ -81,23 +81,45 @@ dappy-node repository contains several command lines tools.
    - --boxid: boxId used to deploy domain tokens
    - --contractid: contract token created
 - dappy-node: DoH server. Configuration is described below
-### Configuration
+### dappy-node Configuration
 
-Three settings are critical to run a rnode instance, and have it joining a RChain network.
-- `DAPPY_RCHAIN_BOOTSTRAP` is the bootstrap node that you will first connect to. Please ask RChain dev team for a bootstrap node for a given network.
-- `DAPPY_RCHAIN_NETWORK` is the id of the RChain network that you must know prior to connecting, ex: "testbm202107". -
-- `DAPPY_RCHAIN_SHARD_NAME` is the shard name ex: "testbm". -
+dappy-node is configurable through environments variables.
+To be more convenient, dappy-node try to load a [.env file](https://github.com/motdotla/dotenv) named `dappyrc` at startup.
 
-- `DAPPY_NAMES_MASTER_REGISTRY_URI` : A dappy node must be connected to a name system, therefore it must know a registry URI (blockchain address) of a rchain token master deployment. You can run dappy-node without this env. (dappy network with no name system).
-- `DAPPY_NETWORK` may be `gamma`, `beta`, `d` or `local` for development.
-- `DAPPY_RCHAIN_READ_ONLY` (url) should point to the local url of rnode service in the k8s cluster, leave it as `https://rnode`.
-- `DAPPY_RCHAIN_VALIDATOR` (url) should be a public url for a validator node of the same RChain network.
-- `DAPPY_RCHAIN_NETWORK` same as above.
-- `DAPPY_RCHAIN_SHARD_NAME` same as above.
+Below, here are all environments variables read by dappy-node.
+#### General environment variables
 
-Dappy jobs are cron jobs, the main one stores log of some rchain token contracts.
-- `DAPPY_NAMES_MASTER_REGISTRY_URI` same as above.
-- `DAPPY_JOBS_LOGS_CONTRACTS` comma-separated list of contracts you want to keep the logs of. example `dappynamesystem,dappytoken`.
+| **Keys** | **Required** | **Default value** | **Description** |
+|---|---|---|---|
+| DAPPY_NODE_ZONE_PROVIDER | No | `rchain` | Zone provider used |
+| DAPPY_NODE_HTTP_PORT | Yes | `3001` | dappy-node http port  |
+| DAPPY_NODE_HTTPS_PORT | No |  | dappy-node https port |
+| DAPPY_NODE_PRIVATE_KEY_FILENAME | No | `dappynode.key` | dappy-node private key. Generated if not exists |
+| DAPPY_NODE_CERTIFICATE_FILENAME | No | `dappynode.crt` | dappy-node certificate. Generated if not exists |
+| DAPPY_NODE_CACHING | Yes | `60` | record ttl cache. Disabled if set to `0` |
+| DAPPY_NODE_ENABLE_REQUEST_METRICS | Yes | `false` | Activate metrics |
+| DAPPY_NODE_SENTRY_URL | No | `false` | Send logs to sentry |
+| DAPPY_NETWORK | Yes | `unknown` | `unknown`, `gamma`, `beta` or `d` |
+| DAPPY_LOG_PATH | Yes | `./logs` | path to log warning and errors |
+| NODES_FILE | No |  |  |
+
+#### Environment variables read when rchain is used as zone provider
+
+| **Keys** | **Required** | **Default value** | **Description** |
+|---|---|---|---|
+| DAPPY_NAMES_MASTER_REGISTRY_URI | Yes |  | rchain token master deployment |
+| DAPPY_NAMES_CONTRACT_ID | Yes |  | rchain contract used for dappy name system |
+| DAPPY_RCHAIN_VALIDATOR | Yes | `http://localhost:40403` | Rnode used to send transactions |
+| DAPPY_RCHAIN_READ_ONLY | Yes | `http://localhost:40403` | Rnode used to query rchain data |
+| DAPPY_RCHAIN_NETWORK | Yes | `unknown` | RChain network |
+| DAPPY_JOBS_LOGS_CONTRACTS | Yes | | Ccomma-separated list of contracts you want to keep the logs |
+| DAPPY_JOBS_REDIS_URL |  Yes | | Redis url format: `redis://HOST:PORT/DB` |
+| DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME | Yes |  | Rnode certificate  |
+| DAPPY_NODE_LAST_BLOCK_JOB_INTERVAL | Yes | `40000` | Interval in ms to fetch rchain data |
+| DAPPY_NODE_START_JOBS | Yes | `false` |  |
+| DAPPY_NODE_REDIS_DB | Yes | `1` | Redis database number |
+| DAPPY_NODE_REDIS_HOST | Yes | `localhost` | Redis host |
+| DAPPY_NODE_REDIS_PORT | Yes | `6379` | Redis port |
 
 ### API.md
 

@@ -58,7 +58,7 @@ function initConfig(env = {}) {
     contracts: parseArray(mandatory('DAPPY_JOBS_LOGS_CONTRACTS', env.DAPPY_JOBS_LOGS_CONTRACTS)),
     rnodeUri: mandatory('DAPPY_RCHAIN_READ_ONLY', env.DAPPY_RCHAIN_READ_ONLY),
     redisUrl: parseRedisUrl(mandatory('DAPPY_JOBS_REDIS_URL', env.DAPPY_JOBS_REDIS_URL)),
-    caCertificate: getFileContent(env.READ_ONLY_CERTIFICATE_PATH),
+    caCertificate: getFileContent(env.DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME),
   };
 }
 
