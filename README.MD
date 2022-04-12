@@ -51,6 +51,22 @@ Please refer to [INSTALLATION.md](INSTALLATION.MD) if you want to install a stan
 
 ### Configuration
 
+Three settings are critical to run a rnode instance, and have it joining a RChain network.
+- `DAPPY_RCHAIN_BOOTSTRAP` is the bootstrap node that you will first connect to. Please ask RChain dev team for a bootstrap node for a given network.
+- `DAPPY_RCHAIN_NETWORK` is the id of the RChain network that you must know prior to connecting, ex: "testbm202107". -
+- `DAPPY_RCHAIN_SHARD_NAME` is the shard name ex: "testbm". -
+
+- `DAPPY_NAMES_MASTER_REGISTRY_URI` : A dappy node must be connected to a name system, therefore it must know a registry URI (blockchain address) of a rchain token master deployment. You can run dappy-node without this env. (dappy network with no name system).
+- `DAPPY_NETWORK` may be `gamma`, `beta`, `d` or `local` for development.
+- `DAPPY_RCHAIN_READ_ONLY` (url) should point to the local url of rnode service in the k8s cluster, leave it as `https://rnode`.
+- `DAPPY_RCHAIN_VALIDATOR` (url) should be a public url for a validator node of the same RChain network.
+- `DAPPY_RCHAIN_NETWORK` same as above.
+- `DAPPY_RCHAIN_SHARD_NAME` same as above.
+
+Dappy jobs are cron jobs, the main one stores log of some rchain token contracts.
+- `DAPPY_NAMES_MASTER_REGISTRY_URI` same as above.
+- `DAPPY_JOBS_LOGS_CONTRACTS` comma-separated list of contracts you want to keep the logs of. example `dappynamesystem,dappytoken`.
+
 ### API.md
 
 ## Want contributing ?
