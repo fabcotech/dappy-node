@@ -73,15 +73,15 @@ We use the issue tracker to keep track of bugs and improvements to dappy-node it
 
 dappy-node repository contains several command lines tools.
 
-- dappy-init-rchain-genesis-block: create files `.rnode/genesis/bonds.txt` and `rnode/genesis/wallets.txt` needed to bootstrap rchain
-- dappy-run-local-rnode: run docker compose file `docker/docker-compose.yml`, which starts the latest images of [rnode](https://hub.docker.com/r/rchain/rnode) and [redis](https://hub.docker.com/_/redis)
-- dappy-deploy-name-system: deploy dappy name system master on rchain. Arguments:
+- **dappy-init-rchain-genesis-block**: create files `.rnode/genesis/bonds.txt` and `rnode/genesis/wallets.txt` needed to bootstrap rchain
+- **dappy-run-local-rnode**: run docker compose file `docker/docker-compose.yml`, which starts the latest images of [rnode](https://hub.docker.com/r/rchain/rnode) and [redis](https://hub.docker.com/_/redis)
+- **dappy-deploy-name-system**: deploy dappy name system master on rchain. Arguments:
    - --validator: url to rchain node validator
    - --privatekey: private key used to deploy dappy name system master
    - --boxid: boxId used to deploy domain tokens
    - --contractid: contract token created
-- dappy-node: DoH server. Configuration is described below
-### dappy-node Configuration
+- **dappy-node**: DoH server. Configuration is described below
+### dappy-node configuration
 
 dappy-node is configurable through environments variables.
 To be more convenient, dappy-node try to load a [.env file](https://github.com/motdotla/dotenv) named `dappyrc` at startup.
