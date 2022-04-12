@@ -37,7 +37,27 @@ Please refer to [INSTALLATION.md](INSTALLATION.MD) if you want to install a stan
 
 ### Zone providers
 
+Dappy-node abstracts how zones and records are persisted.
+
+There are 2 zone providers availables:
+- memory: for demo and development purpose. It contains a built-in zone `example` with some records. It is the easiest way to start and experiment dappy-node.
+- rchain: for production purposes. Zones and records are persisted on blockchain [Rchain](https://rchain-community.github.io/)
+
+Each of these zone providers have their own jobs and routes.
+
+Use `DAPPY_NODE_ZONE_PROVIDER` environment variable to define zone_provider.  
+
 ### DNS over HTTPS
+
+Dappy-node is queryable over HTTPS. It implements [DoH](https://datatracker.ietf.org/doc/html/rfc8484) RFC. DNS packets are sent over HTTPS in binary format.
+
+Under the hood, dappy-node use [dns-packet](https://github.com/mafintosh/dns-packet) to decode and encode DNS packets.
+
+Every DoH clients can query dappy-node, it includes browsers like Chrome. Dappy provide a command line [dappy-lookup](https://github.com/fabcotech/dappy-lookup) that makes DoH queries. You can try it like this:
+
+```sh
+npx @fabcotech/dappy-lookup example.dappy A --endpoint=http://127.0.0.1:3001
+```
 
 ## Support
 
