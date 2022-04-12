@@ -121,6 +121,6 @@ Below, here are all environments variables read by dappy-node.
 | DAPPY_NODE_REDIS_HOST | Yes | `localhost` | Redis host |
 | DAPPY_NODE_REDIS_PORT | Yes | `6379` | Redis port |
 
-### API.md
+### API Reference
 
-## Want contributing ?
+Please read [API Reference](API.md) for more details.
