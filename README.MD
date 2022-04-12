@@ -61,14 +61,26 @@ npx @fabcotech/dappy-lookup example.dappy A --endpoint=http://127.0.0.1:3001
 
 ## Support
 
+We are open to, and grateful for, any contributions made by the community.
+
 ### Report a bug
 
-### Ask a question
+We use the issue tracker to keep track of bugs and improvements to dappy-node itself and the documentation. We encourage you to open issues to discuss improvements, architecture, theory, internal implementation, etc. If a topic has been discussed before, we will ask you to join the previous discussion.
 
 ## Reference
 
-### Command line
+### Command line tools
 
+dappy-node repository contains several command lines tools.
+
+- dappy-init-rchain-genesis-block: create files `.rnode/genesis/bonds.txt` and `rnode/genesis/wallets.txt` needed to bootstrap rchain
+- dappy-run-local-rnode: run docker compose file `docker/docker-compose.yml`, which starts the latest images of [rnode](https://hub.docker.com/r/rchain/rnode) and [redis](https://hub.docker.com/_/redis)
+- dappy-deploy-name-system: deploy dappy name system master on rchain. Arguments:
+   - --validator: url to rchain node validator
+   - --privatekey: private key used to deploy dappy name system master
+   - --boxid: boxId used to deploy domain tokens
+   - --contractid: contract token created
+- dappy-node: DoH server. Configuration is described below
 ### Configuration
 
 Three settings are critical to run a rnode instance, and have it joining a RChain network.
