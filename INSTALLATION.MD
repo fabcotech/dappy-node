@@ -87,6 +87,10 @@ dappy-deploy-name-system
 dappy-node
 ```
 
+### With kubernetes and minikube
+
+To install dappy, rnode and redis in a local kubernetes cluster, please follow this [procedure](/kubernetes/envs/minikube/MINIKUBE.md).
+
 ### Test local dappy-node
 
 ```

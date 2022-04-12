@@ -1,73 +1,3 @@
-# Installation outside of kubernetes
-
-Prerequisites:
-- [Git](https://git-scm.com/):  Open source distributed version control system
-- [NodeJS](https://nodejs.org/): Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine.
-- [Docker](https://www.docker.com/get-started) : Docker CLI and container runtime
-
-## Rchain node
-
-You need a RChain node running locally or remotely with regular API exposed ([rchain.coop/developer.html](https://rchain.coop/developer.html)), and a redis server running also. Generate certificates `.crt` and private key `.key` (see below).
-
-Mandatory, to add transactions into blocks and propose them, this command need to be executed in another terminal
-```sh
-watch -n 3 rnode --grpc-port 40402 propose
-```
-
-## Redis
-
-You can run a redis instance inside a container using this command:
-
-```sh
-docker run --name dappy-redis -d redis
-```
-
-To stop it, use this command:
-```sh
-docker stop dappy-redis
-```
-
-## Dappy-node
-
-Grab dappy-node git repository
-
-```sh
-git clone https://github.com/fabcotech/dappy-node.git
-cd dappy-node
-```
-
-### Setup dappy-node .env file
-
-You must copy the values in any of the `.env.local.example` files, and rename it to `.env` so environment variables will be read. Of course you must also edit the `.env` variables so it fits with your rnode program and variables.
-
-```sh
-cp .env.local.example .env
-```
-
-In `.env` file, `DAPPY_NAMES_MASTER_REGISTRY_URI=<MASTER_URI_TO_BE_DEFINED>` have to filled with a contract id of a dappy name system. 
-
-You will deploy it in next steps on your rchain local node.
-
-```sh
-npm run deploy_name_contract
-```
-
-Contract is now deployed on your local rnode network, you can get `Master registry URI` and `Contract id` values from stdout.
-
-In `<DAPPY_NODE_FOLDER>/.env` file, replace:
-- `<MASTER_URI_TO_BE_DEFINED>` with `Master registry URI` value. 
-- `<CONTRACT_ID_TO_BE_DEFINED` with `Contract id` value
-
-### Run dappy-node
-
-In `<DAPPY_NODE_FOLDER>`, run these commands:
-```sh
-npm install
-node --max-old-space-size=8192 src/index.js --ssl
-```
-
-**Note:** Of course set the 8192 value according to the capabilities of your server. See https://medium.com/@vuongtran/how-to-solve-process-out-of-memory-in-node-js-5f0de8f8464c.
-
 # Installation inside a local kubernetes using minikube
 
 ## Install and run local kubernetes cluster
@@ -127,7 +57,6 @@ curl https://rnode.dev/status
 
 Prerequisites to run dappy-node:
 - Dappy name system master uri is needed and set to `DAPPY_NAMES_MASTER_REGISTRY_URI` env variable.
-- Dappy name system contract `dappynamesystem` must exists on local rnode network
 
 To create master and deploy dappy name system contract on local rnode network, follow instructions below.
 
