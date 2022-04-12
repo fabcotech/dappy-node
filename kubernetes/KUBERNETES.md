@@ -15,7 +15,7 @@ You may handle one, two or more dappy-node namespaces with this repository. An e
 
 Non production dappy-node infrastructure
 
-![Dappy-node non production infrastructure](./docs/infrastructure.png)
+![Dappy-node non production infrastructure](../docs/infrastructure.png)
 
 ## Deploy rnode
 
