@@ -25,7 +25,7 @@ npm i -g @fabcotech/dappy-node      # DoH server
 # Deploy Dappy name system on local rnode
 dappy-deploy-name-system
 
-# Launch dappy-node (http on port 3001, https on port 3002)
+# Launch dappy-node (http on port 3001)
 dappy-node
 ```
 ### With docker
@@ -35,6 +35,11 @@ dappy-node
 Please, install following binaries:
 - [Node](https://nodejs.org/) >= 16
 - [Docker](https://docs.docker.com/get-docker/)
+
+Install globally `fabcotech/dappy-node` package 
+```sh
+npm i -g @fabcotech/dappy-node      # DoH server
+```
 
 #### Deploy and run a local dappy name system
 
@@ -48,7 +53,7 @@ dappy-run-local-rnode
 # Deploy Dappy name system on local rnode
 dappy-deploy-name-system
 
-# Launch dappy-node (http on port 3001, https on port 3002)
+# Launch dappy-node (http on port 3001)
 dappy-node
 ```
 
@@ -83,7 +88,7 @@ Restart your terminal to refresh you PATH
 # Deploy Dappy name system on local rnode
 dappy-deploy-name-system
 
-# Launch dappy-node (http on port 3001, https on port 3002)
+# Launch dappy-node (http on port 3001)
 dappy-node
 ```
 
