@@ -169,6 +169,10 @@ Install globally `fabcotech/dappy-node` package
 dappy-node
 ```
 
+### On Ubuntu without docker
+
+[Here](UBUNTU.MD) is a procedure to install dappy-node on Ubuntu without docker.
+
 ### With sources
 
 #### Prerequisites

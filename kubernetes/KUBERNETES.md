@@ -9,6 +9,7 @@ The specific configurations files are organized on a per-namespace basis, in the
 `kubernetes/envs/<CLOUD_PROVIDER>/` contains one folder per namespace. (see commands)
 
 You may handle one, two or more dappy-node namespaces with this repository. An example:
+
 - namespace 1 : **gamma**, connected to RChain testnet. Configuration files in `kubernetes/envs/<CLOUD_PROVIDER>/gamma`
 - namespace 2 : **beta**, connected to RChain mainnet. Configuration files in `kubernetes/envs/<CLOUD_PROVIDER>/beta`
 - namespace 3 : **d**, connected to RChain mainnet. Configuration files in `kubernetes/envs/<CLOUD_PROVIDER>/d` (main dappy name system not deployed yet)
@@ -21,7 +22,7 @@ Non production dappy-node infrastructure
 
 ### Rnode public domain must be know by Rnode
 
-Rnode endpoint must be publicly avaivable and have a domain name. To be executed, `rnode` needs to know its public domain (argument `--host`).  In scaleway we can recover the public domain name of the kubernetes nodes/virtual machines with a wget command, and store the value in `/var/lib/config/public-domain` text file.
+Rnode endpoint must be publicly avaivable and have a domain name. To be executed, `rnode` needs to know its public domain (argument `--host`). In scaleway we can recover the public domain name of the kubernetes nodes/virtual machines with a wget command, and store the value in `/var/lib/config/public-domain` text file.
 
 You will have to change this so that it works with your cloud provider.
 
@@ -58,7 +59,7 @@ kubectl create secret tls rnode-tls --key="rnode.key" --cert="rnode.crt" -n=<NAM
 kubectl apply -k kubernetes/envs/<CLOUD_PROVIDER>/<NAMESPACE>/rnode
 ```
 
-## Deploy dappy-node 
+## Deploy dappy-node
 
 ### Static IP
 
