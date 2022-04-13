@@ -36,13 +36,14 @@ Please, install following binaries:
 - [Node](https://nodejs.org/) >= 16
 - [Docker](https://docs.docker.com/get-docker/)
 
-Install globally `fabcotech/dappy-node` package 
+Install globally `@fabcotech/dappy-node` package 
 ```sh
-npm i -g @fabcotech/dappy-node      # DoH server
+npm i -g @fabcotech/dappy-node
 ```
 
 #### Deploy and run a local dappy name system
 
+Restart your terminal to refresh you $PATH
 ```sh
 # Create .rnode folder with genesis block
 dappy-init-rchain-genesis-block
@@ -83,7 +84,7 @@ npm install && npm run build && npm pack
 npm install -g fabcotech-dappy-node-X.XX.XX.tgz
 ```
 
-Restart your terminal to refresh you PATH
+Restart your terminal to refresh you $PATH
 ```sh
 # Deploy Dappy name system on local rnode
 dappy-deploy-name-system
@@ -129,15 +130,15 @@ npx @fabcotech/dappy-lookup example A --endpoint=http://127.0.0.1:3001
 
 Here are all available dappy networks and their corresponding environment variables.
 
-|  | **gamma** | **beta** |
-|---|---|---|
-| DAPPY_NAMES_MASTER_REGISTRY_URI | eakdr9k4q37b1gq879jwsfq38autx8bm3tjz6wbdw5pjfkwb5got9f |  |
-| DAPPY_NAMES_BOX_ID | eakboxns |  |
-| DAPPY_NAMES_CONTRACT_ID | eakcontractns |  |
-| DAPPY_JOBS_LOGS_CONTRACTS | eakcontractns |  |
-| DAPPY_NETWORK | gamma |  |
-| DAPPY_RCHAIN_NETWORK | testnet220309 |  |
-| DAPPY_RCHAIN_VALIDATOR | https://node0.testnet.rchain.coop |  |
+|  | **gamma** | **beta** | **d** |
+|---|---|---|---|
+| DAPPY_NAMES_MASTER_REGISTRY_URI | eakdr9k4q37b1gq879jwsfq38autx8bm3tjz6wbdw5pjfkwb5got9f | TBD | TBD |
+| DAPPY_NAMES_BOX_ID | eakboxns | TBD | TBD |
+| DAPPY_NAMES_CONTRACT_ID | eakcontractns | TBD | TBD |
+| DAPPY_JOBS_LOGS_CONTRACTS | eakcontractns | TBD |  TBD|
+| DAPPY_NETWORK | gamma | TBD | TBD |
+| DAPPY_RCHAIN_NETWORK | testnet220309 | TBD | TBD |
+| DAPPY_RCHAIN_VALIDATOR | https://node0.testnet.rchain.coop | TBD | TBD |
 
 Please choose a dappy network and save corresponding environments variables to `dappyrc` file. It is loaded at startup by `dappy-node`.
 
@@ -195,7 +196,7 @@ npm install && npm run build && npm pack
 npm install -g fabcotech-dappy-node-X.XX.XX.tgz
 ```
 
-Restart your terminal to refresh you PATH
+Restart your terminal to refresh you $PATH
 ```sh
 # Launch dappy-node (http on port 3001, https on port 3002)
 dappy-node
