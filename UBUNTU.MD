@@ -109,6 +109,7 @@ sudo apt install ./rnode_0.12.4_all.deb
 # TODO: Replace nohup by a rnode systemd service 
 # - enabled
 # - dedicated user with restrictive system rights (with hardening settings at FS and network level, logs not in user folder)
+# TODO: Rnode will consume a lot of disk space, best practice is to have dedicate file partition for rnode.
 nohup rnode run --bootstrap $DAPPY_RCHAIN_BOOTSTRAP --network-id $DAPPY_RCHAIN_NETWORK --shard-name $DAPPY_RCHAIN_SHARD_NAME --host $RNODE_PUBLIC_DOMAIN_NAME --protocol-port '40400' --discovery-port '40404' --api-port-grpc-external '40401' --api-port-http '40403' --finalization-rate '1' --max-number-of-parents '1' --fault-tolerance-threshold '-1' --synchrony-constraint-threshold '0.99' --fork-choice-stale-threshold '60 minutes'
 
 ctrl+z
