@@ -5,7 +5,6 @@ import { getNodes } from './get-nodes';
 import { ping } from './ping';
 import { createDnsQuery, createExtendedDnsQuery } from './dns-query';
 import { getCurrentZoneProvider } from '../../ZoneProviders';
-import { createGetCertificates } from './get-certificates';
 import { getStore } from '../../store';
 
 export function getRouter() {
@@ -28,11 +27,5 @@ export function getRouter() {
     bodyParser.json(),
     createExtendedDnsQuery(getZones)
   );
-  router.post(
-    '/get-certificates',
-    bodyParser.json(),
-    createGetCertificates(getZones)
-  );
-
   return router;
 }
