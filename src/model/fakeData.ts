@@ -2,9 +2,10 @@ import { NameZone } from './NameZone';
 import { NamePacket, ReturnCode, PacketType } from './NamePacket';
 
 import { mergeDeep } from '../utils/mergeDeep';
-import { RRA, RRAAAA, RRCERT, RRTXT } from './ResourceRecords';
+import { RRA, RRAAAA, RRCERT, RRCSP, RRTXT } from './ResourceRecords';
 
-export const fakeSelfSignedCert = Buffer.from(`-----BEGIN CERTIFICATE-----
+export const fakeSelfSignedCert = Buffer.from(
+  `-----BEGIN CERTIFICATE-----
 MIIEZzCCAs+gAwIBAgIRAKOiJf1OO3+OOR+peyH8HsQwDQYJKoZIhvcNAQELBQAw
 gZsxHjAcBgNVBAoTFW1rY2VydCBkZXZlbG9wbWVudCBDQTE4MDYGA1UECwwvcGF1
 bG11c3NvQG1hY2Jvb2stcHJvLWRlLXBhdWwuaG9tZSAoUGF1bCBNdXNzbykxPzA9
@@ -29,7 +30,11 @@ F6ed6qYuzR2MJARBvvrdTVoqDryyuIaoyhBfTwvRFiwHZO2wyxysPcmj3yy3PPgP
 fDQl9eM6cTrZentozYhB+UkyuNeZJLAm7MhiCEx3f7FVYXBZEg8SVGVDZ2tibzSk
 G72GCuXuXPANhMpPHbn3ht3p8yt9kB5WEOHuM4B189iExrzugmNDp2yXisrlrKxf
 FdKAoYx5XTW11Yd8GoEhlWNAAf0YhZCAi5WU
------END CERTIFICATE-----`, 'ascii').toString('base64');
+-----END CERTIFICATE-----`,
+  'ascii'
+).toString('base64');
+
+const fakeCSP = "default-src 'self' *.source-sure.example.net";
 
 export const createRRA = (rra: Partial<RRA> = {}): RRA => {
   return mergeDeep(
@@ -75,6 +80,17 @@ export const createRRCERT = (rrcert: Partial<RRCERT> = {}): RRCERT => {
   );
 };
 
+export const createRRCSP = (rrcsp: Partial<RRCSP> = {}): RRCSP => {
+  return mergeDeep(
+    {
+      name: '@',
+      type: 'CSP',
+      data: fakeCSP,
+    },
+    rrcsp
+  );
+};
+
 export const createNameZone = (zone: Partial<NameZone> = {}): NameZone => {
   return mergeDeep(
     {
@@ -85,10 +101,12 @@ export const createNameZone = (zone: Partial<NameZone> = {}): NameZone => {
         createRRAAAA(),
         createRRCERT(),
         createRRTXT(),
+        createRRCSP(),
         createRRA({ name: 'foo' }),
         createRRAAAA({ name: 'foo' }),
         createRRCERT({ name: 'foo' }),
         createRRTXT({ name: 'foo' }),
+        createRRCSP({ name: 'foo' }),
       ],
     },
     zone

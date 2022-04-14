@@ -6,7 +6,14 @@ import {
   isStringNotEmpty,
 } from '../utils/validation';
 
-import { isRRA, isRRAAAA, isRRCERT, isRRTXT, RR } from './ResourceRecords';
+import {
+  isRRA,
+  isRRAAAA,
+  isRRCERT,
+  isRRCSP,
+  isRRTXT,
+  RR,
+} from './ResourceRecords';
 import { JSONObject } from '../utils/json';
 
 export type NameZone = {
@@ -19,6 +26,8 @@ export const isNameZone = (data: JSONObject): data is NameZone => {
   return isObjectWith({
     origin: isStringNotEmpty,
     ttl: isNumber,
-    records: isArrayNotEmptyOf(isOneOf([isRRA, isRRAAAA, isRRCERT, isRRTXT])),
+    records: isArrayNotEmptyOf(
+      isOneOf([isRRA, isRRAAAA, isRRCERT, isRRTXT, isRRCSP])
+    ),
   })(data);
 };

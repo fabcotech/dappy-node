@@ -1,8 +1,14 @@
 import chai, { expect } from 'chai';
 import spies from 'chai-spies';
 
-import { isRRA, isRRAAAA, isRRCERT, isRRTXT } from './ResourceRecords';
-import { createRRA, createRRAAAA, createRRCERT, createRRTXT } from './fakeData';
+import { isRRA, isRRAAAA, isRRCERT, isRRCSP, isRRTXT } from './ResourceRecords';
+import {
+  createRRA,
+  createRRAAAA,
+  createRRCERT,
+  createRRCSP,
+  createRRTXT,
+} from './fakeData';
 
 chai.use(spies);
 
@@ -39,5 +45,14 @@ describe('ResourceRecords', () => {
       foo: 'bar',
     };
     expect(isRRCERT(notRecordTXT)).to.eql(false);
+  });
+
+  it('isRRCSP()', () => {
+    const recordCSP = createRRCSP();
+    expect(isRRCSP(recordCSP)).to.eql(true);
+    const notRecordCSP = {
+      foo: 'bar',
+    };
+    expect(isRRCERT(notRecordCSP)).to.eql(false);
   });
 });

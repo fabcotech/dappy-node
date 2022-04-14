@@ -1,21 +1,27 @@
-import dnsPacket, { Packet, Question } from 'dns-packet';
+import dnsPacket, { Packet } from 'dns-packet';
 import { Request, Response } from 'express';
 
 import { isNameZone, NameZone } from '../../model/NameZone';
 import {
   NameAnswer,
   NamePacket,
+  NameQuestion,
   PacketType,
   ReturnCode,
 } from '../../model/NamePacket';
 import { getTLDs, normalizeRecords } from './utils';
 
+const compliantDNSRecordTypes = ['A', 'AAAA', 'TXT'];
+
+const isCompliantDNSRecordType = (type: string) =>
+  compliantDNSRecordTypes.includes(type);
+
 export const getZoneRecords = (
-  questions: Question[],
+  questions: NameQuestion[],
   zones: NameZone[]
 ): NameAnswer[] =>
   questions
-    .filter((q) => q.type !== 'CERT')
+    .filter((q) => isCompliantDNSRecordType(q.type))
     .map(({ type, name }) => {
       const records = zones
         .map((zone) =>
