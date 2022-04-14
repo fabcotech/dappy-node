@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 
 import { getNodes } from './get-nodes';
 import { ping } from './ping';
-import { createDnsQuery } from './dns-query';
+import { createDnsQuery, createExtendedDnsQuery } from './dns-query';
 import { getCurrentZoneProvider } from '../../ZoneProviders';
 import { createGetCertificates } from './get-certificates';
 import { getStore } from '../../store';
@@ -22,6 +22,11 @@ export function getRouter() {
       type: 'application/dns-message',
     }),
     createDnsQuery(getZones)
+  );
+  router.post(
+    '/dns-query-extended',
+    bodyParser.json(),
+    createExtendedDnsQuery(getZones)
   );
   router.post(
     '/get-certificates',

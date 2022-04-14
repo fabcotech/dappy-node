@@ -21,7 +21,6 @@ export const getZoneRecords = (
   zones: NameZone[]
 ): NameAnswer[] =>
   questions
-    .filter((q) => isCompliantDNSRecordType(q.type))
     .map(({ type, name }) => {
       const records = zones
         .map((zone) =>
@@ -124,9 +123,31 @@ export const createDnsQuery =
     });
 
     const queryPacket = dnsPacket.decode(req.body);
+    const withoutNonCompliantDNSRecordTypes = {
+      ...queryPacket,
+      questions: (queryPacket.questions || []).filter((q) =>
+        isCompliantDNSRecordType(q.type)
+      ),
+    };
+    const response = await createFetchNameAnswers(getZones)(
+      withoutNonCompliantDNSRecordTypes as NamePacket
+    );
+
+    res.send(dnsPacket.encode(response as Packet));
+  };
+
+export const createExtendedDnsQuery =
+  (getZones: (names: string[]) => Promise<NameZone[]>) =>
+  async (req: Request, res: Response) => {
+    res.set({
+      'content-type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    });
+
+    const queryPacket = req.body;
     const response = await createFetchNameAnswers(getZones)(
       queryPacket as NamePacket
     );
 
-    res.send(dnsPacket.encode(response as Packet));
+    res.send(response);
   };
