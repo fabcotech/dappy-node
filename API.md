@@ -23,7 +23,7 @@ Example of a decoded dns message (question):
 }
 ```
 
-Example of a decode dns message (answer):
+Example of a decoded dns message (answer):
 ```json
 {
   "type": "query",
@@ -43,6 +43,19 @@ Example of a decode dns message (answer):
   }]
 }
 ```
+
+# POST `/dns-query-extended`
+
+Resolve name query using DNS message in json format.
+
+It is the json format alternative to `/dns-query`, without DNS constraints on record lengths.
+
+- **content-type:** application/json
+- **query body format:** json
+- **response format:** json
+
+dns message have the same structure as the ones of `/dns-query`
+
 ### POST `/get-certificates`
 
 Get certificates for a given list of records / names.
