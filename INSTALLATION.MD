@@ -35,6 +35,7 @@ dappy-node
 Please, install following binaries:
 - [Node](https://nodejs.org/) >= 16
 - [Docker](https://docs.docker.com/get-docker/)
+- [docker-compose](https://docs.docker.com/compose/install/)
 
 Install globally `@fabcotech/dappy-node` package 
 ```sh
