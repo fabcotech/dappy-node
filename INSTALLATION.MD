@@ -52,6 +52,12 @@ dappy-init-rchain-genesis-block
 # Run local rnode, propose blocks, and redis using docker and docker-compose 
 dappy-run-local-rnode
 
+# Easy deploy using rchain-token
+# prints deploy ID
+dappy-easy-deploy-rnode helloworld.rho
+# Waits for something on deploy ID unforgeable name
+dappy-easy-deploy-rnode helloworld.rho --wait
+
 # Deploy Dappy name system on local rnode
 dappy-deploy-name-system
 

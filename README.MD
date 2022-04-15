@@ -75,6 +75,7 @@ dappy-node repository contains several command lines tools.
 
 - **dappy-init-rchain-genesis-block**: create files `.rnode/genesis/bonds.txt` and `rnode/genesis/wallets.txt` needed to bootstrap rchain
 - **dappy-run-local-rnode**: run docker compose file `docker/docker-compose.yml`, which starts the latest images of [rnode](https://hub.docker.com/r/rchain/rnode) and [redis](https://hub.docker.com/_/redis)
+- **dappy-easy-deploy-rnode**: deploys a rholang file, --phlo-limit, --phlo-price, --private-key and --host have default values that can be overwritten.
 - **dappy-deploy-name-system**: deploy dappy name system master on rchain. Arguments:
    - --validator: url to rchain node validator
    - --privatekey: private key used to deploy dappy name system master
