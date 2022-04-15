@@ -11,7 +11,7 @@ import { addZoneProviderRoutes } from '../ZoneProviders';
 
 import { log } from '../log';
 import { getConfig } from '../config';
-import { initMetrics } from './routes/metrics';
+import { initMetrics } from './metrics';
 
 const SELF_SIGNED_CERTIFICATE_DURATION = 365 * 20; // 20 years
 

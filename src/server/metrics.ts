@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import client from 'prom-client';
-import { getConfig } from '../../config';
+import { getConfig } from '../config';
 
 export function getMetricsRegistry() {
   const register = new client.Registry();
