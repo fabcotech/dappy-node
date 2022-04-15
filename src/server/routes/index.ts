@@ -27,5 +27,6 @@ export function getRouter() {
     bodyParser.json(),
     createExtendedDnsQuery(getZones)
   );
+
   return router;
 }

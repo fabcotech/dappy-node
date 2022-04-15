@@ -268,7 +268,6 @@ const fetchRchainPurses = async (
   names,
   { log, urlOrOptions, exploreDeploy }
 ) => {
-  debugger; 
   const config = getConfig();
   let exploreDeployResponse;
   try {

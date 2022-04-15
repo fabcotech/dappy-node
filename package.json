@@ -32,6 +32,8 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@fabcotech/rchain-token": "^16.0.2",
+    "@fabcotech/rchain-toolkit": "^1.0.0",
     "@sentry/node": "^6.2.3",
     "@sentry/tracing": "^6.2.3",
     "ajv": "^6.10.0",
@@ -42,8 +44,7 @@
     "elliptic": "6.5.4",
     "express": "^4.17.1",
     "pem": "^1.14.6",
-    "@fabcotech/rchain-token": "^16.0.2",
-    "@fabcotech/rchain-toolkit": "^1.0.0",
+    "prom-client": "^14.0.1",
     "redis": "^4.0.2"
   },
   "devDependencies": {

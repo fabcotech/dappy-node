@@ -22,6 +22,9 @@
         "<node_internals>/**",
         "node_modules/**"
       ],
+      "env": {
+        "DAPPY_NODE_ENABLE_REQUEST_METRICS": "true"
+      }
     },
     {
       "name": "dappy-node (memory)",
@@ -44,6 +47,7 @@
       "env": {
         "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json",
         "DAPPY_NODE_ZONE_PROVIDER": "memory",
+        "DAPPY_NODE_ENABLE_REQUEST_METRICS": "true",
         "DAPPY_NODE_CACHING": "0"
       }
     },

@@ -8,13 +8,10 @@ import pem from 'pem';
 import { getRouter } from './routes';
 import { initSentry } from './sentry';
 import { addZoneProviderRoutes } from '../ZoneProviders';
-import {
-  incRequestMetricsMiddleware,
-  initRequestMetrics,
-} from '../requestMetrics';
 
 import { log } from '../log';
 import { getConfig } from '../config';
+import { initMetrics } from './routes/metrics';
 
 const SELF_SIGNED_CERTIFICATE_DURATION = 365 * 20; // 20 years
 
@@ -62,10 +59,7 @@ export const startHttpServers = async () => {
   const app = express();
   const config = getConfig();
 
-  if (config.dappyNodeEnableRequestMetrics) {
-    initRequestMetrics();
-    app.use(incRequestMetricsMiddleware);
-  }
+  initMetrics(app);
   initRoutes(app);
 
   log(`Listening for HTTP on address 127.0.0.1:${config.dappyNodeHttpPort} !`);
