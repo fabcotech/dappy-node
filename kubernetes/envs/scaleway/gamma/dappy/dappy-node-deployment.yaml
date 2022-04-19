@@ -21,15 +21,15 @@ spec:
             - name: DAPPY_RCHAIN_VALIDATOR
               value: https://node0.testnet.rchain.coop 
             - name: DAPPY_RCHAIN_READ_ONLY
-              value: https://observer.testnet.rchain.coop
+              value: https://rnode
             - name: DAPPY_NODE_ENABLE_REQUEST_METRICS
               value: 'true'  
-            # - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
-            #   value: '/ssl/tls.crt'
-          # volumeMounts:
-          # - name: rnode-tls
-          #   mountPath: /ssl
-          #   readOnly: true              
+            - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
+              value: '/ssl/tls.crt'
+          volumeMounts:
+          - name: rnode-tls
+            mountPath: /ssl
+            readOnly: true              
       volumes:
         - name: rnode-tls
           secret:
