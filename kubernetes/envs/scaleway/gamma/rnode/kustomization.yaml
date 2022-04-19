@@ -1,7 +1,6 @@
 namespace: gamma 
 
 resources:
-- gamma-namespace.yaml
 - rnode-nginx-configmap.yaml
 - rnode-service.yaml
 - rnode-statefulset.yaml

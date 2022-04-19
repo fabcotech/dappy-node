@@ -9,9 +9,9 @@ spec:
         - name: get-contract-logs
           env:
             - name: DAPPY_NAMES_MASTER_REGISTRY_URI
-              value: eakdr9k4q37b1gq879jwsfq38autx8bm3tjz6wbdw5pjfkwb5got9f
+              value: kgr7m8xo8od9ioiy1qoxxdgoiaesuwaaiixjccyf8aqebx7msibxnz
             - name: DAPPY_JOBS_LOGS_CONTRACTS
-              value: eakcontractns 
+              value: kgrcontractns 
             - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
               value: /ssl/tls.crt
           volumeMounts:
