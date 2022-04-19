@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus 
+spec:
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus 
+    spec:
+      initContainers:
+        - name: give-disk-permissions
+          image: busybox:1.33.1
+          volumeMounts:
+            - name: prometheus-data
+              mountPath: "/prometheus"
+          command:
+            - sh
+            - '-c'
+            - chown 1000:1000 /prometheus
+      containers:
+        - image: prom/prometheus:v2.11.1
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          name: prometheus
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: 200m
+          volumeMounts:
+          - name: prometheus-data
+            mountPath: "/prometheus"
+          - name: prometheus-configmap
+            mountPath: "/etc/prometheus/prometheus.yml"
+            subPath: prometheus.yml            
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--storage.tsdb.retention.time=365d"
+      volumes:
+        - name: prometheus-configmap
+          configMap:
+            name: prometheus-configmap
+        - name: prometheus-data
+          persistentVolumeClaim:
+            claimName: prometheus-data

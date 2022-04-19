@@ -92,8 +92,7 @@ spec:
                   --max-number-of-parents '1' \
                   --fault-tolerance-threshold '-1' \
                   --synchrony-constraint-threshold '0.99' \
-                  --fork-choice-stale-threshold '60 minutes' \
-                  -J-Xms10g
+                  --fork-choice-stale-threshold '60 minutes'
           ports:
             - containerPort: 40400
               hostPort: 40400
@@ -105,7 +104,7 @@ spec:
               hostPort: 40404
           resources:
             requests:
-              memory: 14Gi
+              memory: 6Gi
               cpu: 1400m
       
       volumes:

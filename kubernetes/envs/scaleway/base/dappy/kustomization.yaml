@@ -4,6 +4,7 @@ bases:
 resources:
 - dappy-node-nginx-configmap.yaml
 - dappy-node-service.yaml
+- dappy-node-clusterip-service.yaml
 
 patchesStrategicMerge:
 - dappy-jobs-deployment.yaml
@@ -13,4 +14,4 @@ patchesStrategicMerge:
 images:
   - name: fabcotech/dappy-node
     newName: fabcotech/dappy-node
-    newTag: '3.20.4'
+    newTag: '3.22.0'

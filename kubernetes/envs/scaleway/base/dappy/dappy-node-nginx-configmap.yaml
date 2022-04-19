@@ -9,6 +9,12 @@ data:
 
     server {
       listen 80 default_server;
+
+      location /metrics {
+        deny all;
+        return 404;
+      }
+
       location / {
         rewrite /(.*) /$1 break;
 
@@ -31,6 +37,11 @@ data:
       proxy_set_header Upgrade $http_upgrade;
       proxy_set_header Connection "Upgrade";
       proxy_set_header Host $host;
+
+      location /metrics {
+        deny all;
+        return 404;
+      }
 
       location / {
         rewrite /(.*) /$1 break;

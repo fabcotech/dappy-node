@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dappy-node
+spec:
+  type: ClusterIP
+  selector:
+    app: dappy-node 
+  ports:
+    - port: 3001
+      name: http 
+      targetPort: 3001
