@@ -9,7 +9,8 @@
     "test": "mocha -r ts-node/register 'src/**/*.spec.ts' 'src/**/*.spec.js'",
     "test:watch": "mocha -r ts-node/register -watch 'src/**/*.spec.ts' 'src/**/*.spec.js' -watch-files 'src/**/*.ts' 'src/**/*.js'",
     "lint": "eslint src --ext .ts",
-    "build": "rm -rf dist && tsc",
+    "copy-files": "copyfiles src/**/*.yml dist/",
+    "build": "rm -rf dist && tsc && npm run copy-files",
     "start": "node dist/index.js",
     "start:dev:rchain": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=rchain ts-node src/index.ts",
     "start:dev:memory": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=memory ts-node src/index.ts",
@@ -25,8 +26,7 @@
     "dappy-deploy-name-system": "./bin/dappy-deploy-name-system",
     "dappy-init-rchain-genesis-block": "./bin/dappy-init-rchain-genesis-block",
     "dappy-node": "./bin/dappy-node",
-    "dappy-run-local-rnode": "./bin/dappy-run-local-rnode",
-    "dappy-easy-deploy-rnode": "./bin/dappy-easy-deploy-rnode"
+    "easyrnode": "./dist/bin/easyrnode.js"
   },
   "engines": {
     "node": ">=16"
@@ -46,7 +46,8 @@
     "express": "^4.17.1",
     "pem": "^1.14.6",
     "prom-client": "^14.0.1",
-    "redis": "^4.0.2"
+    "redis": "^4.0.2",
+    "ps-tree": "^1.2.0"
   },
   "devDependencies": {
     "@types/chai": "^4.3.0",
@@ -56,10 +57,12 @@
     "@types/express": "^4.17.13",
     "@types/mocha": "^9.1.0",
     "@types/pem": "^1.9.6",
+    "@types/ps-tree": "^1.1.2",
     "@typescript-eslint/eslint-plugin": "^5.16.0",
     "@typescript-eslint/parser": "^5.16.0",
     "chai": "^4.3.4",
     "chai-spies": "^1.0.0",
+    "copyfiles": "^2.4.1",
     "eslint": "^8.11.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^16.1.4",

@@ -71,12 +71,55 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "easyrnode",
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register",
+      ],
+      "args": [
+        "./bin/easyrnode-debug.ts",
+        "${input:easyrnode-commands}",
+        "${input:easyrnode-args}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": [
+        "<node_internals>/**",
+        "node_modules/**"
+      ],
+      "env": {
+        "PWD": "${workspaceFolder}",
+        "TS_NODE_PROJECT": "${workspaceFolder}/tsconfig.json",
+        "TS_NODE_COMPILER_OPTIONS": "{\"module\": \"commonjs\" }"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "deploy_name_contract",
       "stopOnEntry": false,
       "cwd": "${workspaceRoot}",
       "args": [
         "./scripts/deploy_name_contract.js"
       ]
-    }    
+    },
+  ],
+  "inputs": [
+    {
+      "id": "easyrnode-commands",
+      "description": "easyrnode commands",
+      "type": "pickString",
+      "options": [
+        "deploy",
+        "run"
+      ]
+    },
+    {
+      "id": "easyrnode-args",
+      "description": "easyrnode args",
+      "type": "promptString",
+      "default": "foo.rho"
+    }
   ]
 }
