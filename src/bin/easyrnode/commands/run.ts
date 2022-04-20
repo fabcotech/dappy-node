@@ -15,7 +15,7 @@ export const runCommand: Command = {
     await api.command(
       'docker-compose',
       '-f',
-      path.join(__dirname, '../docker-compose.yml'),
+      path.join(__dirname, './assets/docker-compose.yml'),
       'up'
     );
 

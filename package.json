@@ -9,7 +9,7 @@
     "test": "mocha -r ts-node/register 'src/**/*.spec.ts' 'src/**/*.spec.js'",
     "test:watch": "mocha -r ts-node/register -watch 'src/**/*.spec.ts' 'src/**/*.spec.js' -watch-files 'src/**/*.ts' 'src/**/*.js'",
     "lint": "eslint src --ext .ts",
-    "copy-files": "copyfiles -u 1 src/**/*.yml dist/",
+    "copy-files": "copyfiles -u 1 src/bin/easyrnode/**/*.yml src/bin/easyrnode/**/*.sh dist/",
     "build": "rm -rf dist && tsc && npm run copy-files",
     "start": "node dist/index.js",
     "start:dev:rchain": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=rchain ts-node src/index.ts",
@@ -24,7 +24,6 @@
   ],
   "bin": {
     "dappy-deploy-name-system": "./bin/dappy-deploy-name-system",
-    "dappy-init-rchain-genesis-block": "./bin/dappy-init-rchain-genesis-block",
     "dappy-node": "./bin/dappy-node",
     "easyrnode": "./bin/easyrnode"
   },
