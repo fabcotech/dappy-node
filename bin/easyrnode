@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
-const { runCli } = require('../dist/src/bin/easyrnode');
+const { runCli } = require('../dist/bin/easyrnode');
 
 runCli();
