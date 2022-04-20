@@ -73,9 +73,11 @@ We use the issue tracker to keep track of bugs and improvements to dappy-node it
 
 dappy-node repository contains several command lines tools.
 
-- **dappy-init-rchain-genesis-block**: create files `.rnode/genesis/bonds.txt` and `rnode/genesis/wallets.txt` needed to bootstrap rchain
-- **dappy-run-local-rnode**: run docker compose file `docker/docker-compose.yml`, which starts the latest images of [rnode](https://hub.docker.com/r/rchain/rnode) and [redis](https://hub.docker.com/_/redis)
-- **dappy-easy-deploy-rnode**: deploys a rholang file, --phlo-limit, --phlo-price, --private-key and --host have default values that can be overwritten.
+- **easyrnode**: It helps to work with a local rchain node using the following commands/arguments:
+  - **init**: create files `.rnode/genesis/bonds.txt` and `rnode/genesis/wallets.txt` needed to bootstrap rchain
+  - **run**: run docker compose [file](src/bin/easyrnode/commands/assets/docker-compose.yml), which starts the latest images of [rnode](https://hub.docker.com/r/rchain/rnode) and [redis](https://hub.docker.com/_/redis)
+  - **deploy**: deploys a rholang file, --phlo-limit, --phlo-price, --private-key and --host have default values that can be overwritten. Example: `easyrnode deploy ./example.rho --wait`
+  - **help**: display help for each command. Example: `easyrnode help deploy`
 - **dappy-deploy-name-system**: deploy dappy name system master on rchain. Arguments:
    - --validator: url to rchain node validator
    - --privatekey: private key used to deploy dappy name system master
@@ -94,7 +96,7 @@ Below, here are all environments variables read by dappy-node.
 |---|---|---|---|
 | DAPPY_NODE_ZONE_PROVIDER | No | `rchain` | Zone provider used |
 | DAPPY_NODE_HTTP_PORT | Yes | `3001` | dappy-node http port  |
-| DAPPY_NODE_HTTPS_PORT | No |  | dappy-node https port |
+| DAPPY_NODE_HTTPS_PORT | No |  | dappy-node https port. HTTPS is disabled if not defined |
 | DAPPY_NODE_PRIVATE_KEY_FILENAME | No | `dappynode.key` | dappy-node private key. Generated if not exists |
 | DAPPY_NODE_CERTIFICATE_FILENAME | No | `dappynode.crt` | dappy-node certificate. Generated if not exists |
 | DAPPY_NODE_CACHING | Yes | `60` | record ttl cache. Disabled if set to `0` |

@@ -47,16 +47,10 @@ npm i -g @fabcotech/dappy-node
 Restart your terminal to refresh you $PATH
 ```sh
 # Create .rnode folder with genesis block
-dappy-init-rchain-genesis-block
+easyrnode init
 
 # Run local rnode, propose blocks, and redis using docker and docker-compose 
-dappy-run-local-rnode
-
-# Easy deploy using rchain-token
-# prints deploy ID
-dappy-easy-deploy-rnode helloworld.rho
-# Waits for something on deploy ID unforgeable name
-dappy-easy-deploy-rnode helloworld.rho --wait
+easyrnode run 
 
 # Deploy Dappy name system on local rnode
 dappy-deploy-name-system
