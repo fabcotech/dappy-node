@@ -1,8 +1,11 @@
+#!/bin/bash
+
+cat << EOF | docker-compose -f /dev/stdin up
 services:
   rnode:
     image: rchain/rnode:latest
     volumes:
-    - ${PWD}/.rnode:/var/lib/rnode
+    - $PWD/.rnode:/var/lib/rnode
     ports:
     - 40403:40403
     - 40402:40402
@@ -17,3 +20,4 @@ services:
     image: redis:latest
     ports:
     - 6379:6379
+EOF

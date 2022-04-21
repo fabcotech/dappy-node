@@ -12,12 +12,7 @@ export const runCommand: Command = {
       easyrnode run 
   `,
   action: async ([...rest], api) => {
-    await api.command(
-      'docker-compose',
-      '-f',
-      path.join(__dirname, './assets/docker-compose.yml'),
-      'up'
-    );
+    await api.command(path.join(__dirname, './assets/rnode-run.sh'));
 
     return 0;
   },
