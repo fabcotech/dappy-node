@@ -10,7 +10,50 @@ data:
     scrape_configs:
       - job_name: dappy-node
         metrics_path: /metrics
-        static_configs:
-          - targets:
-            - dappy-node:3001
         scrape_interval: 5s
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+              - gamma
+        relabel_configs:
+          - source_labels : [__meta_kubernetes_pod_label_app,__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: dappy-node;3001
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_service_label_app]
+            separator: ;
+            regex: (.*)
+            replacement: $1
+            action: keep
+          - source_labels: [__meta_kubernetes_namespace]
+            separator: ;
+            regex: (.*)
+            target_label: namespace
+            replacement: $1
+            action: replace
+          - source_labels: [__meta_kubernetes_pod_name]
+            separator: ;
+            regex: (.*)
+            target_label: pod
+            replacement: $1
+            action: replace
+          - source_labels: [__meta_kubernetes_service_name]
+            separator: ;
+            regex: (.*)
+            target_label: service
+            replacement: $1
+            action: replace
+          - source_labels: [__meta_kubernetes_service_name]
+            separator: ;
+            regex: (.*)
+            target_label: job
+            replacement: ${1}
+            action: replace
+          - separator: ;
+            regex: (.*)
+            target_label: endpoint
+            replacement: $1
+            action: replace

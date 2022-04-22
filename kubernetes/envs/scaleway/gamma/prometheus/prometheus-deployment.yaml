@@ -11,6 +11,7 @@ spec:
       labels:
         app: prometheus 
     spec:
+      serviceAccountName: prometheus
       initContainers:
         - name: give-disk-permissions
           image: busybox:1.33.1
@@ -41,6 +42,10 @@ spec:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus"
             - "--storage.tsdb.retention.time=365d"
+          ports:
+            - name: web
+              containerPort: 9090
+              protocol: TCP
       volumes:
         - name: prometheus-configmap
           configMap:
