@@ -29,7 +29,7 @@ export const getRequestDurationMetricsMiddleware = (
       const responseTimeInMs = Date.now() - start;
 
       httpRequestDurationMicroseconds
-        .labels(req.method, req.route.path, res.statusCode.toString())
+        .labels(req.method, req.path, res.statusCode.toString())
         .observe(responseTimeInMs);
     });
 
