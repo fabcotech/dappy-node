@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingresses
+  namespace: gamma  
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location ~* /metrics {
+        deny all;
+        return 404;
+      }    
+spec:
+  tls:
+    - hosts:
+        - fabco.gamma.dappy
+      secretName: dappy-node-tls
+  rules:
+    - host: fabco.gamma.dappy
+      http:
+        paths:      
+          - path: /grafana(?:/)?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000              
+          - path: /(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: dappy-node
+                port:
+                  number: 3001

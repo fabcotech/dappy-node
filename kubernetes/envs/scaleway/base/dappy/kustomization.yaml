@@ -2,8 +2,6 @@ bases:
 - ../../../../base/dappy
 
 resources:
-- dappy-node-nginx-configmap.yaml
-- dappy-node-service.yaml
 - dappy-node-clusterip-service.yaml
 
 patchesStrategicMerge:

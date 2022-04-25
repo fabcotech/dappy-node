@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana 
+spec:
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana 
+    spec:
+      initContainers:
+        - name: give-disk-permissions
+          image: busybox:1.33.1
+          volumeMounts:
+            - name: grafana-data
+              mountPath: /grafana
+          command:
+            - sh
+            - '-c'
+            - chown 1000:1000 /grafana
+      containers:
+        - image: grafana/grafana:6.2.5
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          name: grafana 
+          resources:
+            limits:
+              memory: 384Mi
+              cpu: 500m
+          volumeMounts:
+          - name: grafana-data
+            mountPath: /var/lib/grafana
+          - name: grafana-datasources-configmap
+            mountPath: /etc/grafana/provisioning/datasources
+          - name: grafana-configmap
+            mountPath: /etc/grafana/grafana.ini
+            subPath: grafana.ini
+          - name: grafana-dashboards-configmap
+            mountPath: /var/lib/grafana/dashboards
+          ports:
+            - name: http
+              containerPort: 3000
+      volumes:
+        - name: grafana-configmap
+          configMap:
+            name: grafana-configmap
+        - name: grafana-datasources-configmap
+          configMap:
+            name: grafana-datasources-configmap
+        - name: grafana-dashboards-configmap
+          configMap:
+            name: grafana-dashboards-configmap
+        - name: grafana-data
+          persistentVolumeClaim:
+            claimName: grafana-data

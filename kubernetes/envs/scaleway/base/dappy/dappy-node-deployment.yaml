@@ -6,24 +6,6 @@ spec:
   template:
     spec:
       containers:
-        - image: nginx:1.21.3
-          name: nginx
-          volumeMounts:
-          - name: dappy-node-tls
-            mountPath: /ssl
-          - name: dappy-node-nginx-config
-            mountPath: /etc/nginx/conf.d/default.conf
-            subPath: nginx.conf
-          - name: dappy-node-nginx-config
-            mountPath: /etc/nginx/snippets/sslparams.conf
-            subPath: sslparams.conf
-          ports:
-            - containerPort: 80
-            - containerPort: 443
-          resources:
-            limits:
-              cpu: 100m
-              memory: 100Mi
         - image: fabcotech/dappy-node
           name: dappy-node
           env:

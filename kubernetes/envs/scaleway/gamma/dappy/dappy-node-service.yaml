@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: lb-dappy-node
-spec:
-  loadBalancerIP: 195.154.71.146
