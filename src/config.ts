@@ -49,6 +49,7 @@ export function initConfig() {
     rchainReadOnlyCertificateFilename:
       process.env.DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME,
     rchainNetwork: process.env.DAPPY_RCHAIN_NETWORK || 'unknown',
+    rchainShardId: process.env.DAPPY_RCHAIN_SHARD_NAME || '',
 
     dappyNodeHttpPort:
       parseInt(process.env.DAPPY_NODE_HTTP_PORT || '', 10) || 3001,

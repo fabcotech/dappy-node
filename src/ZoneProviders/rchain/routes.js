@@ -37,6 +37,7 @@ const getInfo = (store) => (req, res) => {
       rchainNamesMasterRegistryUri: config.dappyNamesMasterRegistryUri,
       rchainNamesContractId: config.dappyNamesContractId,
       rchainNetwork: config.rchainNetwork,
+      rchainShardId: config.rchainShardId,
       wrappedRevContractId,
       lastFinalizedBlockNumber: store.lastFinalizedBlockNumber,
       rnodeVersion: store.rnodeVersion,
