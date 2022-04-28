@@ -33,6 +33,7 @@ const getOrCreateCertificate = (
         fs.readFileSync(certificatePath, 'utf8'),
         fs.readFileSync(privateKeyPath, 'utf8'),
       ]);
+      return;
     }
 
     pem.createCertificate(
