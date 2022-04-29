@@ -1,0 +1,34 @@
+<html>
+
+<head>
+
+</head>
+
+<body style="background: #efefef;">
+  <h1>Hello world !</h1>
+  <h2>Dappy test page</h2>
+  <hr />
+  <h4>Iframe to same host</h4>
+  <p>It should load <i>rule: default-src https://helloworld.dappy:3005</i></p>
+  <iframe style="border:1px solid #aaa;" width="300px" height="100px" src="https://helloworld.dappy:3005"></iframe>
+  <hr />
+  <h4>Iframe to another host</h4>
+  <p>It should not load <i>rule: default-src https://helloworld.dappy:3005</i></p>
+  <iframe style="border:1px solid #aaa;" width="300px" height="100px" src="https://test2.dappy:3006"></iframe>
+  <hr />
+  <h4>CSP (javascript)</h4>
+  <p>You should see log "CSP script-src ok ! etc." in JS console <i>rule: script-src-elem https://helloworld.dappy:3005
+      https://test2.dappy:3006;</i></p>
+  <script type='text/javascript' src="https://test2.dappy:3006/test2script.js"></script>
+  <hr />
+  <h4>CSP (image)</h4>
+  <p>You should not see this image hosted at <b>https://test2.dappy:3006/test2img</b> <i>rule: img-src 'self';</i> :
+  </p>
+  <img style="border:1px solid #aaa;" width="300px" height="100px" src="https://test2.dappy:3006/test2img.png"></img>
+  <p>You should see this image hosted at <b>https://helloworld.dappy:3005/test2img</b> <i>rule: img-src 'self';</i> :
+  </p>
+  <img style="border:1px solid #aaa;" width="300px" height="auto"
+    src="https://helloworld.dappy:3005/helloworldimg.png"></img>
+</body>
+
+</html>
