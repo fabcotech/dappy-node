@@ -16,6 +16,7 @@ const getProcessArgv = (param: string) => {
 async function easyDeploy(
   filePath: string,
   host: string,
+  shardId: string,
   phloPrice: number,
   phloLimit: number,
   privateKey: string,
@@ -32,11 +33,14 @@ async function easyDeploy(
   if (wait) {
     const dataAtNameResponse = await rc.http.easyDeploy(
       host,
-      term,
-      privateKey,
-      phloPrice,
-      phloLimit,
-      wait
+      {
+        term,
+        privateKey,
+        shardId,
+        phloPrice,
+        phloLimit,
+        timeout: wait,
+      }
     );
     const data = rc.utils.rhoValToJs(
       JSON.parse(dataAtNameResponse).exprs[0].expr
@@ -46,10 +50,14 @@ async function easyDeploy(
   } else {
     const deployResponse = await rc.http.easyDeploy(
       host,
-      term,
-      privateKey,
-      phloPrice,
-      phloLimit
+      {
+        term,
+        privateKey,
+        phloPrice,
+        phloLimit,
+        shardId,
+        timeout: undefined,
+      }
     );
     const prettyResponse = deployResponse
       .replace(/\\n/, '\n')
@@ -94,6 +102,7 @@ export const deployCommand: Command = {
     api.print('');
 
     const host = getProcessArgv('--host') || 'http://localhost:40403';
+    const shardId = getProcessArgv('--shardId') || 'dev';
 
     const phloPrice = getProcessArgv('--phlo-price')
       ? parseInt(getProcessArgv('--phlo-price') || '', 10)
@@ -116,6 +125,7 @@ export const deployCommand: Command = {
     await easyDeploy(
       filepath,
       host,
+      shardId,
       phloPrice,
       phloLimit,
       privateKey,

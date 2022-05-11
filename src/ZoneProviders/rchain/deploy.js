@@ -67,7 +67,15 @@ module.exports.deployWsHandler = async (body, urlOrOptions) => {
     };
   }
 
-  const deployResponse = await rchainToolkit.http.deploy(urlOrOptions, body);
+  let deployResponse;
+  try {
+    deployResponse = await rchainToolkit.http.deploy(urlOrOptions, body);
+  } catch (err) {
+    return {
+      success: false,
+      error: { message: deployResponse },
+    };
+  }
   if (!deployResponse.startsWith('"Success')) {
     return {
       success: false,

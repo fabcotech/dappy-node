@@ -9,7 +9,7 @@ services:
     ports:
     - 40403:40403
     - 40402:40402
-    command: run -s --validator-private-key ${RNODE_PRIVATE_KEY:-28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36} --dev-mode
+    command: run -s --shard-name dev --validator-private-key ${RNODE_PRIVATE_KEY:-28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36} --dev-mode
   rnode-propose:
     image: rchain/rnode:latest
     links:
