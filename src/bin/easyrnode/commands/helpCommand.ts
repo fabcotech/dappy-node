@@ -9,7 +9,7 @@ export const createHelpCommand = (commands: {
 
     Examples:
     
-      easyrnode help
+      easyrnode --help
   `,
   action: async (args, api) => {
     if (args.length === 0) {

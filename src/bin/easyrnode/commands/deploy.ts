@@ -30,6 +30,13 @@ async function easyDeploy(
     throw new Error(`Unable to locate file ${filePath}`);
   }
 
+  console.log('host', host);
+  console.log('privateKey', privateKey);
+  console.log('shardId', shardId);
+  console.log('phloPrice', phloPrice);
+  console.log('phloLimit', phloLimit);
+  console.log('timeout', wait);
+
   if (wait) {
     const dataAtNameResponse = await rc.http.easyDeploy(
       host,
@@ -76,6 +83,7 @@ export const deployCommand: Command = {
     Optional arguments:
       --phlo-price (default: 1)
       --phlo-limit (default: 100000000)
+      --shard-id (default: dev)
       --private-key (default: 28a5c9ac133b4449ca38e9bdf7cacdce31079ef6b3ac2f0a080af83ecff98b36)
       --host (default: http://localhost:40403)
       --wait: if defined, wait for the transaction to be mined before printing the result (default: 40000)
@@ -102,7 +110,7 @@ export const deployCommand: Command = {
     api.print('');
 
     const host = getProcessArgv('--host') || 'http://localhost:40403';
-    const shardId = getProcessArgv('--shardId') || 'dev';
+    const shardId = getProcessArgv('--shard-id') || 'dev';
 
     const phloPrice = getProcessArgv('--phlo-price')
       ? parseInt(getProcessArgv('--phlo-price') || '', 10)

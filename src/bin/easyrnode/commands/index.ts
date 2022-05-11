@@ -13,7 +13,7 @@ export const getCommands = (): { [key: string]: Command } => {
     init: initCommand,
   } as { [key: string]: Command };
 
-  commands.help = createHelpCommand(commands);
+  commands['--help'] = createHelpCommand(commands);
 
   return commands;
 };
