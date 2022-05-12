@@ -23,7 +23,8 @@
         "node_modules/**"
       ],
       "env": {
-        "DAPPY_NODE_ENABLE_REQUEST_METRICS": "true"
+        "DAPPY_NODE_ENABLE_REQUEST_METRICS": "true",
+        "DAPPY_NODE_HTTPS_PORT": "3002"
       }
     },
     {
