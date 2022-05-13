@@ -4,10 +4,10 @@ import { getStore } from '../../store';
 const { Router } = require('express');
 const bodyParser = require('body-parser');
 
-const { listenForDataAtNameWsHandler } = require('./listen-for-data-at-name');
+const { listenForDataAtNameWsHandler } = require('./data-at-name');
 const {
-  listenForDataAtNameXWsHandler,
-} = require('./listen-for-data-at-name-x');
+  dataAtNameXWsHandler,
+} = require('./data-at-name-x');
 const { deployWsHandler } = require('./deploy');
 const { exploreDeployWsHandler } = require('./explore-deploy');
 const { exploreDeployXWsHandler } = require('./explore-deploy-x');
@@ -116,8 +116,8 @@ const listenForDataAtName = (store) => async (req, res) => {
   }
 };
 
-const listenForDataAtNameX = (store) => async (req, res) => {
-  const data = await listenForDataAtNameXWsHandler(
+const dataAtNameX = (store) => async (req, res) => {
+  const data = await dataAtNameXWsHandler(
     req.body,
     pickRandomReadOnly(store),
   );
@@ -164,14 +164,14 @@ export function getRoutes() {
   router.post('/info', getInfo(store));
   router.post('/last-finalized-block-number', getLastFinalizedBlockNumber(store));
   router.post('/explore-deploy-x', exploreDeployX(store));
-  router.post('/listen-for-data-at-name-x', listenForDataAtNameX(store));
+  router.post('/data-at-name-x', dataAtNameX(store));
   router.post('/get-x-records', getXRecords(store));
   router.post('/get-x-records-by-public-key', getXRecordsByPublicKey(store));
   router.post('/get-contract-logs', getContractLogs(store));
   router.post('/api/deploy', deploy(store));
   router.post('/api/prepare-deploy', prepareDeploy(store));
   router.post('/api/explore-deploy', exploreDeploy(store));
-  router.post('/api/listen-for-data-at-name', listenForDataAtName(store));
+  router.post('/api/data-at-name', listenForDataAtName(store));
 
   return router;
 }

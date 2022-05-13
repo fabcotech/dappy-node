@@ -43,8 +43,11 @@ const validate = ajv.compile(schema);
 
 module.exports.listenForDataAtNameWsHandler = async (body, urlOrOptions) => {
   log('listen-data-at-name');
+  console.log('listen-data-at-name')
 
   const valid = validate(body);
+  console.log(body)
+  console.log('valid', valid)
 
   if (!valid) {
     return {
@@ -64,6 +67,6 @@ module.exports.listenForDataAtNameWsHandler = async (body, urlOrOptions) => {
 
   return {
     success: true,
-    data: parsedResponse.exprs[parsedResponse.exprs.length - 1],
+    data: dataAtNameResponse,
   };
 };

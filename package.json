@@ -32,7 +32,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@fabcotech/rchain-token": "^16.0.2",
+    "@fabcotech/rchain-token": "^17.0.6",
     "@fabcotech/rchain-toolkit": "2.0.0",
     "@sentry/node": "^6.2.3",
     "@sentry/tracing": "^6.2.3",

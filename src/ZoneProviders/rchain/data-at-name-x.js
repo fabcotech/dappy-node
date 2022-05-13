@@ -1,7 +1,7 @@
 const Ajv = require('ajv');
 const rchainToolkit = require('@fabcotech/rchain-toolkit');
 
-const listenDataAtNameBodySchema = require('./listen-for-data-at-name').schema;
+const listenDataAtNameBodySchema = require('./data-at-name').schema;
 
 const { log } = require('../../log');
 
@@ -37,11 +37,9 @@ module.exports.listenForDataAtNameXWsHandler = (body, urlOrOptions) => {
     )
       .then((dataAtNameResponses) => {
         const data = dataAtNameResponses.map((r) => {
-          const parsedResponse = JSON.parse(r);
-
           return {
             success: true,
-            data: parsedResponse.exprs[parsedResponse.exprs.length - 1],
+            data: r,
           };
         });
 
