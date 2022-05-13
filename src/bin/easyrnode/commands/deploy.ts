@@ -30,13 +30,6 @@ async function easyDeploy(
     throw new Error(`Unable to locate file ${filePath}`);
   }
 
-  console.log('host', host);
-  console.log('privateKey', privateKey);
-  console.log('shardId', shardId);
-  console.log('phloPrice', phloPrice);
-  console.log('phloLimit', phloLimit);
-  console.log('timeout', wait);
-
   if (wait) {
     const dataAtNameResponse = await rc.http.easyDeploy(
       host,
