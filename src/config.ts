@@ -55,9 +55,9 @@ export function initConfig() {
       parseInt(process.env.DAPPY_NODE_HTTP_PORT || '', 10) || 3001,
     dappyNodeHttpsPort: parseInt(process.env.DAPPY_NODE_HTTPS_PORT || '', 10),
     dappyNodePrivateKeyFilename:
-      process.env.DAPPY_NODE_PRIVATE_KEY_FILENAME || 'dappynode.key',
+      process.env.DAPPY_NODE_PRIVATE_KEY_FILENAME || './dappynode.key',
     dappyNodeCertificateFilename:
-      process.env.DAPPY_NODE_CERTIFICATE_FILENAME || 'dappynode.crt',
+      process.env.DAPPY_NODE_CERTIFICATE_FILENAME || './dappynode.crt',
     dappyNodeVersion: '0.2.8',
     dappyNodeZoneProvider: process.env.DAPPY_NODE_ZONE_PROVIDER || 'rchain',
     dappyNodeCaching: numberOr(
