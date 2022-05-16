@@ -41,7 +41,7 @@ const getOrCreateCertificate = (
         days: SELF_SIGNED_CERTIFICATE_DURATION,
         selfSigned: true,
         commonName: 'dappynode',
-        altNames: ['localhost'],
+        altNames: ['localhost', 'dappynode'],
       },
       (err, certificate) => {
         if (err) {
