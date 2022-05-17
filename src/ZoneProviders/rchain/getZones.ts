@@ -3,12 +3,16 @@ import { pickRandomReadOnly } from './pickRandomReadOnly';
 import { log } from '../../log';
 import { NameZone } from '../../model/NameZone';
 import { getStore } from '../../store';
+import { getConfig } from '../../config';
 
 export const getZones = async (names: string[]): Promise<NameZone[]> => {
   const store = getStore();
+  const config = getConfig();
+
   const result = await getXRecordsWsHandler(
     { names },
     {
+      cacheEnabled: config.dappyNodeCachingZone,
       redisClient: store.redisClient,
       log,
       urlOrOptions: pickRandomReadOnly(),
@@ -19,5 +23,7 @@ export const getZones = async (names: string[]): Promise<NameZone[]> => {
     throw new Error('Failed to get zones from rchain');
   }
 
-  return result.records?.map((r) => JSON.parse(r.data)) as NameZone[];
+  return result.records?.map((r) =>
+    (typeof r.data === 'string' ? (JSON.parse(r.data)) : r.data
+  )) as NameZone[];
 };

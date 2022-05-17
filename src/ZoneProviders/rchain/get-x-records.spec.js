@@ -95,6 +95,7 @@ describe('get-x-records', function test() {
 
     const r = await getXRecordsWsHandler(args, {
       redisClient,
+      cacheEnabled: true,
       urlOrOptions,
       log,
       exploreDeploy,
@@ -137,7 +138,6 @@ describe('get-x-records', function test() {
       (() => {
         let call = 0;
         return () => {
-          debugger;
           call += 1;
           if (call === 1) {
             return JSON.stringify(createPurseExpr('dappy'));
@@ -151,6 +151,7 @@ describe('get-x-records', function test() {
     );
 
     await getXRecordsWsHandler(args, {
+      cacheEnabled: true,
       redisClient,
       urlOrOptions,
       log,
@@ -210,6 +211,7 @@ describe('get-x-records', function test() {
     const log = chai.spy();
 
     const r = await getXRecordsWsHandler(args, {
+      cacheEnabled: true,
       redisClient,
       urlOrOptions,
       log,
@@ -281,6 +283,7 @@ describe('get-x-records', function test() {
     const log = chai.spy();
 
     const r = await getXRecordsWsHandler(args, {
+      cacheEnabled: true,
       redisClient,
       urlOrOptions,
       log,

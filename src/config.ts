@@ -64,6 +64,7 @@ export function initConfig() {
       60,
       parseInt(process.env.DAPPY_NODE_CACHING || '', 10)
     ),
+    dappyNodeCachingZone: process.env.DAPPY_NODE_CACHING_ZONE === 'true',
     dappyNodeFiles: process.env.NODES_FILE,
     dappyNodeEnableRequestMetrics:
       process.env.DAPPY_NODE_ENABLE_REQUEST_METRICS === 'true',

@@ -127,6 +127,7 @@ Below, here are all environments variables read by dappy-node.
 | DAPPY_NODE_REDIS_DB | Yes | `1` | Redis database number |
 | DAPPY_NODE_REDIS_HOST | Yes | `localhost` | Redis host |
 | DAPPY_NODE_REDIS_PORT | Yes | `6379` | Redis port |
+| DAPPY_NODE_CACHING_ZONE | Yes | `false` | Cache zones |
 
 ### API Reference
 

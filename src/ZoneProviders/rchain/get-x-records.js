@@ -334,6 +334,7 @@ const fetchRchainPursesData = async (names, {
 };
 
 const fetchRchainRecords = async (names, {
+  cacheEnabled,
   redisClient,
   log,
   urlOrOptions,
@@ -364,14 +365,15 @@ const fetchRchainRecords = async (names, {
 
   const missingRecords = names.filter((name) => !records.map((r) => r.id).includes(name));
 
-  if (missingRecords.length > 0) {
-    await cacheNegativeRecords(redisClient.hSet.bind(redisClient))(missingRecords);
-  }
-
-  try {
-    await cacheRecords(records, redisClient);
-  } catch (err) {
-    log(err);
+  if (cacheEnabled) {
+    if (missingRecords.length > 0) {
+      await cacheNegativeRecords(redisClient.hSet.bind(redisClient))(missingRecords);
+    }
+    try {
+      await cacheRecords(records, redisClient);
+    } catch (err) {
+      log(err);
+    }
   }
 
   return [
@@ -389,6 +391,7 @@ const mergeCacheAndRchainRecords = (cachedRecords, rchainRecords) => Object.entr
 const getXRecordsWsHandler = async (
   args,
   {
+    cacheEnabled,
     redisClient,
     log,
     urlOrOptions,
@@ -407,7 +410,7 @@ const getXRecordsWsHandler = async (
 
     const cachedRecords = Object.fromEntries(await Promise.all(
       args.names.map(async (name) => {
-        const recordCache = await redisClient.hGetAll(`record:${name}`);
+        const recordCache = cacheEnabled ? await redisClient.hGetAll(`record:${name}`) : {};
         return [name, Object.keys(recordCache).length ? {
           id: name,
           ...recordCache,
@@ -419,6 +422,7 @@ const getXRecordsWsHandler = async (
       .filter((name) => cachedRecords[name] === undefined);
 
     const rchainRecords = await fetchRchainRecords(cacheMissingRecords, {
+      cacheEnabled,
       redisClient,
       log,
       urlOrOptions,
