@@ -23,7 +23,7 @@ async function easyDeploy(
   wait: number | undefined,
   api: Api
 ) {
-  let term = 'new x in { x!("hello world !") }';
+  let term = 'new deployId(`rho:rchain:deployId`) in { deployId!("hello world !") }';
   try {
     term = await api.readFile(filePath);
   } catch (err) {
