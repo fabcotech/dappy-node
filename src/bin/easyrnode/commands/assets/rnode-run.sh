@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat << EOF | docker-compose -f /dev/stdin up
+cat << EOF | docker compose -f /dev/stdin up
 services:
   rnode:
     image: rchain/rnode:v0.13.0-alpha3
