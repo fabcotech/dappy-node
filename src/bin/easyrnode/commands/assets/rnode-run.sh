@@ -14,8 +14,10 @@ services:
     image: rchain/rnode:v0.13.0-alpha3
     links:
     - rnode
-    entrypoint: ''
-    command: sh -c 'while true; do /opt/docker/bin/rnode --grpc-port 40402 --grpc-host rnode propose; done'
+    entrypoint: 
+    - sh
+    - '-c'
+    - 'while true; do /opt/docker/bin/rnode --grpc-port 40402 --grpc-host rnode propose; done'
   redis:
     image: redis:latest
     ports:

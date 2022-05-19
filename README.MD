@@ -98,6 +98,7 @@ Below, here are all environments variables read by dappy-node.
 | **Keys** | **Required** | **Default value** | **Description** |
 |---|---|---|---|
 | DAPPY_NODE_ZONE_PROVIDER | No | `rchain` | Zone provider used |
+| DAPPY_NODE_DNS_PORT | No | | dappy-node dns port, disabled if not provided  |
 | DAPPY_NODE_HTTP_PORT | Yes | `3001` | dappy-node http port  |
 | DAPPY_NODE_HTTPS_PORT | No |  | dappy-node https port. HTTPS is disabled if not defined |
 | DAPPY_NODE_PRIVATE_KEY_FILENAME | No | `dappynode.key` | dappy-node private key. Generated if not exists |

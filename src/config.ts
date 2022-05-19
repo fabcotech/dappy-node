@@ -54,6 +54,7 @@ export function initConfig() {
     dappyNodeHttpPort:
       parseInt(process.env.DAPPY_NODE_HTTP_PORT || '', 10) || 3001,
     dappyNodeHttpsPort: parseInt(process.env.DAPPY_NODE_HTTPS_PORT || '', 10),
+    dappyNodeDnsPort: parseInt(process.env.DAPPY_NODE_DNS_PORT || '', 10),
     dappyNodePrivateKeyFilename:
       process.env.DAPPY_NODE_PRIVATE_KEY_FILENAME || './dappynode.key',
     dappyNodeCertificateFilename:
