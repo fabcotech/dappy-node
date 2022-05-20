@@ -48,11 +48,9 @@ const getOrCreateCertificate = (
         days: SELF_SIGNED_CERTIFICATE_DURATION,
         selfSigned: true,
         commonName: 'dappynode',
-        altNames: ['localhost', 'dappynode'],
-        config: `
-        [v3_req]
-        basicConstraints = critical,CA:TRUE
-        `,
+        config: `[v3_req]
+basicConstraints = critical, CA:TRUE
+subjectAltName = DNS.1:localhost, DNS.2:dappynode`,
       },
       (err, certificate) => {
         if (err) {
