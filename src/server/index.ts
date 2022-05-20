@@ -49,6 +49,10 @@ const getOrCreateCertificate = (
         selfSigned: true,
         commonName: 'dappynode',
         altNames: ['localhost', 'dappynode'],
+        config: `
+        [v3_req]
+        basicConstraints = critical,CA:TRUE
+        `,
       },
       (err, certificate) => {
         if (err) {
