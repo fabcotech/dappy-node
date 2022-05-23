@@ -1,6 +1,6 @@
 {
   "name": "@fabcotech/dappy-node",
-  "version": "3.29.2",
+  "version": "3.29.3",
   "description": "Dappy main nodeJS program, stores the name records and provides a HTTP+TLS interface to interact with rnode",
   "author": "FABCO",
   "repository": "https://github.com/fabcotech/dappy-node.git",
