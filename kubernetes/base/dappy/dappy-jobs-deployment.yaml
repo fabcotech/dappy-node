@@ -14,7 +14,7 @@ spec:
       containers:
         - image: fabcotech/dappy-node:latest
           name: get-contract-logs
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           env:
             - name: DAPPY_JOBS_REDIS_URL
               value: redis://redis:6379/1

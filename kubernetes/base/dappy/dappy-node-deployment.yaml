@@ -14,7 +14,7 @@ spec:
       containers:
         - image: fabcotech/dappy-node:latest
           name: dappy-node
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           env:
             - name: DAPPY_RCHAIN_READ_ONLY
               value: http://rnode:40403
