@@ -8,13 +8,14 @@ module.exports.getPurseZeroPrice = async (urlOrOptions) => {
   let exploreDeployResult;
   const config = getConfig();
 
+  const term = readPursesTerm({
+    masterRegistryUri: config.dappyNamesMasterRegistryUri,
+    contractId: config.dappyNamesContractId,
+    pursesIds: ['0'],
+  });
   try {
     exploreDeployResult = await rchainToolkit.http.exploreDeploy(urlOrOptions, {
-      term: readPursesTerm({
-        masterRegistryUri: config.dappyNamesMasterRegistryUri,
-        contractId: config.dappyNamesContractId,
-        pursesIds: ['0'],
-      }),
+      term: term,
     });
   } catch (err) {
     log('Unable to explore-deploy for name price', 'error');
@@ -43,6 +44,7 @@ module.exports.getPurseZeroPrice = async (urlOrOptions) => {
       throw new Error('Invalid name price');
     }
   } catch (err) {
+    log(term)
     log(exploreDeployResult);
     log(err);
     log(
