@@ -104,7 +104,7 @@ spec:
               hostPort: 40404
           resources:
             requests:
-              memory: 6Gi
+              memory: 5Gi
               cpu: 1400m
       
       volumes:
