@@ -94,11 +94,11 @@ kubectl create secret tls dappy-node-tls --key="dappy-node.key" --cert="dappy-no
 ### Deploy dappy-node kubernetes manifests
 
 ```sh
-kubectl apply -k kubernetes/envs/scaleway/<NAMESPACE>/dappy
+kubectl apply -k kubernetes/envs/<CLOUD_PROVIDER>/<NAMESPACE>/dappy
 
 # if ./ingresses folder exists, deploy it
-kubectl apply -k kubernetes/envs/scaleway/<NAMESPACE>/ingresses
+kubectl apply -k kubernetes/envs/<CLOUD_PROVIDER>/<NAMESPACE>/ingresses
 
 # if monitoring is required,, deploy it
-kubectl apply -k kubernetes/envs/scaleway/<NAMESPACE>/monitoring
+kubectl apply -k kubernetes/envs/<CLOUD_PROVIDER>/<NAMESPACE>/monitoring
 ```

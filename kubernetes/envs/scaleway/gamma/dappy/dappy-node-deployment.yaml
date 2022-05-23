@@ -9,21 +9,23 @@ spec:
         - name: dappy-node
           env:
             - name: DAPPY_NAMES_MASTER_REGISTRY_URI
-              value: kgr7m8xo8od9ioiy1qoxxdgoiaesuwaaiixjccyf8aqebx7msibxnz
+              value: 6ycpuscy6roa5j7z9tzecynqwizf8r1uk66jnmd1n1cwt3sdccados
             - name: DAPPY_NAMES_CONTRACT_ID
-              value: kgrcontractns
+              value: 6ycdappynamesystem
             - name: DAPPY_JOBS_LOGS_CONTRACTS
-              value: kgrcontractns
+              value: 6ycdappynamesystem
             - name: DAPPY_NETWORK
               value: gamma
             - name: DAPPY_RCHAIN_NETWORK
-              value: testnet220418
+              value: testnet220510
+            - name: DAPPY_RCHAIN_SHARD_NAME
+              value: testnet5
             - name: DAPPY_RCHAIN_VALIDATOR
-              value: https://node0.testnet.rchain.coop 
+              value: https://node2.testnet.rchain.coop
             - name: DAPPY_RCHAIN_READ_ONLY
               value: https://rnode
             - name: DAPPY_NODE_ENABLE_REQUEST_METRICS
-              value: 'true'  
+              value: 'true'
             - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
               value: '/ssl/tls.crt'
           volumeMounts:

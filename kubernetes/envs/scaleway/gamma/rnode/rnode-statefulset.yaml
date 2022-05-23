@@ -58,13 +58,13 @@ spec:
           resources:
             limits:
               memory: 200Mi
-        - image: rchain/rnode:v0.13.0-alpha2
+        - image: rchain/rnode:v0.13.0-alpha3
           name: rnode
           env:
             - name: DAPPY_RCHAIN_BOOTSTRAP
-              value: rnode://1dcd0a80532962e9aba497fa93ded84665062461@node0.testnet.rchain.coop?protocol=40400&discovery=40404
+              value: rnode://2ad712f73f4789f4464e33c83f2fb38c64cdb678@node2.testnet.rchain.coop?protocol=42400&discovery=42404
             - name: DAPPY_RCHAIN_NETWORK
-              value: testnet220418
+              value: testnet220510
             - name: DAPPY_RCHAIN_SHARD_NAME
               value: testnet5
           volumeMounts:
