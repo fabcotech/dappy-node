@@ -3,7 +3,7 @@
 Dappy node is a [DoH](https://datatracker.ietf.org/doc/html/rfc8484) and an authoritative name server, written in [NodeJS](https://nodejs.org/).
 
 Dappy zones and records are independant from [ICANN](https://www.icann.org/).
-To avoid conflicts with existing TLDs, dappy zones are optionnaly suffixed with `.dappy`.
+To avoid conflicts with existing TLDs, dappy zones are optionnaly suffixed with `.d`.
 
 What makes dappy-node really unique is that zones are stored on the blockchain [Rchain](https://rchain-community.github.io/) which has 2 main benefits over others blockchain:
 - [Rchain](https://rchain-community.github.io/) is able to save data on-chain without referring to auxialiary P2P networks like [IPFS](https://ipfs.io/)
@@ -28,8 +28,8 @@ Run a dappy-node with memory zone provider using npx
 # Run a dappy-node that save zones in memory
 DAPPY_NODE_ZONE_PROVIDER=memory DAPPY_NODE_CACHING=0 npx @fabcotech/dappy-node
 
-# Resolve example.dappy A record
-dappy-lookup example.dappy A --endpoint=http://127.0.0.1:3001
+# Resolve example.d A record
+dappy-lookup example.d A --endpoint=http://127.0.0.1:3001
 ```
 
 ### Other installation procedures
@@ -59,7 +59,7 @@ Under the hood, dappy-node use [dns-packet](https://github.com/mafintosh/dns-pac
 Every DoH clients can query dappy-node, it includes browsers like Chrome. Dappy provide a command line [dappy-lookup](https://github.com/fabcotech/dappy-lookup) that makes DoH queries. You can try it like this:
 
 ```sh
-npx @fabcotech/dappy-lookup example.dappy A --endpoint=http://127.0.0.1:3001
+npx @fabcotech/dappy-lookup example.d A --endpoint=http://127.0.0.1:3001
 ```
 
 ## Support

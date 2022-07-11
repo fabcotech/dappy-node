@@ -45,7 +45,7 @@ describe('dns-query', () => {
   it('getTLDs()', () => {
     expect(getTLDs(['foo.bar.baz'])).to.eql(['baz']);
     expect(getTLDs(['foo'])).to.eql(['foo']);
-    expect(getTLDs(['foo.dappy'])).to.eql(['foo']);
-    expect(getTLDs(['foo.bar.dappy'])).to.eql(['bar']);
+    expect(getTLDs(['foo.d'])).to.eql(['foo']);
+    expect(getTLDs(['foo.bar.d'])).to.eql(['bar']);
   });
 });

@@ -124,7 +124,7 @@ export const createNamePacketQuery = (
       flags: 0,
       questions: [
         {
-          name: 'example.dappy',
+          name: 'example.d',
           type: 'A',
           class: 'IN',
         },
@@ -145,14 +145,14 @@ export const createNamePacketSuccessResponse = (
       flags: 0,
       questions: [
         {
-          name: 'example.dappy',
+          name: 'example.d',
           type: 'A',
           class: 'IN',
         },
       ],
       answers: [
         {
-          name: 'example.dappy',
+          name: 'example.d',
           type: 'A',
           class: 'IN',
           ttl: 60,
@@ -175,7 +175,7 @@ export const createNamePacketErrorResponse = (
       flags: 0,
       questions: [
         {
-          name: 'example.dappy',
+          name: 'example.d',
           type: 'A',
           class: 'IN',
         },

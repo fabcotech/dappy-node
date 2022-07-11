@@ -20,18 +20,18 @@ describe('dns-query', () => {
       {
         type: 'A',
         class: 'IN',
-        name: 'example.dappy',
+        name: 'example.d',
         ttl: 3600,
         data: '127.0.0.1',
       },
     ]);
   });
 
-  it('fetchNameAnswers() query 1 record with .dappy returns 1 answer with .dappy', async () => {
+  it('fetchNameAnswers() query 1 record with .d returns 1 answer with .d', async () => {
     const nsQuery = createNamePacketQuery({
       questions: [
         {
-          name: 'example.dappy',
+          name: 'example.d',
           type: RecordType.A,
           class: 'IN',
         },
@@ -47,14 +47,14 @@ describe('dns-query', () => {
       {
         type: 'A',
         class: 'IN',
-        name: 'example.dappy',
+        name: 'example.d',
         ttl: 3600,
         data: '127.0.0.1',
       },
     ]);
   });
 
-  it('fetchNameAnswers() query 1 record without .dappy returns answers without .dappy', async () => {
+  it('fetchNameAnswers() query 1 record without .d returns answers without .d', async () => {
     const nsQuery = createNamePacketQuery({
       questions: [
         {
@@ -81,7 +81,7 @@ describe('dns-query', () => {
     ]);
   });
 
-  it('fetchNameAnswers() query 2 records on 2 different zones with and without .dappy', async () => {
+  it('fetchNameAnswers() query 2 records on 2 different zones with and without .d', async () => {
     const nsQuery = createNamePacketQuery({
       questions: [
         {
@@ -90,7 +90,7 @@ describe('dns-query', () => {
           class: 'IN',
         },
         {
-          name: 'bar.foo.dappy',
+          name: 'bar.foo.d',
           type: RecordType.A,
           class: 'IN',
         },
@@ -132,7 +132,7 @@ describe('dns-query', () => {
       {
         type: 'A',
         class: 'IN',
-        name: 'bar.foo.dappy',
+        name: 'bar.foo.d',
         ttl: 3600,
         data: '192.168.1.1',
       },

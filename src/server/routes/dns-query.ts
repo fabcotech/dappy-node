@@ -24,7 +24,7 @@ export const getZoneRecords = (
     .map(({ type, name }) => {
       const records = zones
         .map((zone) =>
-          normalizeRecords(zone, zone.records, /\.dappy$/.test(name))
+          normalizeRecords(zone, zone.records, /\.dappy|d$/.test(name))
         )
         .flat();
       return records.filter(
