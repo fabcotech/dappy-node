@@ -36,7 +36,8 @@ export enum ReturnCode {
   NOTIMP, //  Function not implemented
   REFUSED, // The server refused to answer for the query
   YXDOMAIN, //  Name that should not exist, does exist
-  XRRSET, //  RRset that should not exist, does exist
+  YXRRSET, //  RR Set Exists when it should not
+  NXRRSET, // RR Set that should exist does not
   NOTAUTH, //  Server not authoritative for the zone
   NOTZONE, //  Name not in zone
 }
