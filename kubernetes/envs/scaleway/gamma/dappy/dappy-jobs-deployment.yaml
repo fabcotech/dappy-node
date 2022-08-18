@@ -9,11 +9,11 @@ spec:
         - name: get-contract-logs
           env:
             - name: DAPPY_NAMES_MASTER_REGISTRY_URI
-              value: kgr7m8xo8od9ioiy1qoxxdgoiaesuwaaiixjccyf8aqebx7msibxnz
+              value: gozng17naz13ehetmd8ogr7i3o4y85uewa7npm5ipbrkfudj14ffby
             - name: DAPPY_JOBS_LOGS_CONTRACTS
-              value: kgrcontractns 
+              value: gozdappynamesystem 
             - name: DAPPY_RCHAIN_READ_ONLY_CERTIFICATE_FILENAME
-              value: /ssl/tls.crt
+              value: /ssl/tls.crt              
           volumeMounts:
           - name: rnode-tls 
             mountPath: '/ssl'

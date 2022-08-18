@@ -62,11 +62,11 @@ spec:
           name: rnode
           env:
             - name: DAPPY_RCHAIN_BOOTSTRAP
-              value: rnode://2ad712f73f4789f4464e33c83f2fb38c64cdb678@node2.testnet.rchain.coop?protocol=42400&discovery=42404
+              value: rnode://304d80eaa18a1ea75a63bd901d060a89b8695de7@node0.testnet.rchain.coop?protocol=40400&discovery=40404
             - name: DAPPY_RCHAIN_NETWORK
-              value: testnet220510
+              value: testnet220729
             - name: DAPPY_RCHAIN_SHARD_NAME
-              value: testnet5
+              value: testnet7
           volumeMounts:
             - name: rnode-tls 
               mountPath: /ssl
