@@ -13,7 +13,7 @@
     "build": "rm -rf dist && tsc && npm run copy-files",
     "start": "node dist/index.js",
     "start:dev:rchain": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=rchain ts-node src/index.ts",
-    "start:dev:memory": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=memory ts-node src/index.ts",
+    "start:dev:memory": "NODE_ENV=development DAPPY_NODE_CACHING=0 DAPPY_NODE_ZONE_PROVIDER=memory ts-node src/index.ts",
     "deploy-name-system": "./bin/dappy-deploy-name-system",
     "prepare": "husky install"
   },
