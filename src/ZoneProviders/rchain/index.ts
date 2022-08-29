@@ -6,4 +6,5 @@ export const rchainZoneProvider = {
   getZones,
   start,
   getRoutes,
+  saveZone: () => Promise.reject(new Error('not implemented')),
 };

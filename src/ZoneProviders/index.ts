@@ -5,9 +5,11 @@ import { log } from '../log';
 import { rchainZoneProvider } from './rchain';
 import { memoryZoneProvider } from './memory';
 import { getConfig } from '../config';
+import { NameZone } from '../model/NameZone';
 
 interface ZoneProvider {
-  getZones: (names: string[]) => Promise<any>;
+  getZones: (names: string[]) => Promise<NameZone[]>;
+  saveZone: (zone: NameZone) => Promise<void>;
   start(): Promise<void>;
   getRoutes(): Router;
 }
