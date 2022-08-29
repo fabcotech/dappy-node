@@ -3,6 +3,8 @@ import { NameZone } from '../../model/NameZone';
 
 export const createGetZones =
   (getZones: (names: string[]) => Promise<NameZone[]>) =>
-  (req: Request, res: Response) => {
-    throw new Error('not implemented');
+  async (req: Request, res: Response) => {
+    return res.send({
+      result: await getZones(req.body),
+    });
   };
