@@ -8,6 +8,7 @@ import { createMintZone } from './mint-zone';
 import { createUpdateZone } from './update-zone';
 import { getCurrentZoneProvider } from '../../ZoneProviders';
 import { getStore } from '../../store';
+import { createGetZones } from './get-zones';
 
 export function getRouter() {
   const router = Router();
@@ -41,6 +42,8 @@ export function getRouter() {
     bodyParser.json(),
     createUpdateZone(getZones, saveZone)
   );
+
+  router.post('/get-zones', bodyParser.json(), createGetZones(getZones));
 
   return router;
 }

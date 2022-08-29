@@ -90,4 +90,99 @@ Response example:
       "data": "..."
    }]
 }
+
+```
+
+### POST `/get-zones`
+
+Get zones (string[]) and their records
+
+**content-type:** application/json
+**query body format:** string[] 
+**response format:** json
+
+Query example:
+```json
+["apple"]
+```
+
+Response example:
+```json
+{ 
+   "result": [{
+      "origin": "apple",
+      "records": {
+         "host": "@",
+         "type": "TXT",
+         "value": "OWNER=04ea33c48dff95cdff4f4211780a5b151570a9a2fac5e62e5fa545c1aa5be3539c34d426b046f985204815964e10fcd1d87ef88d9bcf43816ad1fa00934cfe4652"
+      }
+   }]
+}
+
+```
+
+### POST `/mint-zone`
+
+Mint a zone
+
+**content-type:** application/json
+**query body format:** json 
+**response format:** json
+
+Query example:
+```json
+{
+ "data": {
+  "zone": {
+   "origin": "apple",
+   "records": {
+    "host": "@",
+    "type": "TXT",
+    "value": "OWNER=04ea33c48dff95cdff4f4211780a5b151570a9a2fac5e62e5fa545c1aa5be3539c34d426b046f985204815964e10fcd1d87ef88d9bcf43816ad1fa00934cfe4652"
+   }
+  },
+  "date": 1661785885595
+ },
+ "signature": "304402204d73309c6d9878493da20dbf5137c8a66c90a36815a8d249c9711f83c2f3939b02204366a5b27f0a3e575ff9700db2e3efa4b9f794d00a619c8716016227e2a47299"
+}
+```
+
+Response example:
+```json
+{
+  "result": "ok" 
+}
+```
+
+### POST `/update-zone`
+
+Update a zone
+
+**content-type:** application/json
+**query body format:** json 
+**response format:** json
+
+Query example:
+```json
+{
+ "data": {
+  "zone": {
+   "origin": "apple",
+   "records": {
+    "host": "@",
+    "type": "TXT",
+    "value": "OWNER=04ea33c48dff95cdff4f4211780a5b151570a9a2fac5e62e5fa545c1aa5be3539c34d426b046f985204815964e10fcd1d87ef88d9bcf43816ad1fa00934cfe4652"
+   }
+  },
+  "date": 1661785885595
+ },
+ "signature": "304402204d73309c6d9878493da20dbf5137c8a66c90a36815a8d249c9711f83c2f3939b02204366a5b27f0a3e575ff9700db2e3efa4b9f794d00a619c8716016227e2a47299"
+}
+```
+
+Response example:
+```json
+{
+  "result": "ok" 
+}
 ```
