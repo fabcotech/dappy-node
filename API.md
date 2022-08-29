@@ -1,8 +1,8 @@
 # API Reference
 
-### Available routes
+## Available routes
 
-## POST `/dns-query`
+### POST `/dns-query`
 
 Resolve name query using DNS message format provided by [dns-packet](https://github.com/mafintosh/dns-packet)
 
@@ -44,7 +44,7 @@ Example of a decoded dns message (answer):
 }
 ```
 
-# POST `/dns-query-extended`
+### POST `/dns-query-extended`
 
 Resolve name query using DNS message in json format.
 
