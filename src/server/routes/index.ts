@@ -5,6 +5,7 @@ import { getNodes } from './get-nodes';
 import { ping } from './ping';
 import { createDnsQuery, createExtendedDnsQuery } from './dns-query';
 import { createMintZone } from './mint-zone';
+import { createUpdateZone } from './update-zone';
 import { getCurrentZoneProvider } from '../../ZoneProviders';
 import { getStore } from '../../store';
 
@@ -33,6 +34,12 @@ export function getRouter() {
     '/mint-zone',
     bodyParser.json(),
     createMintZone(getZones, saveZone)
+  );
+
+  router.post(
+    '/update-zone',
+    bodyParser.json(),
+    createUpdateZone(getZones, saveZone)
   );
 
   return router;

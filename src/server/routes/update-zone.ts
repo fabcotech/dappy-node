@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { NameZone } from '../../model/NameZone';
 
-export const createMintZone =
+export const createUpdateZone =
   (
     getZones: (names: string[]) => Promise<NameZone[]>,
     saveZone: (zone: NameZone) => Promise<void>
