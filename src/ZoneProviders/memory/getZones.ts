@@ -1,26 +1,8 @@
-import {
-  createNameZone,
-  createRRA,
-  createRRCERT,
-  createRRCSP,
-  createRRTXT,
-} from '../../model/fakeData';
 import { NameZone } from '../../model/NameZone';
+import { zones } from './zones';
 
-export const getZones = async (): Promise<NameZone[]> => {
-  return [
-    createNameZone({
-      records: [
-        createRRA(),
-        createRRA({ data: '1.1.1.1' }),
-        createRRA({ data: '255.255.255.255' }),
-        createRRCERT(),
-        createRRCERT(),
-        createRRCSP(),
-        createRRTXT(),
-        createRRTXT({ data: 'label2=value2' }),
-        createRRTXT({ name: 'foo' }),
-      ],
-    }),
-  ];
+export const getZones = async (names: string[]): Promise<NameZone[]> => {
+  return Object.entries(zones)
+    .filter(([k]) => names.includes(k))
+    .map(([, v]) => v);
 };

@@ -6,6 +6,9 @@ export const createMintZone =
     getZones: (names: string[]) => Promise<NameZone[]>,
     saveZone: (zone: NameZone) => Promise<void>
   ) =>
-  (req: Request, res: Response) => {
-    throw new Error('not implemented');
+  async (req: Request, res: Response) => {
+    await saveZone(req.body);
+    res.send({
+      result: 'ok',
+    });
   };
