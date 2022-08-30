@@ -20,7 +20,7 @@
     "open:adminer": "open http://localhost:8082/?pgsql=pg&username=postgres&db=dappy&ns=public&table=zones",
     "deploy-name-system": "./bin/dappy-deploy-name-system",
     "prepare": "husky install",
-    "migration:up": "knex migrate:latest --knexfile src/knex.js"
+    "migration:up": "knex migrate:latest --knexfile src/ZoneProviders/postgresql/knex.js"
   },
   "files": [
     "dist/",

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import knex from 'knex';
 import { log } from '../../log';
 import { NameZone } from '../../model/NameZone';
 import { ZoneProvider } from '../ZoneProvider';
@@ -18,6 +19,7 @@ export const zoneProvider: ZoneProvider = {
     return Router();
   },
   saveZone: (zone: NameZone) => {
+    // knex('zones').
     return Promise.reject(new Error('not implemented'));
   },
 };
