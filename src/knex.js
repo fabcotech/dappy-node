@@ -4,7 +4,7 @@
 module.exports = {
     client: 'pg',
     migrations: {
-      directory: './src/migrations',
+      directory: './migrations',
     },
     connection: process.env.PG_CONNECTION_STRING || 'postgresql://postgres:postgres@localhost:5432/dappy',
 };
