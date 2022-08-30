@@ -17,7 +17,7 @@
     "start:dev:postgresql": "NODE_ENV=development DAPPY_NODE_CACHING=0 DAPPY_NODE_ZONE_PROVIDER=postgresql ts-node src/index.ts",
     "pg:start": "docker compose up -d pg adminer",
     "pg:stop": "docker compose stop pg adminer",
-    "open:adminer": "open http://localhost:8082/?pgsql=pg&username=postgres&db=dappy&ns=public&table=zones",
+    "pg:open-adminer": "open http://localhost:8082/?pgsql=pg&username=postgres&db=dappy&ns=public&table=zones",
     "deploy-name-system": "./bin/dappy-deploy-name-system",
     "prepare": "husky install",
     "pg:migrate": "knex migrate:latest --knexfile src/ZoneProviders/postgresql/knex.js",

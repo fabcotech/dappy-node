@@ -27,3 +27,8 @@ Run dappy-node using postgresql zone provider
 ```sh
 npm run start:dev:postgresql
 ```
+
+Open adminer to inspect pg data
+```sh
+npm run pg:open-adminer
+```
