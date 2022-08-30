@@ -79,3 +79,6 @@ warnings.txt
 dappyrc
 *.dev*.pem
 .rnode
+
+
+.pgdata

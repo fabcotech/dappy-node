@@ -15,6 +15,8 @@
     "start:dev:rchain": "NODE_ENV=development DAPPY_NODE_ZONE_PROVIDER=rchain ts-node src/index.ts",
     "start:dev:memory": "NODE_ENV=development DAPPY_NODE_CACHING=0 DAPPY_NODE_ZONE_PROVIDER=memory ts-node src/index.ts",
     "start:dev:postgresql": "NODE_ENV=development DAPPY_NODE_CACHING=0 DAPPY_NODE_ZONE_PROVIDER=postgresql ts-node src/index.ts",
+    "start:pg": "docker compose up -d pg",
+    "stop:pg": "docker compose stop pg",
     "deploy-name-system": "./bin/dappy-deploy-name-system",
     "prepare": "husky install"
   },
@@ -44,6 +46,7 @@
     "dotenv": "6.2.0",
     "elliptic": "^6.5.4",
     "express": "^4.17.1",
+    "knex": "^2.2.0",
     "pem": "^1.14.6",
     "prom-client": "^14.0.1",
     "ps-tree": "^1.2.0",
