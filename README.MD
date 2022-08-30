@@ -42,9 +42,10 @@ Please refer to [INSTALLATION.md](INSTALLATION.MD) if you want to install a stan
 
 Dappy-node abstracts how zones and records are persisted.
 
-There are 2 zone providers availables:
+There are 3 zone providers availables:
 - memory: for demo and development purpose. It contains a built-in zone `example` with some records. It is the easiest way to start and experiment dappy-node.
 - rchain: for production purposes. Zones and records are persisted on blockchain [Rchain](https://rchain-community.github.io/)
+- postgresql: for production purposes when confidentiality is needed. Zones and records are persisted on a pg instance.
 
 Each of these zone providers have their own jobs and routes.
 
@@ -129,6 +130,12 @@ Below, here are all environments variables read by dappy-node.
 | DAPPY_NODE_REDIS_HOST | Yes | `localhost` | Redis host |
 | DAPPY_NODE_REDIS_PORT | Yes | `6379` | Redis port |
 | DAPPY_NODE_CACHING_ZONE | Yes | `false` | Cache zones |
+
+#### Environment variables read when postgresql is used as zone provider
+
+| **Keys** | **Required** | **Default value (dev)** | **Description** |
+|---|---|---|---|
+| DAPPY_PG_CONNECTION_STRING | No | `postgresql://postgres:postgres@localhost:5432/dappy` | postgresql connection string |
 
 ### API Reference
 

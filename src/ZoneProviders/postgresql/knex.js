@@ -6,5 +6,5 @@ module.exports = {
     migrations: {
       directory: './migrations',
     },
-    connection: process.env.PG_CONNECTION_STRING || 'postgresql://postgres:postgres@localhost:5432/dappy',
+    connection: process.env.DAPPY_PG_CONNECTION_STRING || 'postgresql://postgres:postgres@localhost:5432/dappy',
 };
