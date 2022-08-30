@@ -14,17 +14,19 @@ function start() {
   return Promise.resolve();
 }
 
-interface NameZoneResult {
+interface NameZoneTable {
   id: number;
   domain: string;
   zone: NameZone;
 }
 
 export const zoneProvider: ZoneProvider = {
-  getZones: async (): Promise<NameZone[]> => {
-    const result = await connection<NameZoneResult>('zones').select({
-      zone: 'zone',
-    });
+  getZones: async (names: string[]): Promise<NameZone[]> => {
+    const result = await connection<NameZoneTable>('zones')
+      .select({
+        zone: 'zone',
+      })
+      .whereIn('domain', names);
     return result.map((r) => r.zone);
   },
   start,
@@ -32,6 +34,9 @@ export const zoneProvider: ZoneProvider = {
     return Router();
   },
   saveZone: async (zone: NameZone) => {
-    await connection('zones').insert({ domain: zone.origin, zone });
+    await connection<NameZoneTable>('zones').insert({
+      domain: zone.origin,
+      zone,
+    });
   },
 };
