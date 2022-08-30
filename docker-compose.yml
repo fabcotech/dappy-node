@@ -10,3 +10,10 @@ services:
       - '5432:5432'
     volumes:
       - $PWD/.pgdata:/var/lib/postgresql/data
+  adminer:
+    image: amd64/adminer:4.8.1
+    restart: always
+    depends_on:
+      - pg    
+    ports:
+      - 8082:8080      
