@@ -18,7 +18,8 @@
     "start:pg": "docker compose up -d pg",
     "stop:pg": "docker compose stop pg",
     "deploy-name-system": "./bin/dappy-deploy-name-system",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "migration:up": "knex migrate:latest"
   },
   "files": [
     "dist/",
@@ -48,6 +49,7 @@
     "express": "^4.17.1",
     "knex": "^2.2.0",
     "pem": "^1.14.6",
+    "pg": "^8.8.0",
     "prom-client": "^14.0.1",
     "ps-tree": "^1.2.0",
     "redis": "^4.0.2"

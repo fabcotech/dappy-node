@@ -80,5 +80,4 @@ dappyrc
 *.dev*.pem
 .rnode
 
-
 .pgdata
