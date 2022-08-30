@@ -9,7 +9,7 @@ function start() {
   return Promise.resolve();
 }
 
-export const memoryZoneProvider = {
+export const zoneProvider = {
   getZones,
   start,
   getRoutes,

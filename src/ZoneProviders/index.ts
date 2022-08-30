@@ -2,21 +2,17 @@ import { Router } from 'express';
 
 import { log } from '../log';
 
-import { rchainZoneProvider } from './rchain';
-import { memoryZoneProvider } from './memory';
-import { getConfig } from '../config';
-import { NameZone } from '../model/NameZone';
+import { zoneProvider as rchain } from './rchain';
+import { zoneProvider as memory } from './memory';
+import { zoneProvider as postgresql } from './postgresql';
 
-interface ZoneProvider {
-  getZones: (names: string[]) => Promise<NameZone[]>;
-  saveZone: (zone: NameZone) => Promise<void>;
-  start(): Promise<void>;
-  getRoutes(): Router;
-}
+import { getConfig } from '../config';
+import { ZoneProvider } from './ZoneProvider';
 
 const providers: Record<string, ZoneProvider> = {
-  rchain: rchainZoneProvider,
-  memory: memoryZoneProvider,
+  rchain,
+  memory,
+  postgresql,
 };
 
 export function getCurrentZoneProvider() {
