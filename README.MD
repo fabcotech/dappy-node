@@ -1,3 +1,6 @@
+
+Archived ! Moved to [https://github.com/fabcotech/dappy-tools](https://github.com/fabcotech/dappy-tools).
+
 # Dappy-node
 
 Dappy node is a [DoH](https://datatracker.ietf.org/doc/html/rfc8484) and an authoritative name server, written in [NodeJS](https://nodejs.org/).
